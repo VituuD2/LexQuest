@@ -1,0 +1,57 @@
+[
+  {
+    "step": 1,
+    "choice": "B",
+    "legalidade": 10,
+    "estrategia": 10,
+    "etica": 10,
+    "flags": [
+      "atendimento_responsavel"
+    ],
+    "explanation": "Postura profissional e urgente, sem prometer resultado."
+  },
+  {
+    "step": 1,
+    "choice": "A",
+    "legalidade": -5,
+    "estrategia": 0,
+    "etica": -15,
+    "flags": [
+      "promessa_resultado"
+    ],
+    "explanation": "Promessa de resultado compromete a etica profissional."
+  },
+  {
+    "step": 2,
+    "choice": "A",
+    "legalidade": 15,
+    "estrategia": 10,
+    "etica": 0,
+    "flags": [
+      "identificou_decisao_generica"
+    ],
+    "explanation": "Identifica a ausencia de fundamentacao concreta para a preventiva."
+  },
+  {
+    "step": 3,
+    "choice": "A",
+    "legalidade": 15,
+    "estrategia": 15,
+    "etica": 0,
+    "flags": [
+      "escolheu_medida_urgente"
+    ],
+    "explanation": "Prioriza a via urgente compatível com o estado do caso."
+  },
+  {
+    "step": 4,
+    "choice": "B",
+    "legalidade": 20,
+    "estrategia": 15,
+    "etica": 5,
+    "flags": [
+      "tese_principal_correta"
+    ],
+    "explanation": "Constrói tese central proporcional, técnica e consistente com os autos."
+  }
+]

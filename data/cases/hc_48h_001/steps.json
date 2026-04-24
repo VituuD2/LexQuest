@@ -1,0 +1,188 @@
+[
+  {
+    "id": "step_001",
+    "case_id": "hc_48h_001",
+    "step_number": 1,
+    "title": "Atendimento emergencial",
+    "situation": "A mae do cliente procura o jogador logo apos a prisao em flagrante.",
+    "question": "Qual sua primeira providencia?",
+    "objective": "Demonstrar postura profissional, responsavel e urgente diante do caso.",
+    "unlock_documents": [
+      "doc_001",
+      "doc_002"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "Prometer que conseguira soltar Rafael imediatamente."
+      },
+      {
+        "key": "B",
+        "text": "Pedir os documentos disponiveis, confirmar onde ele esta preso e explicar que analisara a medida cabivel com urgencia."
+      },
+      {
+        "key": "C",
+        "text": "Dizer que so aceita atuar depois de receber honorarios integrais."
+      },
+      {
+        "key": "D",
+        "text": "Publicar o caso nas redes sociais para pressionar o juiz."
+      }
+    ],
+    "best_choice": "B",
+    "pedagogical_note": "B e a melhor opcao. A reduz etica por promessa de resultado. C pode ser profissionalmente licita em tese, mas e ruim estrategicamente no contexto de urgencia e vulnerabilidade. D viola estrategia e pode afetar sigilo e imagem."
+  },
+  {
+    "id": "step_002",
+    "case_id": "hc_48h_001",
+    "step_number": 2,
+    "title": "Analise da decisao judicial",
+    "situation": "Os autos revelam a conversao da prisao em flagrante em preventiva.",
+    "question": "O que chama mais atencao na decisao que converteu o flagrante em preventiva?",
+    "objective": "Identificar falha de fundamentacao concreta na decisao cautelar.",
+    "unlock_documents": [
+      "doc_003",
+      "doc_004"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "A decisao parece generica e usa fundamentos abstratos como ordem publica e credibilidade da Justica."
+      },
+      {
+        "key": "B",
+        "text": "A decisao e automaticamente correta porque todo furto autoriza preventiva."
+      },
+      {
+        "key": "C",
+        "text": "A decisao e nula apenas porque o produto tem valor inferior a um salario minimo."
+      },
+      {
+        "key": "D",
+        "text": "A decisao so poderia ter sido tomada pelo STF."
+      }
+    ],
+    "best_choice": "A",
+    "pedagogical_note": "A e a melhor opcao. A preventiva exige fundamentacao concreta. B e D sao incorretas. C pode indicar tese defensiva, mas nao torna a decisao automaticamente nula por esse unico motivo."
+  },
+  {
+    "id": "step_003",
+    "case_id": "hc_48h_001",
+    "step_number": 3,
+    "title": "Escolha da medida urgente",
+    "situation": "Com novos documentos e prova descrita, a defesa precisa agir antes da transferencia.",
+    "question": "Qual medida voce prioriza?",
+    "objective": "Selecionar medida processual urgente adequada ao estado do caso.",
+    "unlock_documents": [
+      "doc_005",
+      "doc_006",
+      "doc_007"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "Habeas corpus com pedido liminar, atacando a fundamentacao generica da preventiva e sustentando suficiencia de medidas cautelares diversas."
+      },
+      {
+        "key": "B",
+        "text": "Acao de indenizacao contra a loja."
+      },
+      {
+        "key": "C",
+        "text": "Reclamacao constitucional diretamente ao STF."
+      },
+      {
+        "key": "D",
+        "text": "Esperar a instrucao criminal para discutir tudo na sentenca."
+      }
+    ],
+    "best_choice": "A",
+    "pedagogical_note": "A e a melhor opcao para urgencia. B pode ate existir futuramente se houver abuso, mas nao resolve a prisao. C e inadequada no MVP. D e ruim estrategicamente."
+  },
+  {
+    "id": "step_004",
+    "case_id": "hc_48h_001",
+    "step_number": 4,
+    "title": "Tese juridica principal",
+    "situation": "Apos entrevista reservada com o cliente, a defesa define a linha central da impugnacao.",
+    "question": "Qual linha argumentativa deve ser central?",
+    "objective": "Construir tese proporcional e tecnicamente defensavel com base nos autos.",
+    "unlock_documents": [
+      "doc_008"
+    ],
+    "options": [
+      {
+        "key": "A",
+        "text": "Apenas dizer que Rafael e inocente, sem enfrentar a decisao judicial."
+      },
+      {
+        "key": "B",
+        "text": "Sustentar ausencia de fundamentacao concreta para preventiva, valor reduzido, bem recuperado, ausencia de violencia, primariedade tecnica e possibilidade de cautelares diversas."
+      },
+      {
+        "key": "C",
+        "text": "Afirmar que furto em loja nunca e crime."
+      },
+      {
+        "key": "D",
+        "text": "Alegar que todo flagrante feito por seguranca privado e ilegal."
+      }
+    ],
+    "best_choice": "B",
+    "pedagogical_note": "B e a melhor opcao. A e fraca. C e D sao generalizacoes incorretas."
+  },
+  {
+    "id": "step_005",
+    "case_id": "hc_48h_001",
+    "step_number": 5,
+    "title": "Redacao de fundamento livre",
+    "situation": "Chegou o momento de redigir o argumento central do pedido liminar.",
+    "question": "Escreva um argumento de 5 a 10 linhas para o pedido liminar.",
+    "objective": "Avaliar capacidade de fundamentacao tecnico-juridica com base nos documentos disponiveis.",
+    "unlock_documents": [],
+    "options": [],
+    "free_text": {
+      "enabled": true,
+      "min_lines": 5,
+      "max_lines": 10
+    },
+    "criteria": [
+      "identifica decisao generica",
+      "menciona ausencia de violencia ou grave ameaca",
+      "menciona recuperacao integral do bem",
+      "aponta inexistencia de condenacao definitiva",
+      "propoe cautelares diversas, se necessario",
+      "evita promessa absoluta de inocencia",
+      "usa tom tecnico"
+    ]
+  },
+  {
+    "id": "step_006",
+    "case_id": "hc_48h_001",
+    "step_number": 6,
+    "title": "Resultado",
+    "situation": "O sistema consolida as escolhas do jogador e narra o desfecho provisório do habeas corpus.",
+    "question": "Qual foi o resultado da sua estrategia?",
+    "objective": "Traduzir pontuacao acumulada em resultado pedagogico narrado.",
+    "unlock_documents": [],
+    "options": [],
+    "result_bands": [
+      {
+        "label": "excelente",
+        "description": "Liminar concedida com cautelares."
+      },
+      {
+        "label": "bom",
+        "description": "Relator pede informacoes e determina analise urgente."
+      },
+      {
+        "label": "medio",
+        "description": "Liminar negada, mas merito pautado."
+      },
+      {
+        "label": "ruim",
+        "description": "Pedido mal fundamentado, liminar negada sem avanco pratico."
+      }
+    ]
+  }
+]

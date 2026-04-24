@@ -1,0 +1,14 @@
+{
+  "case": {
+    "id": "hc_48h_001",
+    "title": "Habeas Corpus em 48h",
+    "description": "Um jovem foi preso por suposto furto de uma parafusadeira. O jogador deve escolher a melhor estrategia urgente para combater a prisao preventiva.",
+    "area": "Processo Penal",
+    "difficulty": "Iniciante"
+  },
+  "initial_scores": {
+    "legalidade": 50,
+    "estrategia": 50,
+    "etica": 50
+  }
+}

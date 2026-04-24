@@ -1,0 +1,129 @@
+{
+  "case": {
+    "id": "hc_48h_001",
+    "title": "Habeas Corpus em 48h",
+    "description": "Um jovem foi preso por suposto furto de uma parafusadeira. O jogador deve escolher a melhor estrategia urgente para combater a prisao preventiva.",
+    "area": "Processo Penal",
+    "difficulty": "Iniciante",
+    "estimated_duration_minutes": {
+      "min": 20,
+      "max": 40
+    },
+    "target_audience": [
+      "estudantes de Direito",
+      "concurseiros iniciantes",
+      "entusiastas"
+    ]
+  },
+  "initial_state": {
+    "case_id": "hc_48h_001",
+    "title": "Habeas Corpus em 48h",
+    "current_step": 1,
+    "client_status": "preso_em_flagrante_convertido_em_preventiva",
+    "deadline_hours": 48,
+    "legalidade": 50,
+    "estrategia": 50,
+    "etica": 50,
+    "documents_unlocked": [
+      "doc_001",
+      "doc_002"
+    ],
+    "flags": {
+      "viu_video": false,
+      "falou_com_cliente": false,
+      "analisou_antecedentes": false,
+      "identificou_decisao_generica": false,
+      "alegou_insignificancia": false,
+      "escolheu_medida_urgente": false,
+      "atendimento_responsavel": false,
+      "promessa_resultado": false,
+      "tese_principal_correta": false
+    }
+  },
+  "metrics": {
+    "legalidade": {
+      "description": "Mede se a providencia escolhida e juridicamente adequada."
+    },
+    "estrategia": {
+      "description": "Mede se a decisao e util para o objetivo pratico do cliente."
+    },
+    "etica": {
+      "description": "Mede se o jogador respeitou limites profissionais, boa-fe, sigilo e deveres processuais."
+    }
+  },
+  "score_bands": [
+    {
+      "min": 0,
+      "max": 39,
+      "label": "atuacao_fraca"
+    },
+    {
+      "min": 40,
+      "max": 69,
+      "label": "atuacao_defensavel_com_falhas"
+    },
+    {
+      "min": 70,
+      "max": 89,
+      "label": "boa_atuacao"
+    },
+    {
+      "min": 90,
+      "max": 100,
+      "label": "atuacao_excelente"
+    }
+  ],
+  "characters": [
+    {
+      "id": "player",
+      "name": "Jogador",
+      "role": "Advogado(a) de defesa",
+      "goal": "Buscar a medida juridicamente mais adequada e proteger os direitos do cliente sem sacrificar a estrategia."
+    },
+    {
+      "id": "cliente_rafael",
+      "name": "Rafael Martins de Oliveira",
+      "role": "Cliente",
+      "age": 22,
+      "occupation": "auxiliar de estoque informal",
+      "situation": "Preso em flagrante por suposto furto de uma parafusadeira avaliada em R$ 189,90.",
+      "background": "Possui um registro antigo por receptacao culposa, sem transito em julgado informado nos documentos iniciais.",
+      "version": "Afirma que colocou a ferramenta na mochila por distracao enquanto atendia uma ligacao da mae e que pretendia pagar outros produtos no caixa."
+    },
+    {
+      "id": "mae_sonia",
+      "name": "Sonia Martins",
+      "role": "Mae do cliente",
+      "narrative_function": "Procura o jogador e entrega informacoes pessoais do cliente.",
+      "relevant_info": "Rafael ajuda financeiramente em casa e cuida do irmao mais novo."
+    },
+    {
+      "id": "seguranca_claudio",
+      "name": "Claudio Ramos",
+      "role": "Seguranca da loja",
+      "narrative_function": "Testemunha principal da acusacao.",
+      "version": "Afirma que viu Rafael ocultar a ferramenta na mochila e tentar sair sem pagar."
+    },
+    {
+      "id": "delegada_helena",
+      "name": "Dra. Helena Duarte",
+      "role": "Delegada plantonista",
+      "narrative_function": "Presidiu o flagrante.",
+      "observation": "Lavrou o auto com base no relato do seguranca e na apreensao do objeto."
+    },
+    {
+      "id": "juiz_alvaro",
+      "name": "Dr. Alvaro Siqueira",
+      "role": "Juiz plantonista",
+      "narrative_function": "Converteu a prisao em flagrante em preventiva.",
+      "legal_issue": "Decisao generica, baseada em garantia da ordem publica e suposta reiteracao delitiva."
+    },
+    {
+      "id": "promotora_camila",
+      "name": "Dra. Camila Farias",
+      "role": "Promotora",
+      "narrative_function": "Sustenta manutencao da prisao preventiva.",
+      "thesis": "Risco de reiteracao, prova da materialidade e indicios de autoria."
+    }
+  ]
+}

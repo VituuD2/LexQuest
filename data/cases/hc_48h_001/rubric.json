@@ -1,0 +1,41 @@
+{
+  "rubric_id": "hc_liminar_argumento_001",
+  "max_score": 30,
+  "criteria": [
+    {
+      "id": "fundamentacao_generica",
+      "description": "Aponta que a prisao preventiva foi fundamentada de forma generica.",
+      "points": 6
+    },
+    {
+      "id": "ausencia_violencia",
+      "description": "Menciona que o fato nao envolveu violencia ou grave ameaca.",
+      "points": 4
+    },
+    {
+      "id": "bem_recuperado",
+      "description": "Menciona recuperacao integral do bem e baixo dano material.",
+      "points": 4
+    },
+    {
+      "id": "antecedentes",
+      "description": "Diferencia processo anterior sem transito em julgado de condenacao definitiva.",
+      "points": 5
+    },
+    {
+      "id": "cautelares_diversas",
+      "description": "Propoe medidas cautelares diversas da prisao como alternativa proporcional.",
+      "points": 5
+    },
+    {
+      "id": "tom_tecnico",
+      "description": "Usa linguagem tecnica, objetiva e respeitosa.",
+      "points": 3
+    },
+    {
+      "id": "coerencia",
+      "description": "Constroi argumento coerente com os documentos do caso.",
+      "points": 3
+    }
+  ]
+}
