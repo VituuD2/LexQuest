@@ -1,124 +1,115 @@
 import "server-only";
-import { randomUUID } from "node:crypto";
-import { getInitialGameState, getStep } from "@/lib/game-engine";
+import { getFoundationDelta, getInitialGameState, getStep } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
-import { getDb } from "@/lib/server/sqlite";
+import { getSupabaseAdminClient } from "@/lib/server/supabase";
 
 type SessionRow = {
   id: string;
-  state: string;
+  state: GameState;
 };
 
-export function createSession() {
-  const db = getDb();
+export async function createSession() {
+  const supabase = getSupabaseAdminClient();
   const initialState = getInitialGameState();
-  const sessionId = randomUUID();
-  const now = new Date().toISOString();
 
-  db.prepare(
-    `
-      insert into player_sessions (
-        id,
-        case_id,
-        current_step,
-        legalidade,
-        estrategia,
-        etica,
-        state,
-        created_at,
-        updated_at
-      )
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
-  ).run(
-    sessionId,
-    initialState.case_id,
-    initialState.current_step,
-    initialState.legalidade,
-    initialState.estrategia,
-    initialState.etica,
-    JSON.stringify(initialState),
-    now,
-    now
-  );
+  const { data, error } = await supabase
+    .from("player_sessions")
+    .insert({
+      case_id: initialState.case_id,
+      current_step: initialState.current_step,
+      legalidade: initialState.legalidade,
+      estrategia: initialState.estrategia,
+      etica: initialState.etica,
+      state: initialState,
+      status: "in_progress"
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Failed to create session: ${error?.message ?? "unknown error"}`);
+  }
 
   return {
-    sessionId,
+    sessionId: data.id,
     gameState: initialState
   };
 }
 
-export function getSessionState(sessionId: string): GameState | null {
-  const db = getDb();
-  const row = db.prepare("select id, state from player_sessions where id = ?").get(sessionId) as SessionRow | undefined;
+export async function getSessionState(sessionId: string): Promise<GameState | null> {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase.from("player_sessions").select("id, state").eq("id", sessionId).maybeSingle();
 
-  if (!row) {
+  if (error) {
+    throw new Error(`Failed to fetch session: ${error.message}`);
+  }
+
+  if (!data) {
     return null;
   }
 
-  return JSON.parse(row.state) as GameState;
+  const row = data as SessionRow;
+  return row.state;
 }
 
-export function saveChoice(params: {
+export async function saveChoice(params: {
   sessionId: string;
   nextState: GameState;
   feedback: FeedbackState;
   stepNumber: number;
   choiceKey: string;
   freeText?: string;
+  selectedFoundationIds?: string[];
 }) {
-  const { sessionId, nextState, feedback, stepNumber, choiceKey, freeText } = params;
-  const db = getDb();
+  const { sessionId, nextState, feedback, stepNumber, choiceKey, freeText, selectedFoundationIds = [] } = params;
+  const supabase = getSupabaseAdminClient();
   const step = getStep(stepNumber);
+  const option = step?.options.find((item) => item.key === choiceKey);
+  const foundationDelta = getFoundationDelta(selectedFoundationIds);
+  const selectedFoundations = feedback.selectedFoundations ?? [];
+  const isFinished = nextState.current_step >= 6;
+  const finalAverage = isFinished
+    ? Math.round((nextState.legalidade + nextState.estrategia + nextState.etica) / 3)
+    : null;
 
-  db.prepare(
-    `
-      insert into player_choices (
-        id,
-        session_id,
-        step_id,
-        choice_key,
-        free_text_argument,
-        score_legalidade,
-        score_estrategia,
-        score_etica,
-        feedback,
-        created_at
-      )
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `
-  ).run(
-    randomUUID(),
-    sessionId,
-    step?.id ?? null,
-    choiceKey,
-    freeText ?? null,
-    feedback.scoreDelta.legalidade,
-    feedback.scoreDelta.estrategia,
-    feedback.scoreDelta.etica,
-    feedback.juridicalFeedback,
-    new Date().toISOString()
-  );
+  const { error: choiceError } = await supabase.from("player_choices").insert({
+    session_id: sessionId,
+    step_id: step?.id ?? null,
+    step_number: stepNumber,
+    choice_key: choiceKey,
+    choice_label: option?.label ?? (choiceKey === "FREE_TEXT" ? "Minuta liminar" : choiceKey),
+    free_text_argument: freeText ?? null,
+    selected_foundations: selectedFoundations,
+    score_legalidade: feedback.scoreDelta.legalidade,
+    score_estrategia: feedback.scoreDelta.estrategia,
+    score_etica: feedback.scoreDelta.etica,
+    foundation_score_legalidade: foundationDelta.legalidade,
+    foundation_score_estrategia: foundationDelta.estrategia,
+    foundation_score_etica: foundationDelta.etica,
+    feedback: feedback.juridicalFeedback,
+    consequence: feedback.consequence ?? null
+  });
 
-  db.prepare(
-    `
-      update player_sessions
-      set
-        current_step = ?,
-        legalidade = ?,
-        estrategia = ?,
-        etica = ?,
-        state = ?,
-        updated_at = ?
-      where id = ?
-    `
-  ).run(
-    nextState.current_step,
-    nextState.legalidade,
-    nextState.estrategia,
-    nextState.etica,
-    JSON.stringify(nextState),
-    new Date().toISOString(),
-    sessionId
-  );
+  if (choiceError) {
+    throw new Error(`Failed to save choice: ${choiceError.message}`);
+  }
+
+  const { error: sessionError } = await supabase
+    .from("player_sessions")
+    .update({
+      current_step: nextState.current_step,
+      legalidade: nextState.legalidade,
+      estrategia: nextState.estrategia,
+      etica: nextState.etica,
+      state: nextState,
+      status: isFinished ? "completed" : "in_progress",
+      final_average: finalAverage,
+      finished_at: isFinished ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", sessionId);
+
+  if (sessionError) {
+    throw new Error(`Failed to update session: ${sessionError.message}`);
+  }
 }

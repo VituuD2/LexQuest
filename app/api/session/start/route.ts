@@ -4,7 +4,12 @@ import { createSession } from "@/lib/server/session-repository";
 export const runtime = "nodejs";
 
 export async function POST() {
-  const session = createSession();
+  try {
+    const session = await createSession();
 
-  return NextResponse.json(session);
+    return NextResponse.json(session);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao iniciar sessao.";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

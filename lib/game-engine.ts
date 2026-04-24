@@ -98,7 +98,7 @@ function getFoundationLabels(foundationIds: string[]) {
     .filter((label): label is string => Boolean(label));
 }
 
-function getFoundationDelta(foundationIds: string[]) {
+export function getFoundationDelta(foundationIds: string[]) {
   return foundationIds.reduce(
     (accumulator, foundationId) => {
       const foundation = typedFoundations.find((item) => item.id === foundationId);
