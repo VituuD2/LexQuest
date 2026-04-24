@@ -11,8 +11,10 @@ type AudioController = {
   toggleBackgroundMusic: () => void;
 };
 
+// Instância global para a música não reiniciar ao trocar de fase
+let globalBgm: HTMLAudioElement | null = null;
+
 export function useLexQuestAudio(): AudioController {
-  const bgmRef = useRef<HTMLAudioElement | null>(null);
   const docOpenRef = useRef<HTMLAudioElement | null>(null);
   const docCloseRef = useRef<HTMLAudioElement | null>(null);
   const decisionRef = useRef<HTMLAudioElement | null>(null);
@@ -20,10 +22,12 @@ export function useLexQuestAudio(): AudioController {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Música de fundo contínua (loop)
-      bgmRef.current = new Audio("/audio/background-tension.mp3");
-      bgmRef.current.loop = true;
-      bgmRef.current.volume = 0.3; // Deixe um volume mais baixo para não ofuscar os efeitos
+      // Inicializa a música globalmente apenas uma vez
+      if (!globalBgm) {
+        globalBgm = new Audio("/audio/background-tension.mp3");
+        globalBgm.loop = true;
+        globalBgm.volume = 0.225; // Volume reduzido em 25% (de 0.3 para 0.225)
+      }
 
       // Efeitos sonoros
       docOpenRef.current = new Audio("/audio/document-open.mp3");
@@ -31,18 +35,13 @@ export function useLexQuestAudio(): AudioController {
       decisionRef.current = new Audio("/audio/decision-commit.mp3");
       tensionRef.current = new Audio("/audio/tension-pulse.mp3");
     }
-
-    return () => {
-      // Cleanup para evitar que a música continue tocando se o componente desmontar
-      bgmRef.current?.pause();
-    };
   }, []);
 
   const unlockAudio = useCallback(() => {
     // Navegadores exigem interação do usuário para tocar áudio.
     // O unlockAudio agora toca a música de fundo e garante que o contexto de mídia seja iniciado.
-    if (bgmRef.current && bgmRef.current.paused) {
-      bgmRef.current.play().catch(console.error);
+    if (globalBgm && globalBgm.paused) {
+      globalBgm.play().catch(console.error);
     }
   }, []);
 
@@ -75,12 +74,12 @@ export function useLexQuestAudio(): AudioController {
   }, []);
   
   const toggleBackgroundMusic = useCallback(() => {
-    if (!bgmRef.current) return;
+    if (!globalBgm) return;
     
-    if (bgmRef.current.paused) {
-      bgmRef.current.play().catch(console.error);
+    if (globalBgm.paused) {
+      globalBgm.play().catch(console.error);
     } else {
-      bgmRef.current.pause();
+      globalBgm.pause();
     }
   }, []);
 
