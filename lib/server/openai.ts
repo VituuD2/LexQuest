@@ -81,13 +81,27 @@ async function callResponsesApi<T>(params: {
 
   const payload = (await response.json()) as {
     output_text?: string;
+    output?: Array<{
+      type?: string;
+      content?: Array<{
+        type?: string;
+        text?: string;
+      }>;
+    }>;
   };
 
-  if (!payload.output_text) {
-    throw new Error("OpenAI request returned no output_text");
+  const structuredText =
+    payload.output
+      ?.flatMap((item) => item.content ?? [])
+      .find((item) => typeof item.text === "string" && item.text.trim().length > 0)?.text ?? null;
+
+  const responseText = payload.output_text ?? structuredText;
+
+  if (!responseText) {
+    throw new Error("OpenAI request returned no parseable text payload");
   }
 
-  return JSON.parse(payload.output_text) as T;
+  return JSON.parse(responseText) as T;
 }
 
 export async function reviewStepChoice(input: {
