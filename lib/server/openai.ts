@@ -8,7 +8,6 @@ export type AiChoiceReviewResult = {
   narrative: string;
   rewriteSuggestion?: string;
   score?: number;
-  raw?: unknown;
 };
 
 export type AiDraftReviewResult = {
@@ -107,10 +106,9 @@ export async function reviewStepChoice(input: {
         feedback: { type: "string" },
         narrative: { type: "string" },
         rewriteSuggestion: { type: ["string", "null"] },
-        score: { type: ["number", "null"] },
-        raw: { type: ["object", "null"], additionalProperties: true }
+        score: { type: ["number", "null"] }
       },
-      required: ["feedback", "narrative", "rewriteSuggestion", "score", "raw"]
+      required: ["feedback", "narrative", "rewriteSuggestion", "score"]
     }
   });
 
