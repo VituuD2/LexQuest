@@ -54,9 +54,7 @@ function JudicialDispatch({ order }: { order: FinalOrder }) {
   return (
     <div className="rounded-[28px] bg-[#fffdf8] p-8 text-[#232323] shadow-dossier">
       <div className="mb-6 flex items-start gap-4 border-b border-[#c9c2b5] pb-5">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#6b6e72] text-center text-[10px] font-bold uppercase leading-4 text-[#50535a]">
-          TJSP
-        </div>
+        <img alt="Selo TJSP" className="h-16 w-16 object-contain" src="/svg/tjsp.svg" />
         <div className="flex-1">
           <p className="text-center text-lg font-semibold uppercase tracking-[0.08em]">{order.issuer.name}</p>
           <p className="text-center text-sm font-semibold uppercase tracking-[0.06em]">{order.issuer.branch}</p>

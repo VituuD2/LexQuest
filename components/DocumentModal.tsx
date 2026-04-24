@@ -6,6 +6,13 @@ type DocumentModalProps = {
 };
 
 function Seal({ label }: { label: string }) {
+  if (label === "TJSP") {
+    return <img alt="Selo TJSP" className="h-20 w-20 object-contain" src="/svg/tjsp.svg" />;
+  }
+  if (label === "PCSP") {
+    return <img alt="Selo PCSP" className="h-20 w-20 object-contain" src="/svg/policia-civil-sp.svg" />;
+  }
+
   return (
     <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-[#6a6d72] text-center text-[11px] font-bold uppercase leading-4 text-[#4b4e53]">
       {label}
@@ -114,6 +121,22 @@ function InterviewTemplate({ document }: { document: CaseDocument }) {
   );
 }
 
+function getFormalFooterText(template?: string) {
+  if (template?.includes("judicial")) {
+    return "Este documento é assinado digitalmente nos termos da Lei 11.419/2006. Para conferir o original, acesse o site do Tribunal de Justiça do Estado de São Paulo.";
+  }
+  if (template?.includes("police")) {
+    return "Documento gerado pelo sistema de Delegacia Eletrônica da Polícia Civil do Estado de São Paulo. A autenticidade pode ser verificada no portal da SSP/SP.";
+  }
+  if (template === "certificate") {
+    return "Certidão expedida gratuitamente pela internet. A aceitação desta certidão está condicionada à verificação de sua autenticidade no respectivo portal.";
+  }
+  if (template === "forensic_report") {
+    return "Relatório interno de segurança patrimonial. Cópia cedida para fins de instrução de ocorrência. Documento de uso restrito.";
+  }
+  return "Documento emitido eletronicamente. A autenticidade e a integridade deste documento podem ser conferidas nos canais oficiais da instituição emitente.";
+}
+
 function FormalTemplate({ document }: { document: CaseDocument }) {
   return (
     <div className="mx-auto max-w-4xl rounded-[20px] bg-[#fffdf8] p-10 shadow-dossier">
@@ -123,7 +146,7 @@ function FormalTemplate({ document }: { document: CaseDocument }) {
       </div>
       <FormalSections sections={document.sections} />
       <div className="mt-10 border-t border-[#b5b0a5] pt-5 text-xs leading-6 text-[#5c6065]">
-        Documento exibido em layout simulado para fins pedagogicos do caso ficticio LexQuest.
+        {getFormalFooterText(document.template)}
       </div>
     </div>
   );
