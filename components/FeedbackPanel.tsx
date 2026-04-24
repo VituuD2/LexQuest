@@ -71,6 +71,7 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
               <div className="border-t border-parchment/15 pt-3 text-xs uppercase tracking-[0.16em] text-parchment/55">
                 IA: {feedback.aiStatus}
                 {feedback.aiScore !== undefined ? ` | nota sugerida: ${feedback.aiScore}` : ""}
+                {feedback.aiStatusDetail ? <p className="mt-2 normal-case tracking-normal text-parchment/75">{feedback.aiStatusDetail}</p> : null}
               </div>
             ) : null}
             <div className="border-t border-parchment/15 pt-3 text-xs text-parchment/65">

@@ -52,8 +52,8 @@
   {
     "step": 2,
     "choice": "B",
-    "legalidade": 5,
-    "estrategia": 4,
+    "legalidade": -4,
+    "estrategia": -2,
     "etica": 1,
     "flags": ["apostou_tese_reducionista"],
     "explanation": "Valor do bem e recuperacao sao relevantes, mas nao bastam, sozinhos, para demonstrar nulidade automatica da preventiva.",
@@ -72,8 +72,8 @@
   {
     "step": 2,
     "choice": "D",
-    "legalidade": 4,
-    "estrategia": 3,
+    "legalidade": -6,
+    "estrategia": -5,
     "etica": 1,
     "flags": ["desvio_tema_lateral"],
     "explanation": "A abordagem por seguranca particular nao e, por si so, o melhor campo de batalha para atacar a cautelar naquele momento.",
@@ -102,8 +102,8 @@
   {
     "step": 3,
     "choice": "C",
-    "legalidade": 7,
-    "estrategia": 2,
+    "legalidade": -5,
+    "estrategia": -10,
     "etica": 2,
     "flags": ["adiou_impugnacao_urgente"],
     "explanation": "Buscar mais prova pode robustecer a tese, mas aqui o custo temporal e alto e pode esvaziar a utilidade da tutela urgente.",
@@ -112,8 +112,8 @@
   {
     "step": 3,
     "choice": "D",
-    "legalidade": 8,
-    "estrategia": 5,
+    "legalidade": -3,
+    "estrategia": -6,
     "etica": 1,
     "flags": ["focou_merito_antes_cautelar"],
     "explanation": "Questionar o merito do furto e legitimo, mas dispersa a argumentacao em momento no qual a falta de motivacao da preventiva pede centralidade.",
@@ -142,9 +142,9 @@
   {
     "step": 4,
     "choice": "C",
-    "legalidade": 4,
-    "estrategia": 3,
-    "etica": 0,
+    "legalidade": -10,
+    "estrategia": -8,
+    "etica": -2,
     "flags": ["exagerou_merito"],
     "explanation": "A estrategia superestima a prova defensiva e aposta em nulidades nao claramente configuradas, reduzindo confiabilidade do pedido urgente.",
     "consequence": "A familia se anima com o tom forte, mas o tribunal pode enxergar excesso retorico em vez de tecnica."

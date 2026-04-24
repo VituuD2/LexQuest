@@ -26,6 +26,14 @@ export function isAiEnabled() {
   return Boolean(getOpenAiKey());
 }
 
+export function getAiRuntimeStatus() {
+  return {
+    enabled: isAiEnabled(),
+    model: DEFAULT_MODEL,
+    missingEnv: isAiEnabled() ? [] : ["OPENAI_API_KEY"]
+  };
+}
+
 async function callResponsesApi<T>(params: {
   system: string;
   user: string;

@@ -416,6 +416,58 @@ export function LevelCreatorApp() {
                           placeholder="Label"
                           value={String(block.meta?.label ?? "")}
                         />
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                next_step: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Proxima etapa (ex: 4)"
+                          value={String(block.meta?.next_step ?? "")}
+                        />
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                ending_key: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Ending key opcional"
+                          value={String(block.meta?.ending_key ?? "")}
+                        />
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none md:col-span-2"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                unlock_documents: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Documentos liberados por esta rota (doc_009, doc_010)"
+                          value={Array.isArray(block.meta?.unlock_documents) ? block.meta?.unlock_documents.join(", ") : String(block.meta?.unlock_documents ?? "")}
+                        />
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none md:col-span-2"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                set_flags: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Flags ativadas por esta rota (rota_hc_plantao, tese_escalonada)"
+                          value={Array.isArray(block.meta?.set_flags) ? block.meta?.set_flags.join(", ") : String(block.meta?.set_flags ?? "")}
+                        />
                       </div>
                     ) : null}
 

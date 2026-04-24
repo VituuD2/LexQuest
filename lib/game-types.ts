@@ -1,6 +1,15 @@
 export type MetricKey = "legalidade" | "estrategia" | "etica";
 
 export type CaseFlagMap = Record<string, boolean>;
+export type BranchCondition = {
+  flag?: string;
+  notFlag?: string;
+  minAverage?: number;
+  maxAverage?: number;
+  minLegalidade?: number;
+  minEstrategia?: number;
+  minEtica?: number;
+};
 
 export type DocumentProgressState = {
   isNew: boolean;
@@ -40,12 +49,22 @@ export type CaseData = {
       default_mode: "blocks" | "json";
       description: string;
     };
+    lose_conditions?: {
+      metric_floor: number;
+      average_floor: number;
+      ending_key: string;
+    };
   };
   initial_state: InitialCaseState;
   score_bands: Array<{
     min: number;
     max: number;
     label: string;
+  }>;
+  ending_rules?: Array<{
+    key: string;
+    label: string;
+    conditions: BranchCondition[];
   }>;
   final_orders?: Record<string, FinalOrder>;
 };
@@ -87,6 +106,10 @@ export type StepOption = {
   key: string;
   label: string;
   text: string;
+  next_step?: number;
+  unlock_documents?: string[];
+  set_flags?: string[];
+  ending_key?: string;
 };
 
 export type Step = {
@@ -124,6 +147,7 @@ export type Step = {
       id: string;
       type: string;
       content: string;
+      meta?: Record<string, string | number | boolean | string[]>;
     }>;
     raw_json?: string;
   };
@@ -182,6 +206,8 @@ export type ChoiceHistoryEntry = {
 
 export type GameState = InitialCaseState & {
   choices_history: ChoiceHistoryEntry[];
+  ending_key?: string;
+  is_case_over?: boolean;
 };
 
 export type FeedbackState = {
@@ -193,6 +219,7 @@ export type FeedbackState = {
   aiRewriteSuggestion?: string;
   aiScore?: number;
   aiStatus?: "pending" | "completed" | "failed" | "skipped";
+  aiStatusDetail?: string;
   scoreDelta: {
     legalidade: number;
     estrategia: number;
@@ -208,6 +235,7 @@ export type FinalReportData = {
   label: string;
   summary: string;
   judgeOrder?: FinalOrder;
+  endingKey?: string;
 };
 
 export type FinalOrder = {

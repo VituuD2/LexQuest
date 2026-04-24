@@ -18,6 +18,11 @@
       "supported_inputs": ["blocks", "json"],
       "default_mode": "blocks",
       "description": "Estrutura base para futura criacao de fases sem codigo, por blocos guiados ou colagem de JSON completo."
+    },
+    "lose_conditions": {
+      "metric_floor": 18,
+      "average_floor": 28,
+      "ending_key": "derrota_tecnica_antecipada"
     }
   },
   "initial_state": {
@@ -86,6 +91,55 @@
       "min": 90,
       "max": 100,
       "label": "atuacao_excelente"
+    }
+  ],
+  "ending_rules": [
+    {
+      "key": "juizo_origem_diligencias",
+      "label": "reavaliacao no juizo de origem",
+      "conditions": [
+        { "flag": "priorizou_origem_com_documentos" },
+        { "minAverage": 72 }
+      ]
+    },
+    {
+      "key": "tese_escalonada_parcial",
+      "label": "liminar parcial com tese escalonada",
+      "conditions": [
+        { "flag": "tese_escalonada" },
+        { "minAverage": 78 }
+      ]
+    },
+    {
+      "key": "exagerou_merito_final",
+      "label": "indeferimento por excesso argumentativo",
+      "conditions": [
+        { "flag": "exagerou_merito" }
+      ]
+    },
+    {
+      "key": "atuacao_excelente",
+      "label": "atuacao excelente",
+      "conditions": [
+        { "flag": "atendimento_responsavel" },
+        { "flag": "escolheu_medida_urgente" },
+        { "flag": "tese_principal_correta" },
+        { "minAverage": 90 }
+      ]
+    },
+    {
+      "key": "boa_atuacao",
+      "label": "boa atuacao",
+      "conditions": [
+        { "minAverage": 70 }
+      ]
+    },
+    {
+      "key": "atuacao_defensavel_com_falhas",
+      "label": "atuacao defensavel com falhas",
+      "conditions": [
+        { "minAverage": 40 }
+      ]
     }
   ],
   "characters": [
@@ -251,6 +305,118 @@
         {
           "heading": "Dispositivo",
           "body": "Indefiro o pedido liminar, prosseguindo-se com a requisicao de informacoes e ulterior vista ministerial, na forma regimental."
+        }
+      ]
+    },
+    "juizo_origem_diligencias": {
+      "template": "judicial_order",
+      "title": "Despacho no juizo de origem com reavaliacao cautelar",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Comarca da Capital - Juizo de Plantao Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "Autos n. 5001847-22.2026.8.26.0050",
+        "date": "19/04/2026",
+        "page": "decisao de reconsideracao"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A defesa trouxe documentos pessoais e argumentacao suficiente para reabrir o exame imediato da necessidade da custodia."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "Sem prejuizo da gravidade em abstrato do fato apurado, a noticia de residencia definida, vinculo laboral informal e ausencia de condenacao definitiva recomenda substituicao da segregacao por cautelares menos gravosas."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Revogo a preventiva e imponho comparecimento bimestral em juizo, compromisso de atualizacao de endereco e proibicao de ausentar-se da comarca sem autorizacao."
+        }
+      ]
+    },
+    "tese_escalonada_parcial": {
+      "template": "judicial_order",
+      "title": "Despacho liminar parcialmente deferido",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A defesa articulou tese cautelar principal e fundamentos subsidiarios em grau suficiente para justificar intervencao pontual nesta fase."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "Embora nao se afaste, em exame perfunctorio, a discussao sobre o merito do fato, a decisao de custodia realmente nao individualizou adequadamente risco atual que exigisse manutencao da prisao."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Defiro parcialmente a liminar para sustar a transferencia do paciente e determinar nova apreciacao da cautelar em 24 horas, com exame expresso da suficiência de medidas diversas."
+        }
+      ]
+    },
+    "exagerou_merito_final": {
+      "template": "judicial_order",
+      "title": "Despacho de indeferimento por insuficiencia de aderencia aos autos",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A impetracao adota narrativa defensiva mais ampla do que o conjunto documental permite sustentar neste exame inicial."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "Os argumentos sobre nulidade do flagrante e inequívoca ausência de dolo extrapolam os limites de certeza toleráveis em sede liminar, reduzindo a força do ataque à cautelar."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Indefiro a liminar, sem prejuizo do processamento regular do habeas corpus e do exame posterior do merito."
+        }
+      ]
+    },
+    "derrota_tecnica_antecipada": {
+      "template": "judicial_order",
+      "title": "Despacho de encerramento sem tutela urgente util",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A sucessao de escolhas defensivas enfraqueceu de modo relevante a consistencia da urgencia postulada antes mesmo de maturacao adequada do pedido."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "A combinacao entre instrucao insuficiente, foco argumentativo disperso e desgaste estrategico impede, neste momento, a concessao de providencia efetiva em regime de plantao."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Deixo de conceder qualquer medida urgente e determino o regular prosseguimento do feito pelos meios ordinarios, mantida a custodia ate ulterior apreciacao."
         }
       ]
     }

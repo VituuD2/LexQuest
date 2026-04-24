@@ -27,6 +27,11 @@ const caseData = getCaseData();
 const steps = getAllSteps();
 
 export default function HomePage() {
+  const [aiStatus, setAiStatus] = useState<{
+    enabled: boolean;
+    model: string;
+    missingEnv: string[];
+  } | null>(null);
   const [phase, setPhase] = useState<AppPhase>("home");
   const [gameState, setGameState] = useState<GameState>(getInitialGameState());
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -51,6 +56,28 @@ export default function HomePage() {
   );
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
+
+  useEffect(() => {
+    async function loadAiStatus() {
+      try {
+        const response = await fetch("/api/ai/status");
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json()) as {
+          enabled: boolean;
+          model: string;
+          missingEnv: string[];
+        };
+        setAiStatus(payload);
+      } catch {
+        setAiStatus(null);
+      }
+    }
+
+    void loadAiStatus();
+  }, []);
 
   useEffect(() => {
     if (phase === "case" || phase === "feedback") {
@@ -253,6 +280,20 @@ export default function HomePage() {
                   {caseData.case.estimated_duration_minutes.min}-{caseData.case.estimated_duration_minutes.max} min
                 </p>
               </div>
+            </div>
+
+            <div className={`mt-6 rounded-[24px] border p-4 text-sm leading-7 ${
+              aiStatus?.enabled ? "border-emerald/25 bg-emerald/10 text-ink" : "border-garnet/25 bg-garnet/10 text-ink"
+            }`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]">
+                IA de revisao {aiStatus?.enabled ? "ativa" : "desativada"}
+              </p>
+              <p className="mt-2">
+                Modelo: {aiStatus?.model ?? "gpt-4.1-mini"}.
+                {aiStatus?.enabled
+                  ? " O caso vai receber feedback juridico personalizado e sugestao de reescrita quando necessario."
+                  : ` Configure ${aiStatus?.missingEnv?.join(", ") || "OPENAI_API_KEY"} para sair do status skipped.`}
+              </p>
             </div>
 
             <button

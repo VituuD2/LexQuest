@@ -75,7 +75,8 @@ export async function POST(request: Request, context: RouteContext) {
           aiFeedback: aiReview.feedback,
           aiRewriteSuggestion: aiReview.rewriteSuggestion ?? undefined,
           aiScore: aiReview.score ?? undefined,
-          aiStatus: "completed"
+          aiStatus: "completed",
+          aiStatusDetail: "Feedback do gpt-4.1-mini recebido com sucesso."
         };
 
         aiMessage = {
@@ -90,13 +91,15 @@ export async function POST(request: Request, context: RouteContext) {
       } catch {
         result.feedback = {
           ...result.feedback,
-          aiStatus: "failed"
+          aiStatus: "failed",
+          aiStatusDetail: "A chave existe, mas a chamada ao modelo falhou. Verifique logs da Vercel e OPENAI_API_KEY."
         };
       }
     } else {
       result.feedback = {
         ...result.feedback,
-        aiStatus: "skipped"
+        aiStatus: "skipped",
+        aiStatusDetail: "IA desabilitada no servidor. Configure OPENAI_API_KEY na Vercel ou no .env local."
       };
     }
 

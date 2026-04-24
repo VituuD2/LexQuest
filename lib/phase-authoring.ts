@@ -12,7 +12,7 @@ export type PhaseBuilderBlock = {
     | "result_band"
     | "note";
   content: string;
-  meta?: Record<string, string | number | boolean>;
+  meta?: Record<string, string | number | boolean | string[]>;
 };
 
 export type PhaseAuthoringInput =
@@ -58,7 +58,11 @@ export function buildPhaseAuthoringSnapshot(step: Step): PhaseBuilderBlock[] {
       content: option.text,
       meta: {
         key: option.key,
-        label: option.label
+        label: option.label,
+        next_step: option.next_step ?? "",
+        unlock_documents: option.unlock_documents ?? [],
+        set_flags: option.set_flags ?? [],
+        ending_key: option.ending_key ?? ""
       }
     });
   }
@@ -93,7 +97,33 @@ export function blocksToStepDraft(step: Step, blocks: PhaseBuilderBlock[]): Step
     .map((block, index) => ({
       key: String(block.meta?.key ?? String.fromCharCode(65 + index)),
       label: String(block.meta?.label ?? `Opcao ${index + 1}`),
-      text: block.content
+      text: block.content,
+      next_step:
+        typeof block.meta?.next_step === "number"
+          ? block.meta.next_step
+          : typeof block.meta?.next_step === "string" && block.meta.next_step.trim()
+            ? Number(block.meta.next_step)
+            : undefined,
+      unlock_documents: Array.isArray(block.meta?.unlock_documents)
+        ? block.meta.unlock_documents.map(String).filter(Boolean)
+        : typeof block.meta?.unlock_documents === "string"
+          ? String(block.meta.unlock_documents)
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean)
+          : undefined,
+      set_flags: Array.isArray(block.meta?.set_flags)
+        ? block.meta.set_flags.map(String).filter(Boolean)
+        : typeof block.meta?.set_flags === "string"
+          ? String(block.meta.set_flags)
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean)
+          : undefined,
+      ending_key:
+        typeof block.meta?.ending_key === "string" && block.meta.ending_key.trim()
+          ? block.meta.ending_key
+          : undefined
     }));
 
   for (const block of blocks) {

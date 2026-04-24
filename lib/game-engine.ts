@@ -5,6 +5,7 @@ import rubric from "@/data/cases/hc_48h_001/rubric.json";
 import scoringRules from "@/data/cases/hc_48h_001/scoring-rules.json";
 import steps from "@/data/cases/hc_48h_001/steps.json";
 import type {
+  BranchCondition,
   CaseData,
   CaseDocument,
   ChoiceHistoryEntry,
@@ -103,14 +104,16 @@ export function getInitialGameState(): GameState {
   return {
     ...baseState,
     document_state: initializeDocumentState(baseState.documents_unlocked, baseState.document_state),
-    choices_history: []
+    choices_history: [],
+    is_case_over: false
   };
 }
 
 export function ensureGameStateDefaults(gameState: GameState): GameState {
   return {
     ...gameState,
-    document_state: initializeDocumentState(gameState.documents_unlocked, gameState.document_state)
+    document_state: initializeDocumentState(gameState.documents_unlocked, gameState.document_state),
+    is_case_over: gameState.is_case_over ?? false
   };
 }
 
@@ -235,6 +238,92 @@ function buildFoundationFeedback(foundationIds: string[]) {
   return parts.join(" ");
 }
 
+function matchesCondition(gameState: GameState, average: number, condition: BranchCondition) {
+  if (condition.flag && !gameState.flags[condition.flag]) {
+    return false;
+  }
+
+  if (condition.notFlag && gameState.flags[condition.notFlag]) {
+    return false;
+  }
+
+  if (condition.minAverage !== undefined && average < condition.minAverage) {
+    return false;
+  }
+
+  if (condition.maxAverage !== undefined && average > condition.maxAverage) {
+    return false;
+  }
+
+  if (condition.minLegalidade !== undefined && gameState.legalidade < condition.minLegalidade) {
+    return false;
+  }
+
+  if (condition.minEstrategia !== undefined && gameState.estrategia < condition.minEstrategia) {
+    return false;
+  }
+
+  if (condition.minEtica !== undefined && gameState.etica < condition.minEtica) {
+    return false;
+  }
+
+  return true;
+}
+
+function resolveEndingKey(gameState: GameState) {
+  if (gameState.ending_key) {
+    return gameState.ending_key;
+  }
+
+  const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
+
+  for (const rule of typedCaseData.ending_rules ?? []) {
+    if (rule.conditions.every((condition) => matchesCondition(gameState, average, condition))) {
+      return rule.key;
+    }
+  }
+
+  if (average >= 90) {
+    return "atuacao_excelente";
+  }
+
+  if (average >= 70) {
+    return "boa_atuacao";
+  }
+
+  if (average >= 40) {
+    return "atuacao_defensavel_com_falhas";
+  }
+
+  return "atuacao_fraca";
+}
+
+function applyFailureIfNeeded(nextState: GameState) {
+  const loseConditions = typedCaseData.case.lose_conditions;
+
+  if (!loseConditions) {
+    return nextState;
+  }
+
+  const average = Math.round((nextState.legalidade + nextState.estrategia + nextState.etica) / 3);
+  const triggered =
+    nextState.legalidade <= loseConditions.metric_floor ||
+    nextState.estrategia <= loseConditions.metric_floor ||
+    nextState.etica <= loseConditions.metric_floor ||
+    average <= loseConditions.average_floor;
+
+  if (!triggered) {
+    return nextState;
+  }
+
+  return {
+    ...nextState,
+    current_step: 6,
+    is_case_over: true,
+    ending_key: loseConditions.ending_key
+  };
+}
+
 export function applyChoice(params: {
   gameState: GameState;
   step: Step;
@@ -244,10 +333,11 @@ export function applyChoice(params: {
 }) {
   const { gameState, step, choiceKey, freeText, selectedFoundationIds = [] } = params;
   const choice = step.options.find((option) => option.key === choiceKey);
-  const nextStep = step.step_number + 1;
+  const nextStep = choice?.next_step ?? step.step_number + 1;
   const nextStepData = getStep(nextStep);
   const unlockedDocuments = uniqueIds([
     ...gameState.documents_unlocked,
+    ...(choice?.unlock_documents ?? []),
     ...(nextStepData?.unlock_documents ?? [])
   ]);
   const nextDocumentState = mergeUnlockedDocumentState(
@@ -279,6 +369,8 @@ export function applyChoice(params: {
         ...gameState.flags,
         falou_com_cliente: true
       },
+      ending_key: choice?.ending_key ?? gameState.ending_key,
+      is_case_over: Boolean(choice?.ending_key),
       choices_history: [
         ...gameState.choices_history,
         buildChoiceHistoryEntry({
@@ -295,6 +387,8 @@ export function applyChoice(params: {
       ]
     };
 
+    const adjustedState = applyFailureIfNeeded(nextState);
+
     const feedback: FeedbackState = {
       title: "Minuta protocolada",
       narrative: evaluation.narrative,
@@ -302,12 +396,12 @@ export function applyChoice(params: {
       consequence: "O relator recebe uma peca com fundamentos selecionados expressamente pela defesa.",
       scoreDelta: combinedDelta,
       unlockedDocuments,
-      nextStep,
+      nextStep: adjustedState.current_step,
       selectedFoundations: foundationLabels
     };
 
     return {
-      nextState,
+      nextState: adjustedState,
       feedback
     };
   }
@@ -341,6 +435,10 @@ export function applyChoice(params: {
     nextFlags[flag] = true;
   }
 
+  for (const flag of choice?.set_flags ?? []) {
+    nextFlags[flag] = true;
+  }
+
   if (step.step_number >= 2) {
     nextFlags.identificou_decisao_generica = nextFlags.identificou_decisao_generica || selectedFoundationIds.includes("fund_decisao_generica");
   }
@@ -354,7 +452,7 @@ export function applyChoice(params: {
     nextFlags.falou_com_cliente = true;
   }
 
-  const nextState: GameState = {
+  const rawNextState: GameState = {
     ...gameState,
     current_step: nextStep,
     legalidade: clampScore(gameState.legalidade + delta.legalidade),
@@ -363,6 +461,8 @@ export function applyChoice(params: {
     documents_unlocked: unlockedDocuments,
     document_state: nextDocumentState,
     flags: nextFlags,
+    ending_key: choice?.ending_key ?? gameState.ending_key,
+    is_case_over: Boolean(choice?.ending_key),
     choices_history: [
       ...gameState.choices_history,
       buildChoiceHistoryEntry({
@@ -377,6 +477,8 @@ export function applyChoice(params: {
     ]
   };
 
+  const nextState = applyFailureIfNeeded(rawNextState);
+
   const feedback: FeedbackState = {
     title: choice?.label ?? step.title,
     narrative: buildNarrative(step, matchedRule?.consequence),
@@ -384,7 +486,7 @@ export function applyChoice(params: {
     consequence: matchedRule?.consequence,
     scoreDelta: delta,
     unlockedDocuments,
-    nextStep,
+    nextStep: nextState.current_step,
     selectedFoundations: foundationLabels
   };
 
@@ -443,38 +545,26 @@ export function evaluateFreeText(text: string) {
 
 export function calculateFinalReport(gameState: GameState): FinalReportData {
   const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
+  const endingKey = resolveEndingKey(gameState);
 
-  if (average >= 90) {
-    return {
-      average,
-      label: "atuacao excelente",
-      summary: "A defesa atuou com tecnica, timing e selecao madura de fundamentos, elevando bastante a chance de tutela util em plantao.",
-      judgeOrder: typedCaseData.final_orders?.atuacao_excelente
-    };
-  }
-
-  if (average >= 70) {
-    return {
-      average,
-      label: "boa atuacao",
-      summary: "A estrategia foi consistente e bem sustentada, ainda que com alguns pontos que poderiam ser calibrados com mais refinamento.",
-      judgeOrder: typedCaseData.final_orders?.boa_atuacao
-    };
-  }
-
-  if (average >= 40) {
-    return {
-      average,
-      label: "atuacao defensavel com falhas",
-      summary: "A defesa apresentou caminhos plausiveis, mas escolhas de fundamento ou de foco reduziram a forca global do pedido.",
-      judgeOrder: typedCaseData.final_orders?.atuacao_defensavel_com_falhas
-    };
-  }
+  const summaries: Record<string, string> = {
+    atuacao_excelente:
+      "A defesa atuou com tecnica, timing e selecao madura de fundamentos, elevando bastante a chance de tutela util em plantao.",
+    boa_atuacao:
+      "A estrategia foi consistente e bem sustentada, ainda que com alguns pontos que poderiam ser calibrados com mais refinamento.",
+    atuacao_defensavel_com_falhas:
+      "A defesa apresentou caminhos plausiveis, mas escolhas de fundamento ou de foco reduziram a forca global do pedido.",
+    atuacao_fraca:
+      "A combinacao entre estrategia e fundamentos nao conseguiu entregar resposta tecnicamente robusta para a urgencia do caso.",
+    derrota_tecnica_antecipada:
+      "A atuacao perdeu tracao cedo demais. A soma entre pressa, fundamentos mal escolhidos e desgaste estrategico fechou o caminho antes do exame ideal do pedido."
+  };
 
   return {
     average,
-    label: "atuacao fraca",
-    summary: "A combinacao entre estrategia e fundamentos nao conseguiu entregar resposta tecnicamente robusta para a urgencia do caso.",
-    judgeOrder: typedCaseData.final_orders?.atuacao_fraca
+    endingKey,
+    label: endingKey.replaceAll("_", " "),
+    summary: summaries[endingKey] ?? summaries.atuacao_fraca,
+    judgeOrder: typedCaseData.final_orders?.[endingKey]
   };
 }

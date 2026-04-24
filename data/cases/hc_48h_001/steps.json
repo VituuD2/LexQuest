@@ -18,7 +18,8 @@
       {
         "key": "A",
         "label": "Atuacao emergencial documentada",
-        "text": "O doutor informa a familia de que nenhuma medida seria seria prometida sem leitura dos autos, mas que ha espaco para atuacao urgente naquela mesma noite. Solicita copia integral do auto, local de custodia, contato de familiares, comprovantes de residencia, elementos de trabalho e autorizacao para entrevistar Rafael reservadamente. Explica que a primeira triagem sera dirigida a verificar ilegalidade concreta da preventiva e eventual cabimento de pedido urgente melhor instruido."
+        "text": "O doutor informa a familia de que nenhuma medida seria seria prometida sem leitura dos autos, mas que ha espaco para atuacao urgente naquela mesma noite. Solicita copia integral do auto, local de custodia, contato de familiares, comprovantes de residencia, elementos de trabalho e autorizacao para entrevistar Rafael reservadamente. Explica que a primeira triagem sera dirigida a verificar ilegalidade concreta da preventiva e eventual cabimento de pedido urgente melhor instruido.",
+        "set_flags": ["atendimento_responsavel"]
       },
       {
         "key": "B",
@@ -98,12 +99,16 @@
       {
         "key": "A",
         "label": "Habeas corpus com liminar bem delimitado",
-        "text": "O doutor prioriza habeas corpus com pedido liminar, focado na deficiencia concreta da fundamentacao da preventiva, no antecedente sem transito em julgado, na ausencia de violencia e na possibilidade de medidas cautelares diversas. A via e agressiva e compativel com a urgencia, mas exige recorte tecnico rigoroso para nao transformar ambiguidades probatorias em afirmacoes absolutas de inocencia."
+        "text": "O doutor prioriza habeas corpus com pedido liminar, focado na deficiencia concreta da fundamentacao da preventiva, no antecedente sem transito em julgado, na ausencia de violencia e na possibilidade de medidas cautelares diversas. A via e agressiva e compativel com a urgencia, mas exige recorte tecnico rigoroso para nao transformar ambiguidades probatorias em afirmacoes absolutas de inocencia.",
+        "unlock_documents": ["doc_009"],
+        "set_flags": ["escolheu_medida_urgente", "rota_hc_plantao"]
       },
       {
         "key": "B",
         "label": "Pedido de revogacao da preventiva com documentos pessoais",
-        "text": "O doutor prefere protocolar pedido de revogacao ou substituicao da preventiva ao juizo de origem, instruindo com residencia familiar, rotina de trabalho e circunstancia de o bem ter sido recuperado. A estrategia pode amadurecer melhor a prova pessoal do custodiado, mas tende a ser mais lenta para fins de resposta imediata se comparada ao HC em regime de plantao."
+        "text": "O doutor prefere protocolar pedido de revogacao ou substituicao da preventiva ao juizo de origem, instruindo com residencia familiar, rotina de trabalho e circunstancia de o bem ter sido recuperado. A estrategia pode amadurecer melhor a prova pessoal do custodiado, mas tende a ser mais lenta para fins de resposta imediata se comparada ao HC em regime de plantao.",
+        "unlock_documents": ["doc_010"],
+        "set_flags": ["priorizou_origem_com_documentos", "rota_revogacao_origem"]
       },
       {
         "key": "C",
@@ -153,7 +158,9 @@
       {
         "key": "D",
         "label": "Tese escalonada de cautelaridade e merito minimo",
-        "text": "O doutor combina ataque principal a genericidade da preventiva com bloco subsidiario de proporcionalidade, valor reduzido, abordagem antes da saida definitiva, ausencia de condenacao definitiva e duvida razoavel sobre a intencao de subtracao. E uma estrategia rica e sofisticada, mas exige muito cuidado de redacao para nao transformar a peca urgente em catalogo excessivo de teses sem hierarquia."
+        "text": "O doutor combina ataque principal a genericidade da preventiva com bloco subsidiario de proporcionalidade, valor reduzido, abordagem antes da saida definitiva, ausencia de condenacao definitiva e duvida razoavel sobre a intencao de subtracao. E uma estrategia rica e sofisticada, mas exige muito cuidado de redacao para nao transformar a peca urgente em catalogo excessivo de teses sem hierarquia.",
+        "unlock_documents": ["doc_011"],
+        "set_flags": ["tese_escalonada"]
       }
     ],
     "best_choice": "A",

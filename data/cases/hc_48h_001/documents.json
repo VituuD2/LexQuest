@@ -266,5 +266,89 @@
       }
     ],
     "content": "Memorando reservado com elementos favoraveis e ambiguidades que exigem calibragem argumentativa."
+  },
+  {
+    "id": "doc_009",
+    "title": "Certidao de distribuicao do habeas corpus",
+    "type": "certidao_judicial",
+    "template": "judicial_order",
+    "unlock_step": 3,
+    "issuer": {
+      "name": "Tribunal de Justica do Estado de Sao Paulo",
+      "branch": "Plantao Judiciario - Distribuicao Criminal",
+      "location": "Sao Paulo/SP"
+    },
+    "meta": {
+      "reference": "HC n. 2247815-11.2026.8.26.0000",
+      "date": "19/04/2026",
+      "page": "fl. 01"
+    },
+    "sections": [
+      {
+        "heading": "Certifico",
+        "body": "Certifico que a presente impetracao foi distribuida em regime de plantao, com pedido liminar e apontamento de urgencia decorrente de transferencia iminente do paciente."
+      },
+      {
+        "heading": "Observacao",
+        "body": "Autos conclusos ao relator para apreciacao da liminar, com documentos iniciais digitalizados pela defesa."
+      }
+    ],
+    "content": "Certidao que confirma a abertura da via do habeas corpus em regime de plantao."
+  },
+  {
+    "id": "doc_010",
+    "title": "Certidao cartoraria de peticao de revogacao",
+    "type": "certidao_judicial",
+    "template": "judicial_order",
+    "unlock_step": 3,
+    "issuer": {
+      "name": "Tribunal de Justica do Estado de Sao Paulo",
+      "branch": "Comarca da Capital - Cartorio do Juizo de Custodia",
+      "location": "Sao Paulo/SP"
+    },
+    "meta": {
+      "reference": "Autos n. 5001847-22.2026.8.26.0050",
+      "date": "19/04/2026",
+      "page": "fl. 22"
+    },
+    "sections": [
+      {
+        "heading": "Certifico",
+        "body": "Certifico que a defesa protocolou pedido de revogacao da prisao preventiva com juntada de comprovantes de residencia, declaracoes familiares e requerimento de cautelares diversas."
+      },
+      {
+        "heading": "Movimentacao",
+        "body": "Os autos aguardam conclusao ao magistrado competente, sem apreciacao ate o momento desta certidao."
+      }
+    ],
+    "content": "Documento que marca a escolha pela via do juizo de origem."
+  },
+  {
+    "id": "doc_011",
+    "title": "Nota interna de triagem do relator",
+    "type": "despacho_interno",
+    "template": "forensic_report",
+    "unlock_step": 4,
+    "issuer": {
+      "name": "Gabinete do relator plantonista",
+      "branch": "Triagem de urgencia",
+      "location": "Sao Paulo/SP"
+    },
+    "meta": {
+      "reference": "Apontamento interno sem publicidade",
+      "date": "19/04/2026",
+      "page": "nota de gabinete"
+    },
+    "sections": [
+      {
+        "heading": "Leitura preliminar",
+        "body": "A peca defensiva trabalha tese principal de cautelaridade com fundamentos subsidiarios de proporcionalidade e ambiguidade probatoria, recomendando leitura integral antes de deliberacao."
+      },
+      {
+        "heading": "Ponto de atencao",
+        "body": "A utilidade da via dependera da disciplina da defesa em nao dispersar o pedido com excesso de teses concorrentes."
+      }
+    ],
+    "content": "Documento de rota que sinaliza a abertura de um caminho parcial a partir da tese escalonada."
   }
 ]
