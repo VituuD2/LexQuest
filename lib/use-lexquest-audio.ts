@@ -13,12 +13,12 @@ type AudioController = {
 
 // Instância global para a música não reiniciar ao trocar de fase
 let globalBgm: HTMLAudioElement | null = null;
+let globalTension: HTMLAudioElement | null = null;
 
 export function useLexQuestAudio(): AudioController {
   const docOpenRef = useRef<HTMLAudioElement | null>(null);
   const docCloseRef = useRef<HTMLAudioElement | null>(null);
   const decisionRef = useRef<HTMLAudioElement | null>(null);
-  const tensionRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -33,11 +33,10 @@ export function useLexQuestAudio(): AudioController {
       docOpenRef.current = new Audio("/audio/document-open.mp3");
       docCloseRef.current = new Audio("/audio/document-close.mp3");
       decisionRef.current = new Audio("/audio/decision-commit.mp3");
-      if (!tensionRef.current){
-
-        tensionRef.current = new Audio("/audio/tension-pulse.mp3");
-        tensionRef.current.loop = true;
-        tensionRef.current.volume = 0.23;
+      if (!globalTension) {
+        globalTension = new Audio("/audio/tension-pulse.mp3");
+        globalTension.loop = true;
+        globalTension.volume = 0.23;
       }
     }
   }, []);
@@ -72,9 +71,8 @@ export function useLexQuestAudio(): AudioController {
   }, []);
 
   const playTensionPulse = useCallback(() => {
-    if (tensionRef.current) {
-      tensionRef.current.currentTime = 0;
-      tensionRef.current.play().catch(console.error);
+    if (globalTension && globalTension.paused) {
+      globalTension.play().catch(console.error);
     }
   }, []);
   
