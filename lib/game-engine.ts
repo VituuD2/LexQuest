@@ -8,6 +8,7 @@ import type {
   CaseData,
   CaseDocument,
   ChoiceHistoryEntry,
+  DocumentStateMap,
   FeedbackState,
   FinalReportData,
   Foundation,
@@ -34,6 +35,44 @@ const KEYWORD_MAP: Record<string, string[]> = {
   coerencia: ["decisao", "bem", "violencia", "cautelares", "antecedente"]
 };
 
+function initializeDocumentState(documentIds: string[], existingState?: DocumentStateMap) {
+  const baseState: DocumentStateMap = { ...(existingState ?? {}) };
+
+  for (const documentId of documentIds) {
+    if (!baseState[documentId]) {
+      baseState[documentId] = {
+        isNew: true,
+        isOpened: false
+      };
+    }
+  }
+
+  return baseState;
+}
+
+function mergeUnlockedDocumentState(currentState: DocumentStateMap, existingUnlocked: string[], nextUnlocked: string[]) {
+  const mergedState = initializeDocumentState(existingUnlocked, currentState);
+
+  for (const documentId of nextUnlocked) {
+    if (!mergedState[documentId]) {
+      mergedState[documentId] = {
+        isNew: true,
+        isOpened: false
+      };
+      continue;
+    }
+
+    if (!existingUnlocked.includes(documentId) && !mergedState[documentId].isOpened) {
+      mergedState[documentId] = {
+        ...mergedState[documentId],
+        isNew: true
+      };
+    }
+  }
+
+  return mergedState;
+}
+
 export function getCaseData() {
   return typedCaseData;
 }
@@ -59,9 +98,19 @@ export function getFoundationsForStep(stepNumber: number) {
 }
 
 export function getInitialGameState(): GameState {
+  const baseState = typedCaseData.initial_state;
+
   return {
-    ...typedCaseData.initial_state,
+    ...baseState,
+    document_state: initializeDocumentState(baseState.documents_unlocked, baseState.document_state),
     choices_history: []
+  };
+}
+
+export function ensureGameStateDefaults(gameState: GameState): GameState {
+  return {
+    ...gameState,
+    document_state: initializeDocumentState(gameState.documents_unlocked, gameState.document_state)
   };
 }
 
@@ -71,6 +120,23 @@ export function getStep(stepNumber: number) {
 
 export function getUnlockedDocuments(documentIds: string[]) {
   return typedDocuments.filter((document) => documentIds.includes(document.id));
+}
+
+export function markDocumentOpened(gameState: GameState, documentId: string): GameState {
+  if (!gameState.document_state[documentId]) {
+    return gameState;
+  }
+
+  return {
+    ...gameState,
+    document_state: {
+      ...gameState.document_state,
+      [documentId]: {
+        isNew: false,
+        isOpened: true
+      }
+    }
+  };
 }
 
 export function getScoringRule(stepNumber: number, choiceKey: string) {
@@ -184,6 +250,11 @@ export function applyChoice(params: {
     ...gameState.documents_unlocked,
     ...(nextStepData?.unlock_documents ?? [])
   ]);
+  const nextDocumentState = mergeUnlockedDocumentState(
+    gameState.document_state,
+    gameState.documents_unlocked,
+    unlockedDocuments
+  );
   const foundationDelta = getFoundationDelta(selectedFoundationIds);
   const foundationFeedback = buildFoundationFeedback(selectedFoundationIds);
   const foundationLabels = getFoundationLabels(selectedFoundationIds);
@@ -203,6 +274,7 @@ export function applyChoice(params: {
       estrategia: clampScore(gameState.estrategia + combinedDelta.estrategia),
       etica: clampScore(gameState.etica + combinedDelta.etica),
       documents_unlocked: unlockedDocuments,
+      document_state: nextDocumentState,
       flags: {
         ...gameState.flags,
         falou_com_cliente: true
@@ -289,6 +361,7 @@ export function applyChoice(params: {
     estrategia: clampScore(gameState.estrategia + delta.estrategia),
     etica: clampScore(gameState.etica + delta.etica),
     documents_unlocked: unlockedDocuments,
+    document_state: nextDocumentState,
     flags: nextFlags,
     choices_history: [
       ...gameState.choices_history,
@@ -375,7 +448,8 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "atuacao excelente",
-      summary: "A defesa atuou com tecnica, timing e selecao madura de fundamentos, elevando bastante a chance de tutela util em plantao."
+      summary: "A defesa atuou com tecnica, timing e selecao madura de fundamentos, elevando bastante a chance de tutela util em plantao.",
+      judgeOrder: typedCaseData.final_orders?.atuacao_excelente
     };
   }
 
@@ -383,7 +457,8 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "boa atuacao",
-      summary: "A estrategia foi consistente e bem sustentada, ainda que com alguns pontos que poderiam ser calibrados com mais refinamento."
+      summary: "A estrategia foi consistente e bem sustentada, ainda que com alguns pontos que poderiam ser calibrados com mais refinamento.",
+      judgeOrder: typedCaseData.final_orders?.boa_atuacao
     };
   }
 
@@ -391,13 +466,15 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "atuacao defensavel com falhas",
-      summary: "A defesa apresentou caminhos plausiveis, mas escolhas de fundamento ou de foco reduziram a forca global do pedido."
+      summary: "A defesa apresentou caminhos plausiveis, mas escolhas de fundamento ou de foco reduziram a forca global do pedido.",
+      judgeOrder: typedCaseData.final_orders?.atuacao_defensavel_com_falhas
     };
   }
 
   return {
     average,
     label: "atuacao fraca",
-    summary: "A combinacao entre estrategia e fundamentos nao conseguiu entregar resposta tecnicamente robusta para a urgencia do caso."
+    summary: "A combinacao entre estrategia e fundamentos nao conseguiu entregar resposta tecnicamente robusta para a urgencia do caso.",
+    judgeOrder: typedCaseData.final_orders?.atuacao_fraca
   };
 }

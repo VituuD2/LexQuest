@@ -1,5 +1,5 @@
 import "server-only";
-import { getFoundationDelta, getInitialGameState, getStep } from "@/lib/game-engine";
+import { ensureGameStateDefaults, getFoundationDelta, getInitialGameState, getStep } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
 import { getSupabaseAdminClient } from "@/lib/server/supabase";
 
@@ -49,7 +49,7 @@ export async function getSessionState(sessionId: string): Promise<GameState | nu
   }
 
   const row = data as SessionRow;
-  return row.state;
+  return ensureGameStateDefaults(row.state);
 }
 
 export async function saveChoice(params: {
@@ -111,5 +111,24 @@ export async function saveChoice(params: {
 
   if (sessionError) {
     throw new Error(`Failed to update session: ${sessionError.message}`);
+  }
+}
+
+export async function updateSessionState(sessionId: string, nextState: GameState) {
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("player_sessions")
+    .update({
+      current_step: nextState.current_step,
+      legalidade: nextState.legalidade,
+      estrategia: nextState.estrategia,
+      etica: nextState.etica,
+      state: nextState,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", sessionId);
+
+  if (error) {
+    throw new Error(`Failed to persist session state: ${error.message}`);
   }
 }

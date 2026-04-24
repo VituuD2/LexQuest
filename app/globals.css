@@ -9,9 +9,12 @@
 body {
   min-height: 100vh;
   background:
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
     radial-gradient(circle at top left, rgba(187, 138, 57, 0.18), transparent 24%),
     radial-gradient(circle at bottom right, rgba(47, 111, 94, 0.16), transparent 22%),
     linear-gradient(180deg, #efe4ce 0%, #f9f4eb 32%, #efe9dc 100%);
+  background-size: 24px 24px, 24px 24px, auto, auto, auto;
   color: #1a1d24;
   font-family: "Trebuchet MS", Verdana, sans-serif;
 }
@@ -22,4 +25,16 @@ body {
 
 ::selection {
   background: rgba(187, 138, 57, 0.28);
+}
+
+@keyframes documentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

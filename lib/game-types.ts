@@ -2,6 +2,13 @@ export type MetricKey = "legalidade" | "estrategia" | "etica";
 
 export type CaseFlagMap = Record<string, boolean>;
 
+export type DocumentProgressState = {
+  isNew: boolean;
+  isOpened: boolean;
+};
+
+export type DocumentStateMap = Record<string, DocumentProgressState>;
+
 export type InitialCaseState = {
   case_id: string;
   title: string;
@@ -12,6 +19,7 @@ export type InitialCaseState = {
   estrategia: number;
   etica: number;
   documents_unlocked: string[];
+  document_state: DocumentStateMap;
   flags: CaseFlagMap;
 };
 
@@ -27,6 +35,11 @@ export type CaseData = {
       max: number;
     };
     target_audience: string[];
+    phase_builder?: {
+      supported_inputs: Array<"blocks" | "json">;
+      default_mode: "blocks" | "json";
+      description: string;
+    };
   };
   initial_state: InitialCaseState;
   score_bands: Array<{
@@ -34,6 +47,7 @@ export type CaseData = {
     max: number;
     label: string;
   }>;
+  final_orders?: Record<string, FinalOrder>;
 };
 
 export type DocumentMessage = {
@@ -103,6 +117,15 @@ export type Step = {
     label: string;
     description: string;
   }>;
+  authoring?: {
+    mode: "blocks" | "json";
+    blocks?: Array<{
+      id: string;
+      type: string;
+      content: string;
+    }>;
+    raw_json?: string;
+  };
 };
 
 export type ScoringRule = {
@@ -179,4 +202,21 @@ export type FinalReportData = {
   average: number;
   label: string;
   summary: string;
+  judgeOrder?: FinalOrder;
+};
+
+export type FinalOrder = {
+  template: string;
+  title: string;
+  issuer: {
+    name: string;
+    branch: string;
+    location: string;
+  };
+  meta: {
+    reference: string;
+    date: string;
+    page: string;
+  };
+  sections: DocumentSection[];
 };

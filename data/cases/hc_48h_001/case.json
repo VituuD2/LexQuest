@@ -13,7 +13,12 @@
       "estudantes de Direito",
       "concurseiros iniciantes",
       "entusiastas"
-    ]
+    ],
+    "phase_builder": {
+      "supported_inputs": ["blocks", "json"],
+      "default_mode": "blocks",
+      "description": "Estrutura base para futura criacao de fases sem codigo, por blocos guiados ou colagem de JSON completo."
+    }
   },
   "initial_state": {
     "case_id": "hc_48h_001",
@@ -28,6 +33,16 @@
       "doc_001",
       "doc_002"
     ],
+    "document_state": {
+      "doc_001": {
+        "isNew": true,
+        "isOpened": false
+      },
+      "doc_002": {
+        "isNew": true,
+        "isOpened": false
+      }
+    },
     "flags": {
       "viu_video": false,
       "falou_com_cliente": false,
@@ -125,5 +140,119 @@
       "narrative_function": "Sustenta manutencao da prisao preventiva.",
       "thesis": "Risco de reiteracao, prova da materialidade e indicios de autoria."
     }
-  ]
+  ],
+  "final_orders": {
+    "atuacao_excelente": {
+      "template": "judicial_order",
+      "title": "Despacho liminar em habeas corpus",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "Examinando os elementos apresentados em sede liminar, verifica-se plausibilidade na alegacao de constrangimento ilegal decorrente de fundamentacao cautelar genérica e insuficientemente individualizada."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "A decisao impugnada invoca ordem publica, credibilidade da Justica e reiteracao delitiva de forma abstrata, sem demonstracao concreta de risco processual atual. Soma-se a isso a ausencia de violencia, a recuperacao integral do bem e a inexistencia, por ora, de condenacao definitiva apta a qualificar reincidencia."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Defiro a liminar para substituir a prisao preventiva por medidas cautelares diversas, consistentes em comparecimento mensal em juizo, proibicao de ausentar-se da comarca sem autorizacao e manutencao de endereco atualizado, expedindo-se o necessario com urgencia."
+        }
+      ]
+    },
+    "boa_atuacao": {
+      "template": "judicial_order",
+      "title": "Despacho de requisicao de informacoes urgentes",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A impetracao apresenta fundamentos defensivos juridicamente relevantes, recomendando exame mais detido do decreto prisional e das circunstancias faticas narradas."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "Ha elementos que sugerem possivel insuficiencia de fundamentacao concreta da preventiva, sem que, neste momento inicial, se mostre prudente a concessao imediata da ordem sem contraditorio minimo das autoridades apontadas."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Requisitem-se informacoes com urgencia ao juizo apontado coator, suspendendo-se a transferencia do paciente ate nova apreciacao, após o que voltara concluso para eventual exame liminar complementar."
+        }
+      ]
+    },
+    "atuacao_defensavel_com_falhas": {
+      "template": "judicial_order",
+      "title": "Despacho de processamento sem liminar",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A defesa traz argumentos que justificam o regular processamento da impetracao, embora sem densidade suficiente, por ora, para concessao liminar imediata."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "As teses articuladas demandam contraditorio e cotejo mais aprofundado dos documentos, notadamente quanto ao alcance da prova audiovisual e ao efetivo peso juridico do registro anterior sem transito em julgado."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Indefiro a liminar neste momento, sem prejuizo do exame prioritario do merito após prestadas as informacoes e ouvido o Ministerio Publico."
+        }
+      ]
+    },
+    "atuacao_fraca": {
+      "template": "judicial_order",
+      "title": "Despacho denegatorio de urgencia",
+      "issuer": {
+        "name": "Tribunal de Justica do Estado de Sao Paulo",
+        "branch": "Plantao Judiciario - Camara Criminal",
+        "location": "Sao Paulo/SP"
+      },
+      "meta": {
+        "reference": "HC n. 2247815-11.2026.8.26.0000",
+        "date": "19/04/2026",
+        "page": "decisao monocratica"
+      },
+      "sections": [
+        {
+          "heading": "Vistos",
+          "body": "A impetracao foi recebida, mas nao trouxe, neste exame inicial, desenvolvimento tecnico bastante para demonstrar plausibilidade imediata do constrangimento ilegal alegado."
+        },
+        {
+          "heading": "Fundamentacao",
+          "body": "A narrativa defensiva apresenta insuficiente enfrentamento dos fundamentos da custodia e reduzida articulacao entre os elementos documentais trazidos e a medida urgente pretendida."
+        },
+        {
+          "heading": "Dispositivo",
+          "body": "Indefiro o pedido liminar, prosseguindo-se com a requisicao de informacoes e ulterior vista ministerial, na forma regimental."
+        }
+      ]
+    }
+  }
 }

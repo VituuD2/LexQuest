@@ -144,9 +144,12 @@ function renderByTemplate(document: CaseDocument) {
 
 export function DocumentModal({ document, onClose }: DocumentModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#13161b]/60 px-4 py-10 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#13161b]/70 px-4 py-10 backdrop-blur-md">
       <div className="w-full max-w-6xl">
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div className="rounded-full border border-white/20 bg-white/8 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/80">
+            Documento em leitura
+          </div>
           <button
             className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
             onClick={onClose}
@@ -155,7 +158,7 @@ export function DocumentModal({ document, onClose }: DocumentModalProps) {
             Fechar documento
           </button>
         </div>
-        {renderByTemplate(document)}
+        <div className="animate-[documentEnter_220ms_ease-out]">{renderByTemplate(document)}</div>
       </div>
     </div>
   );

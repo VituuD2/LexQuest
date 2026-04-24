@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DocumentModal } from "@/components/DocumentModal";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
@@ -13,10 +13,12 @@ import {
   getCaseData,
   getFoundationsForStep,
   getInitialGameState,
+  markDocumentOpened,
   getStep,
   getUnlockedDocuments
 } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
+import { useLexQuestAudio } from "@/lib/use-lexquest-audio";
 
 type AppPhase = "home" | "case" | "feedback" | "result";
 
@@ -34,6 +36,7 @@ export default function HomePage() {
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { unlockAudio, playDecisionCommit, playDocumentClose, playDocumentOpen, playTensionPulse } = useLexQuestAudio();
 
   const currentStep = getStep(gameState.current_step);
   const unlockedDocuments = useMemo(
@@ -48,7 +51,34 @@ export default function HomePage() {
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
 
+  useEffect(() => {
+    if (phase === "case" || phase === "feedback") {
+      playTensionPulse();
+    }
+  }, [phase, currentStep?.step_number, playTensionPulse]);
+
+  async function persistSessionState(nextState: GameState) {
+    if (!sessionId) {
+      return;
+    }
+
+    const response = await fetch(`/api/session/${sessionId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        gameState: nextState
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Falha ao persistir estado da sessao.");
+    }
+  }
+
   async function startCase() {
+    unlockAudio();
     setIsPending(true);
     setErrorMessage(null);
 
@@ -71,6 +101,7 @@ export default function HomePage() {
       setFeedback(null);
       setOpenDocumentId(null);
       setPhase("case");
+      playTensionPulse();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao iniciar o caso.");
     } finally {
@@ -153,6 +184,7 @@ export default function HomePage() {
       setSelectedFoundations([]);
       setFreeText("");
       setPhase("feedback");
+      playDecisionCommit();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao salvar a escolha.");
     } finally {
@@ -171,6 +203,27 @@ export default function HomePage() {
     }
 
     setPhase("case");
+  }
+
+  async function handleOpenDocument(documentId: string) {
+    playDocumentOpen();
+    setOpenDocumentId(documentId);
+
+    if (!gameState.document_state[documentId]?.isOpened) {
+      const nextState = markDocumentOpened(gameState, documentId);
+      setGameState(nextState);
+
+      try {
+        await persistSessionState(nextState);
+      } catch {
+        setErrorMessage("Nao foi possivel registrar a leitura do documento no momento.");
+      }
+    }
+  }
+
+  function handleCloseDocument() {
+    playDocumentClose();
+    setOpenDocumentId(null);
   }
 
   if (phase === "home") {
@@ -256,9 +309,17 @@ export default function HomePage() {
       >
         <div className="mb-6 grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <div className="space-y-6">
-            <div className="rounded-[32px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
-              <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Dashboard do caso</p>
-              <h1 className="mt-2 font-serifDisplay text-4xl text-ink">{caseData.case.title}</h1>
+            <div className="rounded-[36px] border border-ink/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(239,228,206,0.72))] p-6 shadow-dossier">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Sandbox juridico</p>
+                  <h1 className="mt-2 font-serifDisplay text-4xl text-ink">{caseData.case.title}</h1>
+                </div>
+                <div className="rounded-2xl border border-garnet/20 bg-garnet/10 px-4 py-3 text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-garnet/70">Nivel de tensao</p>
+                  <p className="font-serifDisplay text-3xl text-garnet">{Math.max(0, 100 - remainingSteps * 14)}</p>
+                </div>
+              </div>
               <p className="mt-3 text-sm leading-7 text-ink/75">
                 Custodiado: Rafael Martins de Oliveira. Situacao atual:{" "}
                 <span className="font-semibold capitalize">{gameState.client_status.replaceAll("_", " ")}</span>.
@@ -273,6 +334,9 @@ export default function HomePage() {
                 <span className="rounded-full border border-ink/10 px-3 py-2">
                   Etapas restantes: {Math.max(0, remainingSteps)}
                 </span>
+                <span className="rounded-full border border-ink/10 px-3 py-2">
+                  nao lidos: {unlockedDocuments.filter((document) => !gameState.document_state[document.id]?.isOpened).length}
+                </span>
               </div>
             </div>
 
@@ -283,7 +347,11 @@ export default function HomePage() {
             />
           </div>
 
-          <DocumentPanel documents={unlockedDocuments} onOpenDocument={setOpenDocumentId} />
+          <DocumentPanel
+            documentState={gameState.document_state}
+            documents={unlockedDocuments}
+            onOpenDocument={handleOpenDocument}
+          />
         </div>
 
         {phase === "case" && currentStep ? (
@@ -308,7 +376,7 @@ export default function HomePage() {
         {errorMessage ? <p className="mt-4 text-sm text-garnet">{errorMessage}</p> : null}
       </main>
 
-      {activeDocument ? <DocumentModal document={activeDocument} onClose={() => setOpenDocumentId(null)} /> : null}
+      {activeDocument ? <DocumentModal document={activeDocument} onClose={handleCloseDocument} /> : null}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import type { ChoiceHistoryEntry, FinalReportData, GameState } from "@/lib/game-types";
+import type { ChoiceHistoryEntry, FinalOrder, FinalReportData, GameState } from "@/lib/game-types";
 
 type FinalReportProps = {
   gameState: GameState;
@@ -50,6 +50,42 @@ function renderHistoryItem(item: ChoiceHistoryEntry) {
   );
 }
 
+function JudicialDispatch({ order }: { order: FinalOrder }) {
+  return (
+    <div className="rounded-[28px] bg-[#fffdf8] p-8 text-[#232323] shadow-dossier">
+      <div className="mb-6 flex items-start gap-4 border-b border-[#c9c2b5] pb-5">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-[#6b6e72] text-center text-[10px] font-bold uppercase leading-4 text-[#50535a]">
+          TJSP
+        </div>
+        <div className="flex-1">
+          <p className="text-center text-lg font-semibold uppercase tracking-[0.08em]">{order.issuer.name}</p>
+          <p className="text-center text-sm font-semibold uppercase tracking-[0.06em]">{order.issuer.branch}</p>
+          <p className="mt-1 text-center text-xs uppercase tracking-[0.16em] text-[#676b72]">{order.issuer.location}</p>
+          <div className="mt-4 text-sm leading-7">
+            <p><strong>Referencia:</strong> {order.meta.reference}</p>
+            <p><strong>Data:</strong> {order.meta.date}</p>
+            <p><strong>Classe:</strong> {order.meta.page}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 text-center">
+        <p className="text-xs uppercase tracking-[0.18em] text-[#676b72]">Despacho judicial</p>
+        <h3 className="mt-2 font-serifDisplay text-3xl">{order.title}</h3>
+      </div>
+
+      <div className="space-y-5 text-[15px] leading-8">
+        {order.sections.map((section) => (
+          <div key={section.heading}>
+            <h4 className="mb-2 text-center text-base font-semibold uppercase tracking-[0.08em]">{section.heading}</h4>
+            <p className="text-justify">{section.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function FinalReport({ gameState, report, onRestart }: FinalReportProps) {
   return (
     <section className="space-y-6">
@@ -87,6 +123,16 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
           </button>
         </div>
       </div>
+
+      {report.judgeOrder ? (
+        <section className="space-y-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Despacho final</p>
+            <h3 className="mt-2 font-serifDisplay text-3xl text-ink">Decisao judicial recebida</h3>
+          </div>
+          <JudicialDispatch order={report.judgeOrder} />
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="rounded-[32px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
