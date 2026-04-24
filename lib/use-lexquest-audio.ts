@@ -33,7 +33,12 @@ export function useLexQuestAudio(): AudioController {
       docOpenRef.current = new Audio("/audio/document-open.mp3");
       docCloseRef.current = new Audio("/audio/document-close.mp3");
       decisionRef.current = new Audio("/audio/decision-commit.mp3");
-      tensionRef.current = new Audio("/audio/tension-pulse.mp3");
+      if (!tensionRef.current){
+
+        tensionRef.current = new Audio("/audio/tension-pulse.mp3");
+        tensionRef.current.loop = true;
+        tensionRef.current.volume = 0.23;
+      }
     }
   }, []);
 
