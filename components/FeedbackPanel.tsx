@@ -29,6 +29,18 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
             <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Feedback juridico</p>
             <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.juridicalFeedback}</p>
           </div>
+          {feedback.aiFeedback ? (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Revisao da IA</p>
+              <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.aiFeedback}</p>
+            </div>
+          ) : null}
+          {feedback.aiRewriteSuggestion ? (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Sugestao de reescrita</p>
+              <p className="mt-2 whitespace-pre-line text-sm leading-7 text-parchment/90">{feedback.aiRewriteSuggestion}</p>
+            </div>
+          ) : null}
           {feedback.selectedFoundations && feedback.selectedFoundations.length > 0 ? (
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Fundamentos escolhidos</p>
@@ -54,6 +66,12 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
             </div>
             {feedback.consequence ? (
               <div className="border-t border-parchment/15 pt-3 text-xs leading-6 text-parchment/75">{feedback.consequence}</div>
+            ) : null}
+            {feedback.aiStatus ? (
+              <div className="border-t border-parchment/15 pt-3 text-xs uppercase tracking-[0.16em] text-parchment/55">
+                IA: {feedback.aiStatus}
+                {feedback.aiScore !== undefined ? ` | nota sugerida: ${feedback.aiScore}` : ""}
+              </div>
             ) : null}
             <div className="border-t border-parchment/15 pt-3 text-xs text-parchment/65">
               {feedback.unlockedDocuments.length} documentos disponiveis apos esta etapa.

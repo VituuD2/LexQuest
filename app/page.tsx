@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DocumentModal } from "@/components/DocumentModal";
 import { DocumentPanel } from "@/components/DocumentPanel";
@@ -262,6 +263,12 @@ export default function HomePage() {
             >
               {isPending ? "Abrindo sessao..." : "Iniciar caso"}
             </button>
+            <Link
+              className="mt-4 inline-flex rounded-full border border-ink/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition hover:bg-ink/5"
+              href="/creator"
+            >
+              Abrir studio de fases
+            </Link>
             {errorMessage ? <p className="mt-4 text-sm text-garnet">{errorMessage}</p> : null}
           </div>
 

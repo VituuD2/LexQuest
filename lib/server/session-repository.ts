@@ -60,8 +60,13 @@ export async function saveChoice(params: {
   choiceKey: string;
   freeText?: string;
   selectedFoundationIds?: string[];
+  aiMessage?: {
+    role: string;
+    content: string;
+    metadata?: Record<string, unknown>;
+  };
 }) {
-  const { sessionId, nextState, feedback, stepNumber, choiceKey, freeText, selectedFoundationIds = [] } = params;
+  const { sessionId, nextState, feedback, stepNumber, choiceKey, freeText, selectedFoundationIds = [], aiMessage } = params;
   const supabase = getSupabaseAdminClient();
   const step = getStep(stepNumber);
   const option = step?.options.find((item) => item.key === choiceKey);
@@ -87,11 +92,38 @@ export async function saveChoice(params: {
     foundation_score_estrategia: foundationDelta.estrategia,
     foundation_score_etica: foundationDelta.etica,
     feedback: feedback.juridicalFeedback,
-    consequence: feedback.consequence ?? null
+    consequence: feedback.consequence ?? null,
+    ai_evaluation:
+      feedback.aiFeedback || feedback.aiRewriteSuggestion || feedback.aiScore !== undefined
+        ? {
+            aiFeedback: feedback.aiFeedback ?? null,
+            aiRewriteSuggestion: feedback.aiRewriteSuggestion ?? null,
+            aiScore: feedback.aiScore ?? null
+          }
+        : {},
+    ai_feedback: feedback.aiFeedback ?? null,
+    ai_score: feedback.aiScore ?? null,
+    ai_rewrite_suggestion: feedback.aiRewriteSuggestion ?? null,
+    ai_provider: feedback.aiStatus === "completed" ? "openai" : null,
+    ai_model: feedback.aiStatus === "completed" ? "gpt-4.1-mini" : null,
+    ai_status: feedback.aiStatus ?? "skipped"
   });
 
   if (choiceError) {
     throw new Error(`Failed to save choice: ${choiceError.message}`);
+  }
+
+  if (aiMessage) {
+    const { error: aiMessageError } = await supabase.from("ai_messages").insert({
+      session_id: sessionId,
+      role: aiMessage.role,
+      content: aiMessage.content,
+      metadata: aiMessage.metadata ?? {}
+    });
+
+    if (aiMessageError) {
+      throw new Error(`Failed to save ai message: ${aiMessageError.message}`);
+    }
   }
 
   const { error: sessionError } = await supabase

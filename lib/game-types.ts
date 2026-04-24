@@ -101,6 +101,7 @@ export type Step = {
   options: StepOption[];
   best_choice?: string;
   pedagogical_note?: string;
+  ai_prompt_override?: string;
   foundation_selection?: {
     enabled: boolean;
     min: number;
@@ -188,6 +189,10 @@ export type FeedbackState = {
   narrative: string;
   juridicalFeedback: string;
   consequence?: string;
+  aiFeedback?: string;
+  aiRewriteSuggestion?: string;
+  aiScore?: number;
+  aiStatus?: "pending" | "completed" | "failed" | "skipped";
   scoreDelta: {
     legalidade: number;
     estrategia: number;

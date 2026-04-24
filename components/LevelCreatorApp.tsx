@@ -1,0 +1,548 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { PhaseBuilderBlock } from "@/lib/phase-authoring";
+import { blocksToStepDraft, parseJsonStepDraft } from "@/lib/phase-authoring";
+import type { Step } from "@/lib/game-types";
+
+type AuthoringStepBundle = {
+  stepNumber: number;
+  stepId: string;
+  mode: "blocks" | "json";
+  blocks: PhaseBuilderBlock[];
+  rawJson: string;
+  previewStep: Step;
+  validation: {
+    isValid: boolean;
+    issues: string[];
+  };
+  updatedAt: string;
+};
+
+type AuthoringBundle = {
+  caseId: string;
+  caseTitle: string;
+  supportedInputs: Array<"blocks" | "json">;
+  defaultMode: "blocks" | "json";
+  version: {
+    id: string;
+    number: number;
+    label: string;
+    sourceMode: "blocks" | "json";
+    status: "draft" | "published" | "archived";
+    updatedAt: string;
+  };
+  steps: AuthoringStepBundle[];
+};
+
+type DraftReview = {
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  suggestions: string[];
+};
+
+const CASE_ID = "hc_48h_001";
+
+function createBlock(type: PhaseBuilderBlock["type"]): PhaseBuilderBlock {
+  return {
+    id: `${type}_${crypto.randomUUID()}`,
+    type,
+    content: "",
+    meta: type === "option" ? { key: "A", label: "Nova alternativa" } : undefined
+  };
+}
+
+function dateLabel(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR");
+}
+
+export function LevelCreatorApp() {
+  const [bundle, setBundle] = useState<AuthoringBundle | null>(null);
+  const [selectedStepNumber, setSelectedStepNumber] = useState<number>(1);
+  const [mode, setMode] = useState<"blocks" | "json">("blocks");
+  const [blocks, setBlocks] = useState<PhaseBuilderBlock[]>([]);
+  const [rawJson, setRawJson] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [draftReview, setDraftReview] = useState<DraftReview | null>(null);
+
+  useEffect(() => {
+    async function loadBundle() {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await fetch(`/api/authoring/cases/${CASE_ID}`);
+        if (!response.ok) {
+          throw new Error("Nao foi possivel carregar o criador de fases.");
+        }
+
+        const payload = (await response.json()) as AuthoringBundle;
+        setBundle(payload);
+        setSelectedStepNumber(payload.steps[0]?.stepNumber ?? 1);
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao carregar o criador.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadBundle();
+  }, []);
+
+  const selectedStep = useMemo(
+    () => bundle?.steps.find((step) => step.stepNumber === selectedStepNumber) ?? null,
+    [bundle, selectedStepNumber]
+  );
+
+  useEffect(() => {
+    if (!selectedStep) {
+      return;
+    }
+
+    setMode(selectedStep.mode);
+    setBlocks(selectedStep.blocks);
+    setRawJson(selectedStep.rawJson);
+    setDraftReview(null);
+    setSuccessMessage(null);
+  }, [selectedStep]);
+
+  const previewStep = useMemo(() => {
+    if (!selectedStep) {
+      return null;
+    }
+
+    return mode === "blocks"
+      ? blocksToStepDraft(selectedStep.previewStep, blocks)
+      : parseJsonStepDraft(rawJson, selectedStep.previewStep);
+  }, [blocks, mode, rawJson, selectedStep]);
+
+  const validationIssues = useMemo(() => {
+    if (!previewStep) {
+      return [];
+    }
+
+    const issues: string[] = [];
+
+    if (!previewStep.title.trim()) {
+      issues.push("Titulo vazio.");
+    }
+    if (!previewStep.situation.trim()) {
+      issues.push("Contexto vazio.");
+    }
+    if (!previewStep.question.trim()) {
+      issues.push("Pergunta vazia.");
+    }
+    if (!previewStep.free_text?.enabled && previewStep.step_number !== 6 && previewStep.options.length === 0) {
+      issues.push("A etapa precisa de alternativas.");
+    }
+
+    return issues;
+  }, [previewStep]);
+
+  function updateBlock(blockId: string, patch: Partial<PhaseBuilderBlock>) {
+    setBlocks((current) =>
+      current.map((block) => {
+        if (block.id !== blockId) {
+          return block;
+        }
+
+        return {
+          ...block,
+          ...patch,
+          meta: patch.meta ? { ...block.meta, ...patch.meta } : block.meta
+        };
+      })
+    );
+  }
+
+  function removeBlock(blockId: string) {
+    setBlocks((current) => current.filter((block) => block.id !== blockId));
+  }
+
+  function addBlock(type: PhaseBuilderBlock["type"]) {
+    setBlocks((current) => [...current, createBlock(type)]);
+  }
+
+  async function saveStep() {
+    if (!selectedStep) {
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch(`/api/authoring/cases/${CASE_ID}/steps/${selectedStep.stepNumber}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          mode,
+          blocks,
+          rawJson
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Nao foi possivel salvar esta etapa.");
+      }
+
+      const payload = (await response.json()) as AuthoringStepBundle;
+
+      setBundle((current) =>
+        current
+          ? {
+              ...current,
+              version: {
+                ...current.version,
+                sourceMode: mode,
+                updatedAt: new Date().toISOString()
+              },
+              steps: current.steps.map((step) =>
+                step.stepNumber === selectedStep.stepNumber
+                  ? {
+                      ...step,
+                      mode: payload.mode,
+                      blocks: payload.blocks,
+                      rawJson: payload.rawJson,
+                      previewStep: payload.previewStep,
+                      validation: payload.validation,
+                      updatedAt: new Date().toISOString()
+                    }
+                  : step
+              )
+            }
+          : current
+      );
+
+      setSuccessMessage("Etapa salva no rascunho atual.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao salvar a etapa.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function reviewWithAi() {
+    if (!previewStep) {
+      return;
+    }
+
+    setIsReviewing(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch("/api/authoring/review-step", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ step: previewStep })
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error ?? "Nao foi possivel revisar a etapa com IA.");
+      }
+
+      const payload = (await response.json()) as DraftReview;
+      setDraftReview(payload);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada na revisao por IA.");
+    } finally {
+      setIsReviewing(false);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] border border-ink/10 bg-white/75 p-8 shadow-dossier">Carregando criador...</div>
+      </main>
+    );
+  }
+
+  if (!bundle || !selectedStep || !previewStep) {
+    return (
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="rounded-[32px] border border-garnet/20 bg-garnet/10 p-8 text-garnet">
+          {errorMessage ?? "Nao foi possivel iniciar o criador de fases."}
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[36px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
+        <div>
+          <p className="text-xs uppercase tracking-[0.26em] text-ink/45">Studio LexQuest</p>
+          <h1 className="mt-2 font-serifDisplay text-4xl text-ink">Criador de fases</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/75">
+            Edite as etapas em blocos guiados ou JSON bruto, salve no rascunho do Supabase e use a IA para revisar clareza, realismo e dificuldade.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+            href="/"
+          >
+            Voltar ao caso
+          </Link>
+          <div className="rounded-2xl border border-brass/25 bg-brass/10 px-4 py-3 text-sm text-ink/80">
+            {bundle.version.label} · {bundle.version.status} · atualizada em {dateLabel(bundle.version.updatedAt)}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.32fr_0.68fr]">
+        <aside className="rounded-[32px] border border-ink/10 bg-white/75 p-5 shadow-dossier">
+          <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Etapas do caso</p>
+          <div className="mt-4 space-y-3">
+            {bundle.steps.map((step) => (
+              <button
+                className={`w-full rounded-[24px] border px-4 py-4 text-left transition ${
+                  step.stepNumber === selectedStepNumber
+                    ? "border-brass bg-brass/12 shadow-dossier"
+                    : "border-ink/10 bg-parchment/50 hover:border-brass/45"
+                }`}
+                key={step.stepNumber}
+                onClick={() => setSelectedStepNumber(step.stepNumber)}
+                type="button"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-ink">Etapa {step.stepNumber}</p>
+                  <span
+                    className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                      step.validation.isValid ? "bg-emerald/12 text-emerald" : "bg-garnet/12 text-garnet"
+                    }`}
+                  >
+                    {step.validation.isValid ? "ok" : "ajustar"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-ink/75">{step.previewStep.title}</p>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="space-y-6">
+          <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Etapa {selectedStep.stepNumber}</p>
+                <h2 className="mt-2 font-serifDisplay text-3xl text-ink">{previewStep.title || "Nova etapa"}</h2>
+              </div>
+              <div className="flex gap-2 rounded-full border border-ink/10 bg-parchment/55 p-1">
+                {bundle.supportedInputs.map((supportedMode) => (
+                  <button
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      mode === supportedMode ? "bg-ink text-parchment" : "text-ink/65"
+                    }`}
+                    key={supportedMode}
+                    onClick={() => setMode(supportedMode)}
+                    type="button"
+                  >
+                    {supportedMode === "blocks" ? "Blocos" : "JSON"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {mode === "blocks" ? (
+              <div className="mt-6 space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {(["title", "situation", "question", "objective", "option", "foundation_prompt", "note", "result_band"] as const).map((blockType) => (
+                    <button
+                      className="rounded-full border border-ink/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink/65 transition hover:border-brass/40 hover:bg-brass/10"
+                      key={blockType}
+                      onClick={() => addBlock(blockType)}
+                      type="button"
+                    >
+                      + {blockType}
+                    </button>
+                  ))}
+                </div>
+
+                {blocks.map((block) => (
+                  <div className="rounded-[24px] border border-ink/10 bg-[#fffdf8] p-4" key={block.id}>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <div className="rounded-full bg-ink/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/60">
+                        {block.type}
+                      </div>
+                      <button
+                        className="text-xs font-semibold uppercase tracking-[0.14em] text-garnet"
+                        onClick={() => removeBlock(block.id)}
+                        type="button"
+                      >
+                        Remover
+                      </button>
+                    </div>
+
+                    {block.type === "option" ? (
+                      <div className="mb-3 grid gap-3 md:grid-cols-2">
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                key: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Chave"
+                          value={String(block.meta?.key ?? "")}
+                        />
+                        <input
+                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          onChange={(event) =>
+                            updateBlock(block.id, {
+                              meta: {
+                                ...block.meta,
+                                label: event.target.value
+                              }
+                            })
+                          }
+                          placeholder="Label"
+                          value={String(block.meta?.label ?? "")}
+                        />
+                      </div>
+                    ) : null}
+
+                    <textarea
+                      className="min-h-[120px] w-full rounded-[20px] border border-ink/10 bg-white px-4 py-3 text-sm leading-7 text-ink outline-none"
+                      onChange={(event) => updateBlock(block.id, { content: event.target.value })}
+                      placeholder="Conteudo do bloco"
+                      value={block.content}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <textarea
+                className="mt-6 min-h-[520px] w-full rounded-[24px] border border-ink/10 bg-[#11161e] px-5 py-4 font-mono text-sm leading-7 text-parchment outline-none"
+                onChange={(event) => setRawJson(event.target.value)}
+                value={rawJson}
+              />
+            )}
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+                disabled={isSaving}
+                onClick={saveStep}
+                type="button"
+              >
+                {isSaving ? "Salvando..." : "Salvar rascunho"}
+              </button>
+              <button
+                className="rounded-full border border-brass/35 bg-brass/10 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-brass/20 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isReviewing}
+                onClick={reviewWithAi}
+                type="button"
+              >
+                {isReviewing ? "Analisando..." : "Revisar com IA"}
+              </button>
+            </div>
+
+            {successMessage ? <p className="mt-4 text-sm text-emerald">{successMessage}</p> : null}
+            {errorMessage ? <p className="mt-4 text-sm text-garnet">{errorMessage}</p> : null}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+              <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Preview estruturado</p>
+              <h3 className="mt-2 text-2xl font-semibold text-ink">{previewStep.title}</h3>
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-ink/75">{previewStep.question}</p>
+              <div className="mt-5 grid gap-3">
+                {previewStep.options.map((option) => (
+                  <div className="rounded-2xl border border-ink/10 bg-parchment/55 p-4" key={option.key}>
+                    <p className="text-sm font-semibold text-ink">
+                      {option.key}. {option.label}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-ink/75">{option.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Validacao rapida</p>
+                <p className="mt-3 text-sm leading-7 text-ink/75">
+                  {validationIssues.length === 0
+                    ? "A estrutura minima da etapa esta consistente para seguir refinando."
+                    : "Ainda ha pontos estruturais para ajustar antes de publicar."}
+                </p>
+                <div className="mt-4 space-y-2">
+                  {validationIssues.length === 0 ? (
+                    <div className="rounded-2xl bg-emerald/10 px-4 py-3 text-sm text-emerald">Nenhum bloqueio estrutural detectado.</div>
+                  ) : (
+                    validationIssues.map((issue) => (
+                      <div className="rounded-2xl bg-garnet/10 px-4 py-3 text-sm text-garnet" key={issue}>
+                        {issue}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Parecer da IA</p>
+                {draftReview ? (
+                  <div className="mt-4 space-y-4 text-sm leading-7 text-ink/75">
+                    <p>{draftReview.summary}</p>
+                    <div>
+                      <p className="font-semibold text-ink">Forcas</p>
+                      <div className="mt-2 space-y-2">
+                        {draftReview.strengths.map((item) => (
+                          <div className="rounded-2xl bg-emerald/10 px-4 py-3 text-emerald" key={item}>
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-ink">Riscos</p>
+                      <div className="mt-2 space-y-2">
+                        {draftReview.risks.map((item) => (
+                          <div className="rounded-2xl bg-garnet/10 px-4 py-3 text-garnet" key={item}>
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-ink">Sugestoes</p>
+                      <div className="mt-2 space-y-2">
+                        {draftReview.suggestions.map((item) => (
+                          <div className="rounded-2xl bg-brass/10 px-4 py-3 text-ink" key={item}>
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm leading-7 text-ink/70">
+                    Use "Revisar com IA" para receber leitura tecnica sobre realismo, dificuldade, coerencia e valor pedagogico da etapa.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}

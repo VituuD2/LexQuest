@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyChoice, getStep } from "@/lib/game-engine";
+import { reviewStepChoice, isAiEnabled } from "@/lib/server/openai";
 import { getSessionState, saveChoice } from "@/lib/server/session-repository";
 
 export const runtime = "nodejs";
@@ -41,6 +42,64 @@ export async function POST(request: Request, context: RouteContext) {
       selectedFoundationIds: payload.selectedFoundationIds
     });
 
+    let aiMessage:
+      | {
+          role: string;
+          content: string;
+          metadata?: Record<string, unknown>;
+        }
+      | undefined;
+
+    if (isAiEnabled()) {
+      try {
+        const aiReview = await reviewStepChoice({
+          prompt: step.ai_prompt_override ?? "Avalie a decisao do doutor nesta etapa.",
+          context: {
+            step: {
+              step_number: step.step_number,
+              title: step.title,
+              question: step.question,
+              objective: step.objective
+            },
+            choice: payload.choiceKey,
+            selected_foundations: payload.selectedFoundationIds ?? [],
+            free_text: payload.freeText ?? null,
+            current_feedback: result.feedback,
+            current_scores: result.nextState
+          }
+        });
+
+        result.feedback = {
+          ...result.feedback,
+          narrative: aiReview.narrative || result.feedback.narrative,
+          aiFeedback: aiReview.feedback,
+          aiRewriteSuggestion: aiReview.rewriteSuggestion ?? undefined,
+          aiScore: aiReview.score ?? undefined,
+          aiStatus: "completed"
+        };
+
+        aiMessage = {
+          role: "assistant",
+          content: JSON.stringify(aiReview),
+          metadata: {
+            source: "step-review",
+            model: "gpt-4.1-mini",
+            stepNumber: step.step_number
+          }
+        };
+      } catch {
+        result.feedback = {
+          ...result.feedback,
+          aiStatus: "failed"
+        };
+      }
+    } else {
+      result.feedback = {
+        ...result.feedback,
+        aiStatus: "skipped"
+      };
+    }
+
     await saveChoice({
       sessionId,
       nextState: result.nextState,
@@ -48,7 +107,8 @@ export async function POST(request: Request, context: RouteContext) {
       stepNumber: step.step_number,
       choiceKey: payload.choiceKey,
       freeText: payload.freeText,
-      selectedFoundationIds: payload.selectedFoundationIds
+      selectedFoundationIds: payload.selectedFoundationIds,
+      aiMessage
     });
 
     return NextResponse.json({

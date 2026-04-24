@@ -77,7 +77,7 @@ export function StepCard({
             value={freeText}
           />
           <p className="text-xs text-ink/55">
-            A avaliacao do texto continua local nesta sprint, mas a selecao de fundamentos ja impacta o placar do caso.
+            O texto sera avaliado pela rubrica local e, quando a IA estiver habilitada no servidor, tambem recebera parecer tecnico complementar.
           </p>
         </div>
       ) : (
