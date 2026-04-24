@@ -29,6 +29,12 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
             <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Feedback juridico</p>
             <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.juridicalFeedback}</p>
           </div>
+          {feedback.selectedFoundations && feedback.selectedFoundations.length > 0 ? (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Fundamentos escolhidos</p>
+              <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.selectedFoundations.join(", ")}.</p>
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-[24px] bg-white/8 p-5">
@@ -46,6 +52,9 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
               <span>Etica</span>
               <span>{feedback.scoreDelta.etica >= 0 ? "+" : ""}{feedback.scoreDelta.etica}</span>
             </div>
+            {feedback.consequence ? (
+              <div className="border-t border-parchment/15 pt-3 text-xs leading-6 text-parchment/75">{feedback.consequence}</div>
+            ) : null}
             <div className="border-t border-parchment/15 pt-3 text-xs text-parchment/65">
               {feedback.unlockedDocuments.length} documentos disponiveis apos esta etapa.
             </div>

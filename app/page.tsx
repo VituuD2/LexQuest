@@ -1,16 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DocumentModal } from "@/components/DocumentModal";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { FinalReport } from "@/components/FinalReport";
 import { ScoreBars } from "@/components/ScoreBars";
 import { StepCard } from "@/components/StepCard";
 import {
-  applyChoice,
   calculateFinalReport,
   getAllSteps,
   getCaseData,
+  getFoundationsForStep,
   getInitialGameState,
   getStep,
   getUnlockedDocuments
@@ -25,34 +26,78 @@ const steps = getAllSteps();
 export default function HomePage() {
   const [phase, setPhase] = useState<AppPhase>("home");
   const [gameState, setGameState] = useState<GameState>(getInitialGameState());
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [selectedFoundations, setSelectedFoundations] = useState<string[]>([]);
   const [freeText, setFreeText] = useState("");
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    getInitialGameState().documents_unlocked[0] ?? null
-  );
+  const [openDocumentId, setOpenDocumentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const currentStep = getStep(gameState.current_step);
   const unlockedDocuments = useMemo(
     () => getUnlockedDocuments(gameState.documents_unlocked),
     [gameState.documents_unlocked]
   );
+  const activeDocument = unlockedDocuments.find((document) => document.id === openDocumentId) ?? null;
+  const availableFoundations = useMemo(
+    () => (currentStep ? getFoundationsForStep(currentStep.step_number) : []),
+    [currentStep]
+  );
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
 
-  function startCase() {
-    const initialState = getInitialGameState();
+  async function startCase() {
+    setIsPending(true);
+    setErrorMessage(null);
 
-    setGameState(initialState);
-    setSelectedChoice(null);
-    setFreeText("");
-    setFeedback(null);
-    setSelectedDocumentId(initialState.documents_unlocked[0] ?? null);
-    setPhase("case");
+    try {
+      const response = await fetch("/api/session/start", {
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        throw new Error("Nao foi possivel iniciar a sessao do caso.");
+      }
+
+      const payload = (await response.json()) as { sessionId: string; gameState: GameState };
+
+      setSessionId(payload.sessionId);
+      setGameState(payload.gameState);
+      setSelectedChoice(null);
+      setSelectedFoundations([]);
+      setFreeText("");
+      setFeedback(null);
+      setOpenDocumentId(null);
+      setPhase("case");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao iniciar o caso.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
-  function handleSubmitStep() {
-    if (!currentStep) {
+  function toggleFoundation(foundationId: string) {
+    if (!currentStep?.foundation_selection?.enabled) {
+      return;
+    }
+
+    setSelectedFoundations((current) => {
+      if (current.includes(foundationId)) {
+        return current.filter((item) => item !== foundationId);
+      }
+
+      if (current.length >= currentStep.foundation_selection!.max) {
+        return current;
+      }
+
+      return [...current, foundationId];
+    });
+  }
+
+  async function handleSubmitStep() {
+    if (!currentStep || !sessionId) {
       return;
     }
 
@@ -64,19 +109,55 @@ export default function HomePage() {
       return;
     }
 
-    const result = applyChoice({
-      gameState,
-      step: currentStep,
-      choiceKey: selectedChoice ?? "FREE_TEXT",
-      freeText
-    });
+    const minFoundations = currentStep.foundation_selection?.min ?? 0;
+    const maxFoundations = currentStep.foundation_selection?.max ?? Number.MAX_SAFE_INTEGER;
 
-    setGameState(result.nextState);
-    setFeedback(result.feedback);
-    setSelectedChoice(null);
-    setFreeText("");
-    setSelectedDocumentId(result.feedback.unlockedDocuments.at(-1) ?? selectedDocumentId);
-    setPhase("feedback");
+    if (
+      currentStep.foundation_selection?.enabled &&
+      (selectedFoundations.length < minFoundations || selectedFoundations.length > maxFoundations)
+    ) {
+      setErrorMessage(`Selecione entre ${minFoundations} e ${maxFoundations} fundamentos antes de confirmar.`);
+      return;
+    }
+
+    setIsPending(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch(`/api/session/${sessionId}/choice`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          stepNumber: currentStep.step_number,
+          choiceKey: selectedChoice ?? "FREE_TEXT",
+          freeText,
+          selectedFoundationIds: selectedFoundations
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Nao foi possivel registrar essa escolha.");
+      }
+
+      const payload = (await response.json()) as {
+        sessionId: string;
+        gameState: GameState;
+        feedback: FeedbackState;
+      };
+
+      setGameState(payload.gameState);
+      setFeedback(payload.feedback);
+      setSelectedChoice(null);
+      setSelectedFoundations([]);
+      setFreeText("");
+      setPhase("feedback");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao salvar a escolha.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   function handleContinue() {
@@ -121,32 +202,34 @@ export default function HomePage() {
             </div>
 
             <button
-              className="mt-8 rounded-full bg-ink px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-parchment transition hover:bg-ink/90"
+              className="mt-8 rounded-full bg-ink px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+              disabled={isPending}
               onClick={startCase}
               type="button"
             >
-              Iniciar caso
+              {isPending ? "Abrindo sessao..." : "Iniciar caso"}
             </button>
+            {errorMessage ? <p className="mt-4 text-sm text-garnet">{errorMessage}</p> : null}
           </div>
 
           <aside className="rounded-[40px] border border-ink/10 bg-[#1f232b] p-8 text-parchment shadow-dossier">
             <p className="text-xs uppercase tracking-[0.28em] text-parchment/55">Premissa</p>
             <p className="mt-4 text-sm leading-7 text-parchment/85">
-              Sexta-feira a noite. A familia de Rafael Martins de Oliveira procura ajuda urgente apos a conversao do
-              flagrante em preventiva. O relogio corre contra a defesa.
+              Sexta-feira a noite. A familia de Rafael Martins de Oliveira procura auxilio urgente apos a conversao do
+              flagrante em preventiva. O relogio corre, o acervo e ambiguo e a defesa precisa pensar como doutor de plantao.
             </p>
 
             <div className="mt-8 space-y-4">
               <div className="rounded-[24px] bg-white/8 p-5">
                 <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Foco pedagogico</p>
                 <p className="mt-2 text-sm leading-7 text-parchment/85">
-                  Prisao em flagrante, preventiva, habeas corpus, fundamentacao e estrategia defensiva.
+                  Custodia, preventiva, habeas corpus, leitura probatoria, hierarquia argumentativa e estrategia defensiva.
                 </p>
               </div>
               <div className="rounded-[24px] bg-white/8 p-5">
-                <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Publico</p>
+                <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Formato</p>
                 <p className="mt-2 text-sm leading-7 text-parchment/85">
-                  {caseData.case.target_audience.join(", ")}.
+                  Simulacao decisoria com estrategia, fundamentos selecionados e leitura integral de documentos em formatos proprios.
                 </p>
               </div>
             </div>
@@ -165,55 +248,67 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
-        <div className="space-y-6">
-          <div className="rounded-[32px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
-            <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Dashboard do caso</p>
-            <h1 className="mt-2 font-serifDisplay text-4xl text-ink">{caseData.case.title}</h1>
-            <p className="mt-3 text-sm leading-7 text-ink/75">
-              Cliente: Rafael Martins de Oliveira. Status atual:{" "}
-              <span className="font-semibold capitalize">{gameState.client_status.replaceAll("_", " ")}</span>.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-ink/55">
-              <span className="rounded-full border border-ink/10 px-3 py-2">
-                Prazo restante: {Math.max(0, gameState.deadline_hours - gameState.choices_history.length * 8)}h
-              </span>
-              <span className="rounded-full border border-ink/10 px-3 py-2">
-                Etapas restantes: {Math.max(0, remainingSteps)}
-              </span>
+    <>
+      <main
+        className={`mx-auto min-h-screen max-w-7xl px-4 py-8 transition duration-200 sm:px-6 lg:px-8 ${
+          activeDocument ? "pointer-events-none blur-[2px] brightness-75" : ""
+        }`}
+      >
+        <div className="mb-6 grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
+          <div className="space-y-6">
+            <div className="rounded-[32px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
+              <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Dashboard do caso</p>
+              <h1 className="mt-2 font-serifDisplay text-4xl text-ink">{caseData.case.title}</h1>
+              <p className="mt-3 text-sm leading-7 text-ink/75">
+                Custodiado: Rafael Martins de Oliveira. Situacao atual:{" "}
+                <span className="font-semibold capitalize">{gameState.client_status.replaceAll("_", " ")}</span>.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-ink/55">
+                {sessionId ? (
+                  <span className="rounded-full border border-ink/10 px-3 py-2">Sessao: {sessionId.slice(0, 8)}</span>
+                ) : null}
+                <span className="rounded-full border border-ink/10 px-3 py-2">
+                  Prazo restante: {Math.max(0, gameState.deadline_hours - gameState.choices_history.length * 8)}h
+                </span>
+                <span className="rounded-full border border-ink/10 px-3 py-2">
+                  Etapas restantes: {Math.max(0, remainingSteps)}
+                </span>
+              </div>
             </div>
+
+            <ScoreBars
+              estrategia={gameState.estrategia}
+              etica={gameState.etica}
+              legalidade={gameState.legalidade}
+            />
           </div>
 
-          <ScoreBars
-            estrategia={gameState.estrategia}
-            etica={gameState.etica}
-            legalidade={gameState.legalidade}
-          />
+          <DocumentPanel documents={unlockedDocuments} onOpenDocument={setOpenDocumentId} />
         </div>
 
-        <DocumentPanel
-          documents={unlockedDocuments}
-          onSelectDocument={setSelectedDocumentId}
-          selectedDocumentId={selectedDocumentId}
-        />
-      </div>
+        {phase === "case" && currentStep ? (
+          <StepCard
+            disabled={isPending}
+            foundations={availableFoundations}
+            freeText={freeText}
+            onFreeTextChange={setFreeText}
+            onSelectChoice={setSelectedChoice}
+            onSubmit={handleSubmitStep}
+            onToggleFoundation={toggleFoundation}
+            selectedChoice={selectedChoice}
+            selectedFoundations={selectedFoundations}
+            step={currentStep}
+          />
+        ) : null}
 
-      {phase === "case" && currentStep ? (
-        <StepCard
-          disabled={false}
-          freeText={freeText}
-          onFreeTextChange={setFreeText}
-          onSelectChoice={setSelectedChoice}
-          onSubmit={handleSubmitStep}
-          selectedChoice={selectedChoice}
-          step={currentStep}
-        />
-      ) : null}
+        {phase === "feedback" && feedback ? (
+          <FeedbackPanel feedback={feedback} isFinalStep={feedback.nextStep >= 6} onContinue={handleContinue} />
+        ) : null}
 
-      {phase === "feedback" && feedback ? (
-        <FeedbackPanel feedback={feedback} isFinalStep={feedback.nextStep >= 6} onContinue={handleContinue} />
-      ) : null}
-    </main>
+        {errorMessage ? <p className="mt-4 text-sm text-garnet">{errorMessage}</p> : null}
+      </main>
+
+      {activeDocument ? <DocumentModal document={activeDocument} onClose={() => setOpenDocumentId(null)} /> : null}
+    </>
   );
 }

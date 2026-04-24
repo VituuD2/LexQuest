@@ -1,58 +1,270 @@
 [
   {
     "id": "doc_001",
-    "title": "Mensagem inicial da familia",
+    "title": "Extrato de conversa da mae de Rafael",
     "type": "mensagem_whatsapp",
+    "template": "whatsapp_plain",
     "unlock_step": 1,
-    "content": "Doutor(a), boa noite. Meu nome e Sonia, sou mae do Rafael. Meu filho foi preso hoje numa loja de ferramentas no Centro. Disseram que ele furtou uma parafusadeira, mas ele jura que foi um mal-entendido. Ele trabalha fazendo bicos e nunca ficou preso antes. A audiencia foi muito rapida e falaram que ele vai ser transferido. Pelo amor de Deus, da pra fazer alguma coisa ainda hoje?"
+    "issuer": {
+      "name": "Aparelho particular de Sonia Martins",
+      "branch": "WhatsApp Messenger",
+      "location": "Chat individual"
+    },
+    "meta": {
+      "reference": "Conversa exportada sem homologacao judicial",
+      "date": "18/04/2026",
+      "page": "1/1"
+    },
+    "messages": [
+      {
+        "author": "Sonia Martins",
+        "role": "remetente",
+        "timestamp": "21:03",
+        "text": "Doutor, boa noite. Sou Sonia, mae do Rafael. Acabaram de me dizer que ele foi preso numa loja de ferramentas no Centro."
+      },
+      {
+        "author": "Sonia Martins",
+        "role": "remetente",
+        "timestamp": "21:04",
+        "text": "Falaram em furto de uma parafusadeira. Ele jura que foi confusao e que nem saiu da loja."
+      },
+      {
+        "author": "Sonia Martins",
+        "role": "remetente",
+        "timestamp": "21:05",
+        "text": "A audiencia foi muito rapida. Disseram que converteram para preventiva e que ele pode ser transferido."
+      },
+      {
+        "author": "Sonia Martins",
+        "role": "remetente",
+        "timestamp": "21:06",
+        "text": "Ele ajuda em casa e cuida do irmao menor. O senhor consegue olhar isso ainda hoje?"
+      }
+    ],
+    "content": "Conversa informal encaminhada pela mae, ainda sem certificacao ou homologacao judicial."
   },
   {
     "id": "doc_002",
-    "title": "Resumo do auto de prisao em flagrante",
+    "title": "Auto de prisao em flagrante - resumo funcional",
     "type": "documento_policial_resumido",
+    "template": "police_report",
     "unlock_step": 1,
-    "content": "AUTO DE PRISAO EM FLAGRANTE - RESUMO\n\nAos 18 dias do mes corrente, por volta das 17h35, na Loja Ferramax, situada na Rua Central, n. 455, o conduzido Rafael Martins de Oliveira foi detido pelo seguranca Claudio Ramos apos supostamente ocultar em sua mochila uma parafusadeira eletrica da marca Worker, avaliada em R$ 189,90.\n\nSegundo o seguranca, o conduzido circulou por aproximadamente 12 minutos no setor de ferramentas, retirou o produto da prateleira, removeu parcialmente a etiqueta externa e colocou o bem dentro de sua mochila. Ainda segundo o relato, Rafael teria passado pela linha dos caixas sem efetuar o pagamento do item.\n\nO bem foi recuperado integralmente, sem dano aparente, antes da saida definitiva do estabelecimento.\n\nO conduzido declarou que colocou a ferramenta na mochila enquanto atendia uma ligacao de sua mae, negou intencao de subtracao e afirmou que pretendia pagar por outros itens que estavam em sua mao."
+    "issuer": {
+      "name": "Policia Civil do Estado de Sao Paulo",
+      "branch": "Delegacia Seccional Centro - Plantao",
+      "location": "Rua das Palmeiras, 188 - Centro"
+    },
+    "meta": {
+      "reference": "BO n. 1845/2026 - APF n. 077/2026",
+      "date": "18/04/2026",
+      "page": "fl. 03"
+    },
+    "sections": [
+      {
+        "heading": "Condutor e apresentacao",
+        "body": "Compareceu o seguranca Claudio Ramos, empregado da Loja Ferramax, noticiando que RAFAEL MARTINS DE OLIVEIRA teria ocultado uma parafusadeira eletrica Worker 12V, avaliada em R$ 189,90, dentro de mochila pessoal."
+      },
+      {
+        "heading": "Narrativa resumida do fato",
+        "body": "Segundo o condutor, o conduzido permaneceu cerca de 12 minutos no setor de ferramentas, removeu parcialmente a etiqueta externa da embalagem e caminhou em direcao a area dos caixas. O abordante afirma que Rafael passou pela linha de caixas sem pagar o item, embora o objeto tenha sido recuperado antes de qualquer saida definitiva do estabelecimento."
+      },
+      {
+        "heading": "Declaracao do conduzido",
+        "body": "Rafael informou que atendeu ligacao da mae, colocou a ferramenta na mochila para liberar as maos, pretendia pagar produtos que carregava e nao chegou a sair da loja. Negou intencao de subtracao."
+      },
+      {
+        "heading": "Observacoes materiais",
+        "body": "Objeto recuperado integralmente, sem dano funcional. Embalagem parcialmente aberta quando da apreensao."
+      }
+    ],
+    "content": "Resumo policial com versao do seguranca, versao do conduzido e observacoes sobre recuperacao do bem."
   },
   {
     "id": "doc_003",
-    "title": "Termo de declaracao do seguranca",
+    "title": "Termo de declaracao do seguranca Claudio Ramos",
     "type": "depoimento",
+    "template": "police_statement",
     "unlock_step": 2,
-    "content": "DECLARACAO DE CLAUDIO RAMOS\n\nSou seguranca da Loja Ferramax ha quatro anos. Vi o rapaz andando de forma estranha no corredor de ferramentas. Ele pegou uma parafusadeira, olhou para os lados e colocou dentro da mochila. Depois disso, foi para o corredor de tintas e ficou mexendo no celular. Quando caminhou em direcao a saida, eu o abordei apos ele passar pela area dos caixas.\n\nEle tinha outros produtos na mao, mas nao pagou a parafusadeira. A ferramenta estava dentro da mochila. Ele disse que esqueceu, mas, na minha experiencia, isso e conversa comum de quem tenta furtar.\n\nNao houve violencia nem ameaca. Ele colaborou na abordagem."
+    "issuer": {
+      "name": "Policia Civil do Estado de Sao Paulo",
+      "branch": "Plantao de flagrantes",
+      "location": "Centro"
+    },
+    "meta": {
+      "reference": "APF n. 077/2026 - termo de fl. 08",
+      "date": "18/04/2026",
+      "page": "fl. 08"
+    },
+    "sections": [
+      {
+        "heading": "Declaracao",
+        "body": "Sou seguranca da Loja Ferramax ha quatro anos. Vi o rapaz no corredor de ferramentas, olhando para os lados, pegando uma parafusadeira e colocando o item dentro da mochila. Em seguida ele foi para o corredor de tintas e mexeu no celular."
+      },
+      {
+        "heading": "Abordagem",
+        "body": "Quando caminhou em direcao a saida, eu o acompanhei e o abordei depois que passou pela area dos caixas. Ele carregava dois rolos de fita isolante na mao. A parafusadeira estava na mochila."
+      },
+      {
+        "heading": "Impressao do declarante",
+        "body": "O conduzido disse que esqueceu o produto, mas, na minha experiencia, essa justificativa e comum. Nao houve violencia nem ameaca e ele colaborou na abordagem."
+      }
+    ],
+    "content": "Termo de declaracao com narrativa acusatoria principal e observacao de que nao houve violencia."
   },
   {
     "id": "doc_004",
-    "title": "Decisao de conversao em prisao preventiva",
+    "title": "Decisao de custodia convertendo flagrante em preventiva",
     "type": "decisao_judicial",
+    "template": "judicial_order",
     "unlock_step": 2,
-    "content": "DECISAO - AUDIENCIA DE CUSTODIA\n\nVistos.\n\nHomologo o auto de prisao em flagrante, pois formalmente regular.\n\nConverto a prisao em flagrante em prisao preventiva para garantia da ordem publica, considerando a gravidade concreta da conduta e o risco de reiteracao delitiva, evidenciado pelo registro anterior constante nos autos.\n\nA liberdade do custodiado, neste momento, representa risco a ordem publica e a credibilidade da Justica, especialmente diante da necessidade de coibir crimes patrimoniais recorrentes na comarca.\n\nIndefiro a liberdade provisoria.\n\nExpeca-se mandado de prisao preventiva."
+    "issuer": {
+      "name": "Tribunal de Justica do Estado de Sao Paulo",
+      "branch": "Comarca da Capital - Juizo de Plantao Criminal",
+      "location": "Forum Central"
+    },
+    "meta": {
+      "reference": "Autos n. 5001847-22.2026.8.26.0050",
+      "date": "18/04/2026",
+      "page": "fls. 14/15"
+    },
+    "sections": [
+      {
+        "heading": "Vistos",
+        "body": "Homologo o auto de prisao em flagrante por se apresentar formalmente regular."
+      },
+      {
+        "heading": "Fundamentacao",
+        "body": "Converto a prisao em flagrante em preventiva para garantia da ordem publica, tendo em vista a gravidade concreta da conduta, a necessidade de preservacao da credibilidade da Justica e o risco de reiteracao delitiva, evidenciado pelo registro anterior informado nos autos."
+      },
+      {
+        "heading": "Motivacao complementar",
+        "body": "A soltura do custodiado, neste momento, pode estimular novos delitos patrimoniais na comarca, sendo necessaria resposta firme do Estado. Nao verifico, por ora, suficiência de cautelares diversas."
+      },
+      {
+        "heading": "Dispositivo",
+        "body": "Indefiro a liberdade provisoria. Expeca-se o necessario."
+      }
+    ],
+    "content": "Decisao formalmente regular, mas baseada em fundamentos abstratos e pouca individualizacao do risco concreto."
   },
   {
     "id": "doc_005",
-    "title": "Certidao de antecedentes",
+    "title": "Certidao resumida de antecedentes",
     "type": "certidao_resumida",
+    "template": "certificate",
     "unlock_step": 3,
-    "content": "Consta em nome de Rafael Martins de Oliveira um processo anterior por receptacao culposa, distribuido ha dois anos, ainda sem transito em julgado. Nao ha registro de condenacao definitiva nos documentos analisados."
+    "issuer": {
+      "name": "Distribuidor Criminal da Capital",
+      "branch": "Setor de Certidoes",
+      "location": "Sao Paulo/SP"
+    },
+    "meta": {
+      "reference": "Certidao n. 2217/2026",
+      "date": "18/04/2026",
+      "page": "1/1"
+    },
+    "sections": [
+      {
+        "heading": "Pesquisa realizada",
+        "body": "Consta em nome de RAFAEL MARTINS DE OLIVEIRA distribuicao anterior por receptacao culposa, datada de aproximadamente dois anos, sem noticia de transito em julgado da acao penal nos documentos apresentados."
+      },
+      {
+        "heading": "Observacao",
+        "body": "Nao foi identificada, nesta consulta resumida, condenacao penal definitiva apta a certificar reincidencia."
+      }
+    ],
+    "content": "Certidao que indica registro anterior sem comprovar condenacao definitiva."
   },
   {
     "id": "doc_006",
-    "title": "Descricao do video interno da loja",
+    "title": "Relatorio interno sobre imagens da loja",
     "type": "prova_audiovisual_descrita",
+    "template": "forensic_report",
     "unlock_step": 3,
-    "content": "A camera do corredor de ferramentas mostra Rafael pegando a parafusadeira e colocando o objeto dentro da mochila enquanto fala ao celular. O video nao possui audio. Cerca de dois minutos depois, ele aparece segurando dois rolos de fita isolante e caminhando em direcao a area dos caixas.\n\nA camera da frente da loja mostra Rafael passando proximo aos caixas, mas o angulo nao permite confirmar se ele entrou na fila ou se desviou diretamente para a saida. A abordagem do seguranca ocorre antes que Rafael ultrapasse a porta externa da loja."
+    "issuer": {
+      "name": "Loja Ferramax",
+      "branch": "Seguranca patrimonial - relatorio de ocorrencia",
+      "location": "Centro"
+    },
+    "meta": {
+      "reference": "Relatorio de cameras n. 14/2026",
+      "date": "18/04/2026",
+      "page": "1/2"
+    },
+    "sections": [
+      {
+        "heading": "Camera do corredor de ferramentas",
+        "body": "As imagens mostram Rafael pegando a parafusadeira e colocando o objeto dentro da mochila enquanto fala ao celular. Nao ha audio. Em seguida ele permanece no interior da loja e, cerca de dois minutos depois, passa a carregar dois rolos de fita isolante."
+      },
+      {
+        "heading": "Camera frontal",
+        "body": "O segundo angulo registra Rafael caminhando proximo a area dos caixas. O enquadramento nao permite afirmar se ele ingressou em fila, se aguardou atendimento ou se desviou diretamente para a saida. A abordagem do seguranca ocorre antes da porta externa."
+      },
+      {
+        "heading": "Observacao tecnica",
+        "body": "As imagens nao esclarecem com seguranca o momento exato em que eventual decisao de nao pagamento teria se consolidado."
+      }
+    ],
+    "content": "Descricao escrita de video ambiguo: ha ocultacao do objeto, mas nao ha confirmacao clara de saida definitiva sem pagamento."
   },
   {
     "id": "doc_007",
-    "title": "Nota fiscal de avaliacao do produto",
+    "title": "Comprovante comercial e avaliacao do objeto",
     "type": "documento_comercial",
+    "template": "receipt",
     "unlock_step": 3,
-    "content": "Produto: Parafusadeira eletrica Worker 12V\nValor de venda: R$ 189,90\nEstado do produto apos apreensao: integro, sem violacao funcional, embalagem parcialmente aberta."
+    "issuer": {
+      "name": "Ferramax Comercio de Ferragens Ltda.",
+      "branch": "Setor de prevencao de perdas",
+      "location": "Rua Central, 455"
+    },
+    "meta": {
+      "reference": "Ficha interna de produto",
+      "date": "18/04/2026",
+      "page": "1/1"
+    },
+    "sections": [
+      {
+        "heading": "Identificacao do item",
+        "body": "Produto: Parafusadeira eletrica Worker 12V. Valor de venda ao consumidor: R$ 189,90."
+      },
+      {
+        "heading": "Estado do bem",
+        "body": "Item recuperado de forma integra, sem dano funcional aparente. Embalagem parcialmente aberta, sem rompimento total do invólucro."
+      }
+    ],
+    "content": "Documento comercial confirmando valor reduzido e recuperacao integral do objeto."
   },
   {
     "id": "doc_008",
-    "title": "Entrevista com o cliente",
+    "title": "Memorando de entrevista reservada com Rafael",
     "type": "conversa_reservada",
+    "template": "interview_memo",
     "unlock_step": 4,
-    "content": "Rafael informa que estava nervoso porque recebeu ligacao de sua mae dizendo que seu irmao menor havia passado mal. Afirma que colocou a ferramenta na mochila para segurar o telefone e os demais itens, mas admite que isso foi 'uma burrice'. Diz que nao chegou a sair da loja e que pretendia pagar as fitas isolantes. Nao sabe explicar por que a etiqueta da embalagem estava parcialmente removida.\n\nAfirma que trabalha informalmente com pequenos reparos e queria comprar a parafusadeira para fazer um servico no dia seguinte."
+    "issuer": {
+      "name": "Defesa tecnica",
+      "branch": "Atendimento reservado ao custodiado",
+      "location": "Carceragem provisoria"
+    },
+    "meta": {
+      "reference": "Apontamento interno da defesa",
+      "date": "19/04/2026",
+      "page": "1/2"
+    },
+    "sections": [
+      {
+        "heading": "Relato do custodiado",
+        "body": "Rafael afirma que recebeu ligacao de Sonia informando que o irmao menor havia passado mal. Diz que colocou a parafusadeira na mochila para liberar as maos e segurar o celular, reconhecendo que isso foi 'uma burrice'."
+      },
+      {
+        "heading": "Pontos que favorecem a defesa",
+        "body": "Afirma que nao deixou a loja e que pretendia pagar ao menos as fitas isolantes que levava nas maos. Diz trabalhar informalmente com pequenos reparos e residir com a mae."
+      },
+      {
+        "heading": "Pontos de atencao",
+        "body": "O custodiado nao soube explicar por que a etiqueta da embalagem estava parcialmente removida. Tambem nao conseguiu descrever com precisao se ja estava se dirigindo ao caixa ou apenas circulando proximo a ele quando foi abordado."
+      }
+    ],
+    "content": "Memorando reservado com elementos favoraveis e ambiguidades que exigem calibragem argumentativa."
   }
 ]

@@ -1,5 +1,6 @@
 import caseData from "@/data/cases/hc_48h_001/case.json";
 import documents from "@/data/cases/hc_48h_001/documents.json";
+import foundations from "@/data/cases/hc_48h_001/foundations.json";
 import rubric from "@/data/cases/hc_48h_001/rubric.json";
 import scoringRules from "@/data/cases/hc_48h_001/scoring-rules.json";
 import steps from "@/data/cases/hc_48h_001/steps.json";
@@ -9,6 +10,7 @@ import type {
   ChoiceHistoryEntry,
   FeedbackState,
   FinalReportData,
+  Foundation,
   GameState,
   Rubric,
   ScoringRule,
@@ -20,6 +22,7 @@ const typedDocuments = documents as CaseDocument[];
 const typedSteps = steps as Step[];
 const typedScoringRules = scoringRules as ScoringRule[];
 const typedRubric = rubric as Rubric;
+const typedFoundations = foundations as Foundation[];
 
 const KEYWORD_MAP: Record<string, string[]> = {
   fundamentacao_generica: ["generica", "fundamentacao concreta", "ordem publica", "credibilidade da justica"],
@@ -45,6 +48,14 @@ export function getAllDocuments() {
 
 export function getRubric() {
   return typedRubric;
+}
+
+export function getAllFoundations() {
+  return typedFoundations;
+}
+
+export function getFoundationsForStep(stepNumber: number) {
+  return typedFoundations.filter((foundation) => foundation.valid_for_steps.includes(stepNumber));
 }
 
 export function getInitialGameState(): GameState {
@@ -81,25 +92,81 @@ function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function buildChoiceHistoryEntry(
-  step: Step,
-  choiceKey: string,
-  choiceLabel: string,
-  feedback: string,
-  scoreDelta: FeedbackState["scoreDelta"],
-  freeText?: string,
-  rubricScore?: number
-): ChoiceHistoryEntry {
+function getFoundationLabels(foundationIds: string[]) {
+  return foundationIds
+    .map((foundationId) => typedFoundations.find((foundation) => foundation.id === foundationId)?.label)
+    .filter((label): label is string => Boolean(label));
+}
+
+function getFoundationDelta(foundationIds: string[]) {
+  return foundationIds.reduce(
+    (accumulator, foundationId) => {
+      const foundation = typedFoundations.find((item) => item.id === foundationId);
+
+      if (!foundation) {
+        return accumulator;
+      }
+
+      return {
+        legalidade: accumulator.legalidade + foundation.weight.legalidade,
+        estrategia: accumulator.estrategia + foundation.weight.estrategia,
+        etica: accumulator.etica + foundation.weight.etica
+      };
+    },
+    {
+      legalidade: 0,
+      estrategia: 0,
+      etica: 0
+    }
+  );
+}
+
+function buildChoiceHistoryEntry(params: {
+  step: Step;
+  choiceKey: string;
+  choiceLabel: string;
+  feedback: string;
+  consequence?: string;
+  scoreDelta: FeedbackState["scoreDelta"];
+  selectedFoundations?: string[];
+  freeText?: string;
+  rubricScore?: number;
+}): ChoiceHistoryEntry {
   return {
-    stepNumber: step.step_number,
-    stepTitle: step.title,
-    choiceKey,
-    choiceLabel,
-    feedback,
-    scoreDelta,
-    freeText,
-    rubricScore
+    stepNumber: params.step.step_number,
+    stepTitle: params.step.title,
+    choiceKey: params.choiceKey,
+    choiceLabel: params.choiceLabel,
+    feedback: params.feedback,
+    consequence: params.consequence,
+    scoreDelta: params.scoreDelta,
+    selectedFoundations: params.selectedFoundations,
+    freeText: params.freeText,
+    rubricScore: params.rubricScore
   };
+}
+
+function buildFoundationFeedback(foundationIds: string[]) {
+  const selected = typedFoundations.filter((foundation) => foundationIds.includes(foundation.id));
+
+  if (selected.length === 0) {
+    return "";
+  }
+
+  const positive = selected.filter((foundation) => foundation.risk === "baixo").map((foundation) => foundation.label);
+  const risky = selected.filter((foundation) => foundation.risk === "alto").map((foundation) => foundation.label);
+
+  const parts: string[] = [];
+
+  if (positive.length > 0) {
+    parts.push(`Fundamentos bem escolhidos: ${positive.join(", ")}.`);
+  }
+
+  if (risky.length > 0) {
+    parts.push(`Ponto de atencao: ${risky.join(", ")} pode enfraquecer a calibragem tecnica se usado sem cautela.`);
+  }
+
+  return parts.join(" ");
 }
 
 export function applyChoice(params: {
@@ -107,8 +174,9 @@ export function applyChoice(params: {
   step: Step;
   choiceKey: string;
   freeText?: string;
+  selectedFoundationIds?: string[];
 }) {
-  const { gameState, step, choiceKey, freeText } = params;
+  const { gameState, step, choiceKey, freeText, selectedFoundationIds = [] } = params;
   const choice = step.options.find((option) => option.key === choiceKey);
   const nextStep = step.step_number + 1;
   const nextStepData = getStep(nextStep);
@@ -116,15 +184,24 @@ export function applyChoice(params: {
     ...gameState.documents_unlocked,
     ...(nextStepData?.unlock_documents ?? [])
   ]);
+  const foundationDelta = getFoundationDelta(selectedFoundationIds);
+  const foundationFeedback = buildFoundationFeedback(selectedFoundationIds);
+  const foundationLabels = getFoundationLabels(selectedFoundationIds);
 
   if (step.free_text?.enabled) {
     const evaluation = evaluateFreeText(freeText ?? "");
+    const combinedDelta = {
+      legalidade: evaluation.delta.legalidade + foundationDelta.legalidade,
+      estrategia: evaluation.delta.estrategia + foundationDelta.estrategia,
+      etica: evaluation.delta.etica + foundationDelta.etica
+    };
+
     const nextState: GameState = {
       ...gameState,
       current_step: nextStep,
-      legalidade: clampScore(gameState.legalidade + evaluation.delta.legalidade),
-      estrategia: clampScore(gameState.estrategia + evaluation.delta.estrategia),
-      etica: clampScore(gameState.etica + evaluation.delta.etica),
+      legalidade: clampScore(gameState.legalidade + combinedDelta.legalidade),
+      estrategia: clampScore(gameState.estrategia + combinedDelta.estrategia),
+      etica: clampScore(gameState.etica + combinedDelta.etica),
       documents_unlocked: unlockedDocuments,
       flags: {
         ...gameState.flags,
@@ -132,25 +209,29 @@ export function applyChoice(params: {
       },
       choices_history: [
         ...gameState.choices_history,
-        buildChoiceHistoryEntry(
+        buildChoiceHistoryEntry({
           step,
-          "FREE_TEXT",
-          "Argumento liminar",
-          evaluation.feedback,
-          evaluation.delta,
+          choiceKey: "FREE_TEXT",
+          choiceLabel: "Minuta liminar",
+          feedback: `${evaluation.feedback} ${foundationFeedback}`.trim(),
+          consequence: "A qualidade da redacao e dos fundamentos escolhidos passa a definir a forca persuasiva do pedido urgente.",
+          scoreDelta: combinedDelta,
+          selectedFoundations: foundationLabels,
           freeText,
-          evaluation.score
-        )
+          rubricScore: evaluation.score
+        })
       ]
     };
 
     const feedback: FeedbackState = {
-      title: "Fundamento protocolado",
+      title: "Minuta protocolada",
       narrative: evaluation.narrative,
-      juridicalFeedback: evaluation.feedback,
-      scoreDelta: evaluation.delta,
+      juridicalFeedback: `${evaluation.feedback} ${foundationFeedback}`.trim(),
+      consequence: "O relator recebe uma peca com fundamentos selecionados expressamente pela defesa.",
+      scoreDelta: combinedDelta,
       unlockedDocuments,
-      nextStep
+      nextStep,
+      selectedFoundations: foundationLabels
     };
 
     return {
@@ -161,7 +242,7 @@ export function applyChoice(params: {
 
   const matchedRule = getScoringRule(step.step_number, choiceKey);
   const fallbackFeedback = "Escolha juridicamente fraca ou inadequada para o objetivo da etapa.";
-  const delta = matchedRule
+  const strategyDelta = matchedRule
     ? {
         legalidade: matchedRule.legalidade,
         estrategia: matchedRule.estrategia,
@@ -173,6 +254,12 @@ export function applyChoice(params: {
         etica: 0
       };
 
+  const delta = {
+    legalidade: strategyDelta.legalidade + foundationDelta.legalidade,
+    estrategia: strategyDelta.estrategia + foundationDelta.estrategia,
+    etica: strategyDelta.etica + foundationDelta.etica
+  };
+
   const activatedFlags = matchedRule?.flags ?? [];
   const nextFlags = {
     ...gameState.flags
@@ -183,7 +270,7 @@ export function applyChoice(params: {
   }
 
   if (step.step_number >= 2) {
-    nextFlags.identificou_decisao_generica = nextFlags.identificou_decisao_generica || choiceKey === "A";
+    nextFlags.identificou_decisao_generica = nextFlags.identificou_decisao_generica || selectedFoundationIds.includes("fund_decisao_generica");
   }
 
   if (step.step_number >= 3) {
@@ -205,23 +292,27 @@ export function applyChoice(params: {
     flags: nextFlags,
     choices_history: [
       ...gameState.choices_history,
-      buildChoiceHistoryEntry(
+      buildChoiceHistoryEntry({
         step,
         choiceKey,
-        choice?.text ?? choiceKey,
-        matchedRule?.explanation ?? fallbackFeedback,
-        delta
-      )
+        choiceLabel: choice ? `${choice.label} - ${choice.text}` : choiceKey,
+        feedback: `${matchedRule?.explanation ?? fallbackFeedback} ${foundationFeedback}`.trim(),
+        consequence: matchedRule?.consequence,
+        scoreDelta: delta,
+        selectedFoundations: foundationLabels
+      })
     ]
   };
 
   const feedback: FeedbackState = {
-    title: step.title,
-    narrative: buildNarrative(step, matchedRule !== undefined),
-    juridicalFeedback: matchedRule?.explanation ?? fallbackFeedback,
+    title: choice?.label ?? step.title,
+    narrative: buildNarrative(step, matchedRule?.consequence),
+    juridicalFeedback: `${matchedRule?.explanation ?? fallbackFeedback} ${foundationFeedback}`.trim(),
+    consequence: matchedRule?.consequence,
     scoreDelta: delta,
     unlockedDocuments,
-    nextStep
+    nextStep,
+    selectedFoundations: foundationLabels
   };
 
   return {
@@ -230,12 +321,12 @@ export function applyChoice(params: {
   };
 }
 
-function buildNarrative(step: Step, wasStrongChoice: boolean) {
-  if (wasStrongChoice) {
-    return `Sua atuação na etapa "${step.title}" consolidou a defesa com mais segurança. O caso segue em movimento, e cada documento agora pesa a favor de uma estratégia mais refinada.`;
+function buildNarrative(step: Step, consequence?: string) {
+  if (consequence) {
+    return consequence;
   }
 
-  return `A escolha na etapa "${step.title}" manteve o caso vivo, mas abriu espaço para fragilidades estratégicas. O relógio continua correndo e a próxima decisão fica ainda mais importante.`;
+  return `A decisao tomada na etapa "${step.title}" reposiciona a defesa e altera o ritmo do plantao.`;
 }
 
 export function evaluateFreeText(text: string) {
@@ -256,18 +347,18 @@ export function evaluateFreeText(text: string) {
   const delta = {
     legalidade: Math.round(totalScore / 3),
     estrategia: Math.round(totalScore / 4),
-    etica: matchedCriteria.some((item) => item.includes("linguagem tecnica")) ? 3 : 1
+    etica: matchedCriteria.some((item) => item.includes("tecnica")) ? 3 : 1
   };
 
   const feedback =
     matchedCriteria.length > 0
-      ? `Seu texto contemplou ${matchedCriteria.length} dos ${typedRubric.criteria.length} elementos esperados pela rubrica.`
-      : "O argumento ainda esta generico e precisa enfrentar melhor os fundamentos da prisao preventiva.";
+      ? `A redacao contemplou ${matchedCriteria.length} dos ${typedRubric.criteria.length} elementos esperados pela rubrica.`
+      : "O argumento ainda esta generico e precisa enfrentar melhor os fundamentos da preventiva.";
 
   const narrative =
     totalScore >= 20
-      ? "A minuta do pedido liminar ganha densidade tecnica e transmite urgencia com boa organizacao defensiva."
-      : "A peticao foi apresentada, mas ainda carece de densidade argumentativa para pressionar a revisao da preventiva.";
+      ? "A minuta ganha densidade tecnica, hierarquia argumentativa e transmite senso de urgencia compativel com o plantao."
+      : "A peca foi apresentada, mas ainda carece de foco e densidade para pressionar revisao imediata da custodia.";
 
   return {
     score: Math.min(typedRubric.max_score, totalScore),
@@ -284,7 +375,7 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "atuacao excelente",
-      summary: "A liminar encontra terreno favoravel: sua estrategia foi tecnica, proporcional e consistente do inicio ao fim."
+      summary: "A defesa atuou com tecnica, timing e selecao madura de fundamentos, elevando bastante a chance de tutela util em plantao."
     };
   }
 
@@ -292,7 +383,7 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "boa atuacao",
-      summary: "A defesa construiu um caminho solido. Ainda ha ajustes finos possiveis, mas a linha principal esta bem sustentada."
+      summary: "A estrategia foi consistente e bem sustentada, ainda que com alguns pontos que poderiam ser calibrados com mais refinamento."
     };
   }
 
@@ -300,13 +391,13 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     return {
       average,
       label: "atuacao defensavel com falhas",
-      summary: "Voce protegeu parte relevante dos interesses do cliente, mas algumas escolhas reduziram a forca pratica da ofensiva defensiva."
+      summary: "A defesa apresentou caminhos plausiveis, mas escolhas de fundamento ou de foco reduziram a forca global do pedido."
     };
   }
 
   return {
     average,
     label: "atuacao fraca",
-    summary: "A estrategia nao conseguiu responder bem a urgencia do caso. O relatorio mostra onde a defesa perdeu tracao."
+    summary: "A combinacao entre estrategia e fundamentos nao conseguiu entregar resposta tecnicamente robusta para a urgencia do caso."
   };
 }

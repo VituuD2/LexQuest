@@ -24,6 +24,16 @@ function renderHistoryItem(item: ChoiceHistoryEntry) {
       </div>
       <p className="text-sm font-semibold text-ink">{item.choiceLabel}</p>
       <p className="mt-3 text-sm leading-7 text-ink/80">{item.feedback}</p>
+      {item.selectedFoundations && item.selectedFoundations.length > 0 ? (
+        <p className="mt-3 text-sm leading-7 text-ink/72">
+          <strong>Fundamentos:</strong> {item.selectedFoundations.join(", ")}.
+        </p>
+      ) : null}
+      {item.consequence ? (
+        <p className="mt-3 text-sm leading-7 text-ink/72">
+          <strong>Efeito pratico:</strong> {item.consequence}
+        </p>
+      ) : null}
       {item.freeText ? (
         <div className="mt-4 rounded-2xl bg-parchment/45 p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-ink/45">Trecho redigido</p>

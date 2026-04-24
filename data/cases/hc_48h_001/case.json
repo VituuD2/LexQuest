@@ -2,7 +2,7 @@
   "case": {
     "id": "hc_48h_001",
     "title": "Habeas Corpus em 48h",
-    "description": "Um jovem foi preso por suposto furto de uma parafusadeira. O jogador deve escolher a melhor estrategia urgente para combater a prisao preventiva.",
+    "description": "Um jovem foi preso por suposto furto de uma parafusadeira. O doutor deve escolher a estrategia urgente mais adequada para combater a prisao preventiva.",
     "area": "Processo Penal",
     "difficulty": "Iniciante",
     "estimated_duration_minutes": {
@@ -48,7 +48,7 @@
       "description": "Mede se a decisao e util para o objetivo pratico do cliente."
     },
     "etica": {
-      "description": "Mede se o jogador respeitou limites profissionais, boa-fe, sigilo e deveres processuais."
+      "description": "Mede se a defesa respeitou limites profissionais, boa-fe, sigilo e deveres processuais."
     }
   },
   "score_bands": [
@@ -76,7 +76,7 @@
   "characters": [
     {
       "id": "player",
-      "name": "Jogador",
+      "name": "Doutor(a)",
       "role": "Advogado(a) de defesa",
       "goal": "Buscar a medida juridicamente mais adequada e proteger os direitos do cliente sem sacrificar a estrategia."
     },
@@ -94,7 +94,7 @@
       "id": "mae_sonia",
       "name": "Sonia Martins",
       "role": "Mae do cliente",
-      "narrative_function": "Procura o jogador e entrega informacoes pessoais do cliente.",
+      "narrative_function": "Procura o doutor e entrega informacoes pessoais do cliente.",
       "relevant_info": "Rafael ajuda financeiramente em casa e cuida do irmao mais novo."
     },
     {

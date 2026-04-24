@@ -1,57 +1,162 @@
 [
   {
     "step": 1,
-    "choice": "B",
-    "legalidade": 10,
-    "estrategia": 10,
-    "etica": 10,
-    "flags": [
-      "atendimento_responsavel"
-    ],
-    "explanation": "Postura profissional e urgente, sem prometer resultado."
+    "choice": "A",
+    "legalidade": 12,
+    "estrategia": 12,
+    "etica": 8,
+    "flags": ["atendimento_responsavel", "coleta_documentos_iniciada"],
+    "explanation": "A escolha preserva etica, evita promessa de resultado e organiza a urgencia com base documental minima confiavel.",
+    "consequence": "A familia envia documentos essenciais ainda naquela noite, permitindo leitura mais segura da custodia."
   },
   {
     "step": 1,
-    "choice": "A",
-    "legalidade": -5,
-    "estrategia": 0,
-    "etica": -15,
-    "flags": [
-      "promessa_resultado"
-    ],
-    "explanation": "Promessa de resultado compromete a etica profissional."
+    "choice": "B",
+    "legalidade": 4,
+    "estrategia": 7,
+    "etica": 1,
+    "flags": ["protocolo_precipitado"],
+    "explanation": "A via pode ganhar tempo, mas a instrucao pobre aumenta risco de indeferimento liminar e de narrativa ainda instavel.",
+    "consequence": "O protocolo sai rapido, mas a defesa fica dependente de posterior complementacao para nao parecer generica."
+  },
+  {
+    "step": 1,
+    "choice": "C",
+    "legalidade": 7,
+    "estrategia": 4,
+    "etica": 3,
+    "flags": ["tentou_reconsideracao_origem"],
+    "explanation": "Peticionar ao juizo de origem e plausivel, mas pode consumir horas preciosas sem entregar resposta util antes da transferencia.",
+    "consequence": "O cartorio recebe a peticao, mas a incerteza sobre tempo de apreciacao preocupa a familia."
+  },
+  {
+    "step": 1,
+    "choice": "D",
+    "legalidade": 5,
+    "estrategia": 3,
+    "etica": 4,
+    "flags": ["diligencia_extraprocessual"],
+    "explanation": "A coleta defensiva paralela pode agregar valor, mas isoladamente nao enfrenta a prisao com a velocidade exigida.",
+    "consequence": "A defesa consegue pistas uteis, porem perde parte da janela mais sensivel do plantao."
   },
   {
     "step": 2,
     "choice": "A",
-    "legalidade": 15,
+    "legalidade": 14,
     "estrategia": 10,
-    "etica": 0,
-    "flags": [
-      "identificou_decisao_generica"
-    ],
-    "explanation": "Identifica a ausencia de fundamentacao concreta para a preventiva."
+    "etica": 2,
+    "flags": ["identificou_decisao_generica"],
+    "explanation": "A leitura separa suspeita do fato e necessidade de motivacao concreta para a preventiva, exatamente onde a decisao parece mais vulneravel.",
+    "consequence": "A defesa passa a trabalhar com um eixo argumentativo claro e aderente ao defeito mais visivel da custodia."
+  },
+  {
+    "step": 2,
+    "choice": "B",
+    "legalidade": 5,
+    "estrategia": 4,
+    "etica": 1,
+    "flags": ["apostou_tese_reducionista"],
+    "explanation": "Valor do bem e recuperacao sao relevantes, mas nao bastam, sozinhos, para demonstrar nulidade automatica da preventiva.",
+    "consequence": "A critica fica intuitiva, mas menos convincente perante um julgador atento a proporcionalidade e cautelaridade."
+  },
+  {
+    "step": 2,
+    "choice": "C",
+    "legalidade": 8,
+    "estrategia": 6,
+    "etica": 3,
+    "flags": ["leitura_moderada_custodia"],
+    "explanation": "A estrategia e respeitosa e prudente, mas pode subaproveitar o argumento mais forte disponivel contra a decisao.",
+    "consequence": "A defesa preserva tom institucional, embora a peca perca parte da contundencia que o caso permitiria."
+  },
+  {
+    "step": 2,
+    "choice": "D",
+    "legalidade": 4,
+    "estrategia": 3,
+    "etica": 1,
+    "flags": ["desvio_tema_lateral"],
+    "explanation": "A abordagem por seguranca particular nao e, por si so, o melhor campo de batalha para atacar a cautelar naquele momento.",
+    "consequence": "A peca corre o risco de discutir um tema lateral enquanto a preventiva segue pouco enfrentada."
   },
   {
     "step": 3,
     "choice": "A",
     "legalidade": 15,
-    "estrategia": 15,
-    "etica": 0,
-    "flags": [
-      "escolheu_medida_urgente"
-    ],
-    "explanation": "Prioriza a via urgente compatível com o estado do caso."
+    "estrategia": 14,
+    "etica": 2,
+    "flags": ["escolheu_medida_urgente"],
+    "explanation": "A opcao equilibra urgencia, tecnicidade e aderencia ao problema central da custodia, sem ignorar medidas cautelares diversas.",
+    "consequence": "A defesa ingressa no tribunal com pedido urgente potencialmente apto a travar a transferencia."
+  },
+  {
+    "step": 3,
+    "choice": "B",
+    "legalidade": 10,
+    "estrategia": 8,
+    "etica": 2,
+    "flags": ["priorizou_origem_com_documentos"],
+    "explanation": "Revogacao ou substituicao da preventiva no primeiro grau e via util, mas menos ajustada ao relogio apertado do caso.",
+    "consequence": "A medida fica tecnicamente respeitavel, embora a resposta imediata dependa de velocidade do juizo de origem."
+  },
+  {
+    "step": 3,
+    "choice": "C",
+    "legalidade": 7,
+    "estrategia": 2,
+    "etica": 2,
+    "flags": ["adiou_impugnacao_urgente"],
+    "explanation": "Buscar mais prova pode robustecer a tese, mas aqui o custo temporal e alto e pode esvaziar a utilidade da tutela urgente.",
+    "consequence": "Quando a defesa termina as diligencias, a urgencia processual ja esta mais estreita."
+  },
+  {
+    "step": 3,
+    "choice": "D",
+    "legalidade": 8,
+    "estrategia": 5,
+    "etica": 1,
+    "flags": ["focou_merito_antes_cautelar"],
+    "explanation": "Questionar o merito do furto e legitimo, mas dispersa a argumentacao em momento no qual a falta de motivacao da preventiva pede centralidade.",
+    "consequence": "A defesa produz debate interessante sobre o fato, mas o ataque a custodia perde parte da nitidez."
+  },
+  {
+    "step": 4,
+    "choice": "A",
+    "legalidade": 16,
+    "estrategia": 14,
+    "etica": 4,
+    "flags": ["tese_principal_correta"],
+    "explanation": "A linha concentra forca na ilegalidade da cautelar e oferece resposta proporcional com cautelares diversas, sem negar ambiguidades dos autos.",
+    "consequence": "A peca ganha foco, credibilidade e margem para pedido subsidiario tecnicamente elegante."
   },
   {
     "step": 4,
     "choice": "B",
-    "legalidade": 20,
-    "estrategia": 15,
-    "etica": 5,
-    "flags": [
-      "tese_principal_correta"
-    ],
-    "explanation": "Constrói tese central proporcional, técnica e consistente com os autos."
+    "legalidade": 8,
+    "estrategia": 7,
+    "etica": 2,
+    "flags": ["insignificancia_centralizada"],
+    "explanation": "Valor reduzido e recuperacao do bem ajudam, mas apostar neles como chave exclusiva pode deixar a peca dependente demais de tese controvertida.",
+    "consequence": "O argumento chama atencao para proporcionalidade, porem nao neutraliza sozinho os fundamentos da custodia."
+  },
+  {
+    "step": 4,
+    "choice": "C",
+    "legalidade": 4,
+    "estrategia": 3,
+    "etica": 0,
+    "flags": ["exagerou_merito"],
+    "explanation": "A estrategia superestima a prova defensiva e aposta em nulidades nao claramente configuradas, reduzindo confiabilidade do pedido urgente.",
+    "consequence": "A familia se anima com o tom forte, mas o tribunal pode enxergar excesso retorico em vez de tecnica."
+  },
+  {
+    "step": 4,
+    "choice": "D",
+    "legalidade": 12,
+    "estrategia": 11,
+    "etica": 3,
+    "flags": ["tese_escalonada"],
+    "explanation": "A tese escalonada e muito boa quando bem hierarquizada, embora mais exigente em redacao e mais sujeita a dispersao sob pressao.",
+    "consequence": "A defesa constrói peca sofisticada, mas precisa de disciplina para nao transformar riqueza argumentativa em excesso."
   }
 ]

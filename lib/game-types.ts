@@ -36,16 +36,42 @@ export type CaseData = {
   }>;
 };
 
+export type DocumentMessage = {
+  author: string;
+  role: "remetente" | "destinatario";
+  timestamp: string;
+  text: string;
+};
+
+export type DocumentSection = {
+  heading: string;
+  body: string;
+};
+
 export type CaseDocument = {
   id: string;
   title: string;
   type: string;
+  template?: string;
   unlock_step: number;
   content: string;
+  issuer?: {
+    name: string;
+    branch: string;
+    location: string;
+  };
+  meta?: {
+    reference: string;
+    date: string;
+    page: string;
+  };
+  sections?: DocumentSection[];
+  messages?: DocumentMessage[];
 };
 
 export type StepOption = {
   key: string;
+  label: string;
   text: string;
 };
 
@@ -61,6 +87,12 @@ export type Step = {
   options: StepOption[];
   best_choice?: string;
   pedagogical_note?: string;
+  foundation_selection?: {
+    enabled: boolean;
+    min: number;
+    max: number;
+    prompt: string;
+  };
   free_text?: {
     enabled: boolean;
     min_lines: number;
@@ -81,6 +113,7 @@ export type ScoringRule = {
   etica: number;
   flags: string[];
   explanation: string;
+  consequence: string;
 };
 
 export type Rubric = {
@@ -93,17 +126,32 @@ export type Rubric = {
   }>;
 };
 
+export type Foundation = {
+  id: string;
+  label: string;
+  description: string;
+  weight: {
+    legalidade: number;
+    estrategia: number;
+    etica: number;
+  };
+  valid_for_steps: number[];
+  risk: "baixo" | "medio" | "alto";
+};
+
 export type ChoiceHistoryEntry = {
   stepNumber: number;
   stepTitle: string;
   choiceKey: string;
   choiceLabel: string;
   feedback: string;
+  consequence?: string;
   scoreDelta: {
     legalidade: number;
     estrategia: number;
     etica: number;
   };
+  selectedFoundations?: string[];
   freeText?: string;
   rubricScore?: number;
 };
@@ -116,6 +164,7 @@ export type FeedbackState = {
   title: string;
   narrative: string;
   juridicalFeedback: string;
+  consequence?: string;
   scoreDelta: {
     legalidade: number;
     estrategia: number;
@@ -123,6 +172,7 @@ export type FeedbackState = {
   };
   unlockedDocuments: string[];
   nextStep: number;
+  selectedFoundations?: string[];
 };
 
 export type FinalReportData = {
