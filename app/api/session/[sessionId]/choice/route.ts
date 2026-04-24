@@ -88,11 +88,16 @@ export async function POST(request: Request, context: RouteContext) {
             stepNumber: step.step_number
           }
         };
-      } catch {
+      } catch (error) {
+        const detail =
+          error instanceof Error
+            ? error.message.slice(0, 220)
+            : "Falha desconhecida ao chamar o modelo.";
+
         result.feedback = {
           ...result.feedback,
           aiStatus: "failed",
-          aiStatusDetail: "A chave existe, mas a chamada ao modelo falhou. Verifique logs da Vercel e OPENAI_API_KEY."
+          aiStatusDetail: `Falha ao chamar o modelo: ${detail}`
         };
       }
     } else {

@@ -26,7 +26,7 @@ export function useLexQuestAudio(): AudioController {
       if (!globalBgm) {
         globalBgm = new Audio("/audio/background-tension.mp3");
         globalBgm.loop = true;
-        globalBgm.volume = 0.225; // Volume reduzido em 25% (de 0.3 para 0.225)
+        globalBgm.volume = 0.14;
       }
 
       // Efeitos sonoros
@@ -36,7 +36,7 @@ export function useLexQuestAudio(): AudioController {
       if (!globalTension) {
         globalTension = new Audio("/audio/tension-pulse.mp3");
         globalTension.loop = true;
-        globalTension.volume = 0.23;
+        globalTension.volume = 0.15;
       }
     }
   }, []);
