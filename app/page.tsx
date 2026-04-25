@@ -306,7 +306,9 @@ export default function HomePage() {
   }
 
   function toggleFoundation(foundationId: string) {
-    if (!currentStep?.foundation_selection?.enabled) {
+    const foundationSelection = currentStep?.foundation_selection;
+
+    if (!foundationSelection?.enabled) {
       return;
     }
 
@@ -315,7 +317,7 @@ export default function HomePage() {
         return current.filter((item) => item !== foundationId);
       }
 
-      if (current.length >= currentStep.foundation_selection.max) {
+      if (current.length >= foundationSelection.max) {
         return current;
       }
 
