@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DocumentModal } from "@/components/DocumentModal";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
@@ -33,6 +33,13 @@ type AppPhase = "home" | "case" | "feedback" | "result";
 
 const defaultGameCatalog = getDefaultGameCatalog();
 const defaultGameId = defaultGameCatalog[0]?.caseId ?? DEFAULT_CASE_ID;
+const phaseLoadingPhrases = [
+  "Enviando parecer ao sistema",
+  "Escrevendo peticoes",
+  "Analisando jurisprudencias",
+  "Organizando provas documentais",
+  "Revisando estrategia do plantao"
+];
 
 function buildDefaultAuthState(): AuthSessionPayload {
   return {
@@ -83,6 +90,7 @@ function HomeIcon() {
 }
 
 export default function HomePage() {
+  const gameTopRef = useRef<HTMLElement | null>(null);
   const [aiStatus, setAiStatus] = useState<{
     enabled: boolean;
     model: string;
@@ -98,6 +106,9 @@ export default function HomePage() {
   const [openDocumentId, setOpenDocumentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [isPhaseTransitioning, setIsPhaseTransitioning] = useState(false);
+  const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
+  const [loadingDotCount, setLoadingDotCount] = useState(1);
   const [authState, setAuthState] = useState<AuthSessionPayload>(buildDefaultAuthState);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [authMode, setAuthMode] = useState<"login" | "register">("register");
@@ -172,6 +183,22 @@ export default function HomePage() {
           : selectedGameSession
             ? `Continuar ${homeGame.label}`
             : `Iniciar ${homeGame.label}`;
+  const phaseLoadingPhrase = phaseLoadingPhrases[loadingPhraseIndex % phaseLoadingPhrases.length];
+  const phaseLoadingDots = Array.from({ length: loadingDotCount }, () => ".").join(" ");
+  const phaseTransitionOverlay = isPhaseTransitioning ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 px-4 backdrop-blur-md">
+      <div className="w-full max-w-md rounded-[32px] border border-white/12 bg-[#1d2128]/95 p-7 text-center text-parchment shadow-[var(--shadow-elevated-theme)]">
+        <p className="text-xs uppercase tracking-[0.24em] text-parchment/55">Processando fase</p>
+        <p className="mt-4 font-serifDisplay text-3xl text-white">{phaseLoadingPhrase}</p>
+        <p className="mt-4 font-serifDisplay text-4xl tracking-[0.16em] text-brass" aria-hidden="true">
+          {phaseLoadingDots}
+        </p>
+        <p className="sr-only" aria-live="polite">
+          {phaseLoadingPhrase} {phaseLoadingDots}
+        </p>
+      </div>
+    </div>
+  ) : null;
 
   function resetTransientState() {
     setSelectedChoice(null);
@@ -297,6 +324,26 @@ export default function HomePage() {
 
     stopTensionPulse();
   }, [phase, currentStep?.step_number, playTensionPulse, stopTensionPulse]);
+
+  useEffect(() => {
+    if (!isPhaseTransitioning) {
+      setLoadingPhraseIndex(0);
+      setLoadingDotCount(1);
+      return;
+    }
+
+    const phraseTimer = window.setInterval(() => {
+      setLoadingPhraseIndex((current) => (current + 1) % phaseLoadingPhrases.length);
+    }, 1100);
+    const dotTimer = window.setInterval(() => {
+      setLoadingDotCount((current) => (current >= 3 ? 1 : current + 1));
+    }, 320);
+
+    return () => {
+      window.clearInterval(phraseTimer);
+      window.clearInterval(dotTimer);
+    };
+  }, [isPhaseTransitioning]);
 
   async function persistSessionState(nextState: GameState) {
     if (!sessionId) {
@@ -561,17 +608,22 @@ export default function HomePage() {
     }
   }
 
-  function handleContinue() {
-    if (!feedback) {
+  async function handleContinue() {
+    if (!feedback || isPhaseTransitioning) {
       return;
     }
 
-    if (feedback.nextStep >= 6) {
-      setPhase("result");
-      return;
-    }
+    setIsPhaseTransitioning(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    gameTopRef.current?.focus({ preventScroll: true });
+    await new Promise((resolve) => window.setTimeout(resolve, 1250));
 
-    setPhase("case");
+    setPhase(feedback.nextStep >= 6 ? "result" : "case");
+    window.scrollTo({ top: 0, behavior: "auto" });
+    requestAnimationFrame(() => {
+      gameTopRef.current?.focus({ preventScroll: true });
+      setIsPhaseTransitioning(false);
+    });
   }
 
   function handleReturnHome() {
@@ -941,7 +993,14 @@ export default function HomePage() {
 
   if (phase === "result") {
     return (
-      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <>
+        <main
+          className={`mx-auto min-h-screen max-w-7xl px-4 py-8 outline-none transition duration-200 sm:px-6 lg:px-8 ${
+            isPhaseTransitioning ? "pointer-events-none blur-[2px] brightness-75" : ""
+          }`}
+          ref={gameTopRef}
+          tabIndex={-1}
+        >
         <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border px-5 py-4 text-[color:var(--text-primary)]">
           <div className="text-sm text-[color:var(--text-secondary)]">
             Conta: <strong>@{user?.username}</strong>
@@ -983,16 +1042,20 @@ export default function HomePage() {
           onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
           themePreference={themePreference}
         />
-      </main>
+        </main>
+        {phaseTransitionOverlay}
+      </>
     );
   }
 
   return (
     <>
       <main
-        className={`mx-auto min-h-screen max-w-7xl px-4 py-8 transition duration-200 sm:px-6 lg:px-8 ${
-          activeDocument ? "pointer-events-none blur-[2px] brightness-75" : ""
+        className={`mx-auto min-h-screen max-w-7xl px-4 py-8 outline-none transition duration-200 sm:px-6 lg:px-8 ${
+          activeDocument || isPhaseTransitioning ? "pointer-events-none blur-[2px] brightness-75" : ""
         }`}
+        ref={gameTopRef}
+        tabIndex={-1}
       >
         <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border px-5 py-4 text-[color:var(--text-primary)]">
           <div className="text-sm text-[color:var(--text-secondary)]">
@@ -1119,6 +1182,8 @@ export default function HomePage() {
         onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
         themePreference={themePreference}
       />
+
+      {phaseTransitionOverlay}
 
       {activeDocument ? <DocumentModal document={activeDocument} onClose={handleCloseDocument} /> : null}
     </>
