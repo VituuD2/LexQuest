@@ -6,15 +6,19 @@ import { DocumentModal } from "@/components/DocumentModal";
 import { DocumentPanel } from "@/components/DocumentPanel";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { FinalReport } from "@/components/FinalReport";
+import { AudioControlPanel } from "@/components/AudioControlPanel";
+import { PhaseRiskOverlay } from "@/components/PhaseRiskOverlay";
 import { ScoreBars } from "@/components/ScoreBars";
 import { StepCard } from "@/components/StepCard";
 import type { ActiveGameSession, AuthSessionPayload } from "@/lib/auth-types";
 import {
   calculateFinalReport,
+  getFailureThresholdEntries,
   getAllSteps,
   getCaseData,
   getFoundationsForStep,
   getInitialGameState,
+  getLoseConditions,
   getStep,
   getUnlockedDocuments,
   markDocumentOpened
@@ -26,6 +30,8 @@ type AppPhase = "home" | "case" | "feedback" | "result";
 
 const caseData = getCaseData();
 const steps = getAllSteps();
+const loseConditions = getLoseConditions();
+const failureThresholds = getFailureThresholdEntries();
 
 function buildDefaultAuthState(): AuthSessionPayload {
   return {
@@ -64,6 +70,9 @@ export default function HomePage() {
   const [isAuthPending, setIsAuthPending] = useState(false);
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   const [gameErrorMessage, setGameErrorMessage] = useState<string | null>(null);
+  const [showPhaseRiskOverlay, setShowPhaseRiskOverlay] = useState(false);
+  const [seenRiskSteps, setSeenRiskSteps] = useState<number[]>([]);
+  const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
   const [loginForm, setLoginForm] = useState({
     login: "",
     password: ""
@@ -74,7 +83,17 @@ export default function HomePage() {
     password: "",
     confirmPassword: ""
   });
-  const { unlockAudio, playDecisionCommit, playDocumentClose, playDocumentOpen, playTensionPulse } = useLexQuestAudio();
+  const {
+    unlockAudio,
+    playDecisionCommit,
+    playDocumentClose,
+    playDocumentOpen,
+    playTensionPulse,
+    stopTensionPulse,
+    audioSettings,
+    setMusicVolume,
+    setEffectsVolume
+  } = useLexQuestAudio();
 
   const user = authState.user;
   const currentStep = getStep(gameState.current_step);
@@ -103,6 +122,7 @@ export default function HomePage() {
       setSessionId(null);
       setGameState(getInitialGameState());
       resetTransientState();
+      setShowPhaseRiskOverlay(false);
       setPhase("home");
       return;
     }
@@ -173,8 +193,26 @@ export default function HomePage() {
   useEffect(() => {
     if (phase === "case" || phase === "feedback") {
       playTensionPulse();
+      return;
     }
-  }, [phase, currentStep?.step_number, playTensionPulse]);
+
+    stopTensionPulse();
+  }, [phase, currentStep?.step_number, playTensionPulse, stopTensionPulse]);
+
+  useEffect(() => {
+    if (phase !== "case") {
+      return;
+    }
+
+    if (seenRiskSteps.includes(gameState.current_step)) {
+      return;
+    }
+
+    setShowPhaseRiskOverlay(true);
+    setSeenRiskSteps((current) =>
+      current.includes(gameState.current_step) ? current : [...current, gameState.current_step]
+    );
+  }, [phase, gameState.current_step, seenRiskSteps]);
 
   async function persistSessionState(nextState: GameState) {
     if (!sessionId) {
@@ -224,6 +262,11 @@ export default function HomePage() {
       }
 
       const payload = (await response.json()) as ActiveGameSession;
+
+      if (restart) {
+        setSeenRiskSteps([]);
+        setShowPhaseRiskOverlay(false);
+      }
 
       setAuthState((current) => ({
         ...current,
@@ -298,6 +341,8 @@ export default function HomePage() {
         confirmPassword: ""
       });
       applyAuthPayload(buildDefaultAuthState());
+      setSeenRiskSteps([]);
+      setShowPhaseRiskOverlay(false);
     } catch (error) {
       setAuthErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao sair.");
     } finally {
@@ -384,6 +429,9 @@ export default function HomePage() {
       setSelectedFoundations([]);
       setFreeText("");
       setPhase("feedback");
+      if (payload.gameState.current_step >= 6) {
+        setShowPhaseRiskOverlay(false);
+      }
       playDecisionCommit();
     } catch (error) {
       setGameErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao salvar a escolha.");
@@ -439,8 +487,9 @@ export default function HomePage() {
 
   if (phase === "home") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <>
+        <main className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
+          <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-[40px] border border-ink/10 bg-white/70 p-8 shadow-dossier backdrop-blur">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -637,8 +686,16 @@ export default function HomePage() {
               </>
             )}
           </aside>
-        </section>
-      </main>
+          </section>
+        </main>
+        <AudioControlPanel
+          audioSettings={audioSettings}
+          isOpen={isAudioPanelOpen}
+          onEffectsChange={setEffectsVolume}
+          onMusicChange={setMusicVolume}
+          onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+        />
+      </>
     );
   }
 
@@ -669,6 +726,13 @@ export default function HomePage() {
           </div>
         </div>
         <FinalReport gameState={gameState} onRestart={() => void startCase(true)} report={finalReport} />
+        <AudioControlPanel
+          audioSettings={audioSettings}
+          isOpen={isAudioPanelOpen}
+          onEffectsChange={setEffectsVolume}
+          onMusicChange={setMusicVolume}
+          onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+        />
       </main>
     );
   }
@@ -738,9 +802,11 @@ export default function HomePage() {
             </div>
 
             <ScoreBars
+              averageFloor={loseConditions?.average_floor}
               estrategia={gameState.estrategia}
               etica={gameState.etica}
               legalidade={gameState.legalidade}
+              metricFloor={loseConditions?.metric_floor}
             />
           </div>
 
@@ -772,6 +838,23 @@ export default function HomePage() {
 
         {gameErrorMessage ? <p className="mt-4 text-sm text-garnet">{gameErrorMessage}</p> : null}
       </main>
+
+      {showPhaseRiskOverlay && loseConditions ? (
+        <PhaseRiskOverlay
+          averageFloor={loseConditions.average_floor}
+          currentStep={gameState.current_step}
+          onClose={() => setShowPhaseRiskOverlay(false)}
+          thresholds={failureThresholds}
+        />
+      ) : null}
+
+      <AudioControlPanel
+        audioSettings={audioSettings}
+        isOpen={isAudioPanelOpen}
+        onEffectsChange={setEffectsVolume}
+        onMusicChange={setMusicVolume}
+        onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+      />
 
       {activeDocument ? <DocumentModal document={activeDocument} onClose={handleCloseDocument} /> : null}
     </>

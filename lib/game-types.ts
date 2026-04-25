@@ -214,6 +214,9 @@ export type FeedbackState = {
   title: string;
   narrative: string;
   juridicalFeedback: string;
+  mentorTitle?: string;
+  mentorSummary?: string;
+  mentorRules?: string[];
   consequence?: string;
   aiFeedback?: string;
   aiRewriteSuggestion?: string;
@@ -236,6 +239,11 @@ export type FinalReportData = {
   summary: string;
   judgeOrder?: FinalOrder;
   endingKey?: string;
+};
+
+export type AudioSettings = {
+  musicVolume: number;
+  effectsVolume: number;
 };
 
 export type FinalOrder = {

@@ -10,9 +10,11 @@ type ScoreBarsProps = {
   legalidade: number;
   estrategia: number;
   etica: number;
+  averageFloor?: number;
+  metricFloor?: number;
 };
 
-export function ScoreBars({ legalidade, estrategia, etica }: ScoreBarsProps) {
+export function ScoreBars({ legalidade, estrategia, etica, averageFloor, metricFloor }: ScoreBarsProps) {
   const entries: Array<{ key: MetricKey; label: string; value: number }> = [
     { key: "legalidade", label: "Legalidade", value: legalidade },
     { key: "estrategia", label: "Estrategia", value: estrategia },
@@ -56,6 +58,12 @@ export function ScoreBars({ legalidade, estrategia, etica }: ScoreBarsProps) {
           </div>
         ))}
       </div>
+
+      {metricFloor !== undefined && averageFloor !== undefined ? (
+        <div className="mt-5 rounded-2xl border border-garnet/18 bg-garnet/10 px-4 py-3 text-sm leading-6 text-parchment/85">
+          Se qualquer metrica cair para {metricFloor} ou menos, ou se a media geral chegar a {averageFloor} ou menos, o caso termina em derrota tecnica antecipada.
+        </div>
+      ) : null}
     </section>
   );
 }

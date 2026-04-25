@@ -2,6 +2,13 @@ import "server-only";
 
 const OPENAI_API_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_MODEL = "gpt-4.1-mini";
+const MENTOR_REVIEW_RULES = [
+  "nao invente lei, sumula ou jurisprudencia",
+  "separe analise do fato e necessidade da prisao cautelar",
+  "aponte quando a defesa exagera o que os autos sustentam",
+  "valorize hierarquia argumentativa e oferta subsidiaria de cautelares diversas",
+  "mantenha tom de advogado senior: tecnico, direto e pedagogico"
+].join("; ");
 
 export type AiChoiceReviewResult = {
   feedback: string;
@@ -110,8 +117,8 @@ export async function reviewStepChoice(input: {
 }): Promise<AiChoiceReviewResult> {
   const result = await callResponsesApi<AiChoiceReviewResult>({
     system:
-      "Voce e tutor juridico do LexQuest. Analise a escolha do doutor sem inventar lei, sumula ou jurisprudencia. Seja tecnico, claro e pedagogico. Responda apenas em JSON valido.",
-    user: `${input.prompt}\n\nContexto estruturado:\n${JSON.stringify(input.context, null, 2)}`,
+      `Voce e advogado senior e mentor juridico do LexQuest. Regras obrigatorias: ${MENTOR_REVIEW_RULES}. Seja tecnico, claro, pratico e pedagogico. Responda apenas em JSON valido.`,
+    user: `${input.prompt}\n\nRegras permanentes de analise:\n- nao prometer resultado sem base\n- nao exagerar prova ou merito\n- focar primeiro na utilidade cautelar\n- sugerir ajuste de redacao quando houver\n\nContexto estruturado:\n${JSON.stringify(input.context, null, 2)}`,
     jsonSchemaName: "lexquest_step_feedback",
     schema: {
       type: "object",

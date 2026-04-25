@@ -2,42 +2,42 @@
   {
     "step": 1,
     "choice": "A",
-    "legalidade": 12,
-    "estrategia": 12,
-    "etica": 8,
+    "legalidade": 10,
+    "estrategia": 11,
+    "etica": 4,
     "flags": ["atendimento_responsavel", "coleta_documentos_iniciada"],
-    "explanation": "A escolha preserva etica, evita promessa de resultado e organiza a urgencia com base documental minima confiavel.",
-    "consequence": "A familia envia documentos essenciais ainda naquela noite, permitindo leitura mais segura da custodia."
+    "explanation": "A escolha organiza a urgencia com criterio e preserva a credibilidade profissional, embora ainda consuma tempo e pressione o cronograma do plantao.",
+    "consequence": "A familia envia documentos essenciais naquela noite, mas a defesa sente o peso do relogio e passa a jogar com menos margem para erro."
   },
   {
     "step": 1,
     "choice": "B",
-    "legalidade": 4,
-    "estrategia": 7,
-    "etica": 1,
+    "legalidade": -5,
+    "estrategia": 2,
+    "etica": -8,
     "flags": ["protocolo_precipitado"],
-    "explanation": "A via pode ganhar tempo, mas a instrucao pobre aumenta risco de indeferimento liminar e de narrativa ainda instavel.",
-    "consequence": "O protocolo sai rapido, mas a defesa fica dependente de posterior complementacao para nao parecer generica."
+    "explanation": "Protocolar com prova minima pode ate parecer ousado, mas fragiliza a narrativa, expõe a defesa a indeferimento precoce e transmite mais pressa do que criterio.",
+    "consequence": "O protocolo sai rapido, mas o tribunal recebe uma urgencia ainda mal estabilizada e a margem de confianca da defesa cai cedo."
   },
   {
     "step": 1,
     "choice": "C",
-    "legalidade": 7,
-    "estrategia": 4,
-    "etica": 3,
+    "legalidade": 2,
+    "estrategia": -7,
+    "etica": 1,
     "flags": ["tentou_reconsideracao_origem"],
-    "explanation": "Peticionar ao juizo de origem e plausivel, mas pode consumir horas preciosas sem entregar resposta util antes da transferencia.",
-    "consequence": "O cartorio recebe a peticao, mas a incerteza sobre tempo de apreciacao preocupa a familia."
+    "explanation": "A via e juridicamente plausivel, mas compromete estrategia imediata num caso em que a transferencia pode tornar inutil a boa tecnica se ela vier tarde demais.",
+    "consequence": "O cartorio recebe a peticao, porem cada hora sem resposta pressiona a familia e desgasta a utilidade pratica da escolha."
   },
   {
     "step": 1,
     "choice": "D",
-    "legalidade": 5,
-    "estrategia": 3,
-    "etica": 4,
+    "legalidade": -2,
+    "estrategia": -9,
+    "etica": 0,
     "flags": ["diligencia_extraprocessual"],
-    "explanation": "A coleta defensiva paralela pode agregar valor, mas isoladamente nao enfrenta a prisao com a velocidade exigida.",
-    "consequence": "A defesa consegue pistas uteis, porem perde parte da janela mais sensivel do plantao."
+    "explanation": "As diligencias podem ajudar depois, mas como primeira resposta deixam a prisao sem enfrentamento efetivo justamente quando a janela de urgencia esta mais aberta.",
+    "consequence": "A defesa descobre pistas uteis, so que o tempo gasto fora da via urgente cobra um preco alto nas metricas de conducao do caso."
   },
   {
     "step": 2,

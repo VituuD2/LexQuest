@@ -5,6 +5,7 @@ import rubric from "@/data/cases/hc_48h_001/rubric.json";
 import scoringRules from "@/data/cases/hc_48h_001/scoring-rules.json";
 import steps from "@/data/cases/hc_48h_001/steps.json";
 import type {
+  MetricKey,
   BranchCondition,
   CaseData,
   CaseDocument,
@@ -78,6 +79,21 @@ export function getCaseData() {
   return typedCaseData;
 }
 
+export function getLoseConditions() {
+  return typedCaseData.case.lose_conditions ?? null;
+}
+
+export function getFailureThresholdEntries(): Array<{ key: MetricKey; label: string; floor: number }> {
+  const loseConditions = getLoseConditions();
+  const floor = loseConditions?.metric_floor ?? 0;
+
+  return [
+    { key: "legalidade", label: "Legalidade", floor },
+    { key: "estrategia", label: "Estrategia", floor },
+    { key: "etica", label: "Etica", floor }
+  ];
+}
+
 export function getAllSteps() {
   return typedSteps;
 }
@@ -144,6 +160,44 @@ export function markDocumentOpened(gameState: GameState, documentId: string): Ga
 
 export function getScoringRule(stepNumber: number, choiceKey: string) {
   return typedScoringRules.find((rule) => rule.step === stepNumber && rule.choice === choiceKey);
+}
+
+function getMentorRules(step: Step, selectedFoundationIds: string[]) {
+  const rules = [
+    "Ataque primeiro a necessidade da cautelar; nao antecipe o merito sem apoio forte nos autos.",
+    "Use apenas fatos e inferencias que os documentos realmente sustentam.",
+    "Se houver risco residual, ofereca medida cautelar diversa em vez de tese maximalista.",
+    "Mantenha tom tecnico, sobrio e proporcional a urgencia do plantao."
+  ];
+
+  if (step.step_number === 1) {
+    return [
+      "Nao prometa soltura imediata sem leitura minima dos autos.",
+      "Transforme urgencia em triagem documentada, nao em improviso.",
+      "Proteja a confianca da familia sem vender certeza que o caso ainda nao comporta.",
+      "Cada minuto sem lastro documental pode custar pontos de estrategia e credibilidade."
+    ];
+  }
+
+  if (selectedFoundationIds.length > 0) {
+    return [...rules, "Selecione fundamentos que conversem entre si; excesso ou contradicao enfraquecem a tese."];
+  }
+
+  return rules;
+}
+
+function buildMentorSummary(step: Step, delta: FeedbackState["scoreDelta"]) {
+  const totalDelta = delta.legalidade + delta.estrategia + delta.etica;
+
+  if (totalDelta >= 20) {
+    return `Seu mentor enxergaria esta etapa como uma boa decisao de plantao: ${step.title.toLowerCase()} foi conduzida com criterio e utilidade pratica.`;
+  }
+
+  if (totalDelta >= 5) {
+    return `Seu mentor veria uma base defensavel aqui, mas ainda com espaco para lapidar a calibragem tecnica da etapa ${step.step_number}.`;
+  }
+
+  return `Seu mentor apontaria que a etapa ${step.step_number} abriu vulnerabilidades reais na conducao do caso e exige correcao imediata no proximo movimento.`;
 }
 
 function clampScore(value: number) {
@@ -393,6 +447,9 @@ export function applyChoice(params: {
       title: "Minuta protocolada",
       narrative: evaluation.narrative,
       juridicalFeedback: `${evaluation.feedback} ${foundationFeedback}`.trim(),
+      mentorTitle: "Leitura do advogado senior",
+      mentorSummary: buildMentorSummary(step, combinedDelta),
+      mentorRules: getMentorRules(step, selectedFoundationIds),
       consequence: "O relator recebe uma peca com fundamentos selecionados expressamente pela defesa.",
       scoreDelta: combinedDelta,
       unlockedDocuments,
@@ -483,6 +540,9 @@ export function applyChoice(params: {
     title: choice?.label ?? step.title,
     narrative: buildNarrative(step, matchedRule?.consequence),
     juridicalFeedback: `${matchedRule?.explanation ?? fallbackFeedback} ${foundationFeedback}`.trim(),
+    mentorTitle: "Leitura do advogado senior",
+    mentorSummary: buildMentorSummary(step, delta),
+    mentorRules: getMentorRules(step, selectedFoundationIds),
     consequence: matchedRule?.consequence,
     scoreDelta: delta,
     unlockedDocuments,

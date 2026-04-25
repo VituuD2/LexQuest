@@ -91,6 +91,9 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
         <p className="text-xs uppercase tracking-[0.24em] text-parchment/55">Etapa 6</p>
         <h2 className="mt-3 font-serifDisplay text-4xl">Resultado final</h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-parchment/85">{report.summary}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-parchment/70">
+          O despacho abaixo muda conforme suas metricas, fundamentos escolhidos e flags ativados ao longo do caso.
+        </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-4">
           <div className="rounded-[24px] bg-white/8 p-5">
