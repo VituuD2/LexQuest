@@ -1,4 +1,5 @@
 export type MetricKey = "legalidade" | "estrategia" | "etica";
+export type ThemePreference = "system" | "light" | "dark";
 
 export type CaseFlagMap = Record<string, boolean>;
 export type BranchCondition = {

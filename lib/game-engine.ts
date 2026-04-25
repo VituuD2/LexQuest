@@ -98,6 +98,10 @@ export function getAllSteps() {
   return typedSteps;
 }
 
+export function getPlayableSteps() {
+  return typedSteps.filter((step) => step.step_number < 6);
+}
+
 export function getAllDocuments() {
   return typedDocuments;
 }
@@ -114,12 +118,23 @@ export function getFoundationsForStep(stepNumber: number) {
   return typedFoundations.filter((foundation) => foundation.valid_for_steps.includes(stepNumber));
 }
 
-export function getInitialGameState(): GameState {
+export function getInitialGameState(startStep = 1): GameState {
   const baseState = typedCaseData.initial_state;
+  const playableSteps = getPlayableSteps();
+  const normalizedStartStep = playableSteps.some((step) => step.step_number === startStep) ? startStep : 1;
+  const unlockedDocuments = uniqueIds([
+    ...baseState.documents_unlocked,
+    ...typedDocuments
+      .filter((document) => document.unlock_step <= normalizedStartStep)
+      .map((document) => document.id)
+  ]);
 
   return {
     ...baseState,
-    document_state: initializeDocumentState(baseState.documents_unlocked, baseState.document_state),
+    current_step: normalizedStartStep,
+    deadline_hours: Math.max(8, baseState.deadline_hours - Math.max(0, normalizedStartStep - 1) * 8),
+    documents_unlocked: unlockedDocuments,
+    document_state: initializeDocumentState(unlockedDocuments, baseState.document_state),
     choices_history: [],
     is_case_over: false
   };

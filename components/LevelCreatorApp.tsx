@@ -371,6 +371,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
           <h1 className="mt-2 font-serifDisplay text-4xl text-[color:var(--text-primary)]">Criador de fases</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text-secondary)]">
             Edite as etapas em blocos guiados ou JSON bruto, salve no rascunho do Supabase e use a IA para revisar clareza, realismo e dificuldade.
+            A numeracao de cada etapa tambem define a fase inicial exibida para o jogador na home.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -483,7 +484,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 type="button"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-[color:var(--text-primary)]">Etapa {step.stepNumber}</p>
+                  <p className="text-sm font-semibold text-[color:var(--text-primary)]">Etapa {step.stepNumber} · Fase {step.stepNumber}</p>
                   <span
                     className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                       step.validation.isValid ? "bg-emerald/12 text-emerald" : "bg-garnet/12 text-garnet"
@@ -502,7 +503,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
           <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapa {selectedStep.stepNumber}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapa {selectedStep.stepNumber} · Fase {selectedStep.stepNumber}</p>
                 <h2 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">{previewStep.title || "Nova etapa"}</h2>
               </div>
               <div className="theme-pill flex gap-2 rounded-full border p-1">

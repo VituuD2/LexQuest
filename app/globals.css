@@ -29,8 +29,42 @@
   --shadow-elevated-theme: 0 32px 70px rgba(25, 22, 17, 0.16);
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-grid: rgba(255, 255, 255, 0.035);
+  --bg-glow-brass: rgba(214, 170, 95, 0.16);
+  --bg-glow-emerald: rgba(72, 152, 130, 0.12);
+  --bg-canvas:
+    radial-gradient(circle at top left, rgba(214, 170, 95, 0.12), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(72, 152, 130, 0.1), transparent 22%),
+    linear-gradient(180deg, #080b10 0%, #0d1117 48%, #121822 100%);
+  --text-primary: #f5f2ea;
+  --text-secondary: rgba(245, 242, 234, 0.82);
+  --text-muted: rgba(245, 242, 234, 0.56);
+  --border-soft: rgba(245, 242, 234, 0.1);
+  --border-strong: rgba(245, 242, 234, 0.16);
+  --surface-panel: linear-gradient(180deg, rgba(15, 20, 28, 0.84), rgba(11, 16, 24, 0.88));
+  --surface-card: rgba(18, 24, 34, 0.92);
+  --surface-card-strong: rgba(22, 29, 40, 0.96);
+  --surface-muted: rgba(255, 255, 255, 0.05);
+  --surface-pill: rgba(255, 255, 255, 0.04);
+  --surface-contrast: #0f141c;
+  --surface-input: #161c25;
+  --surface-code: #0a0f16;
+  --button-primary-bg: #ece7de;
+  --button-primary-text: #10141b;
+  --button-secondary-hover: rgba(255, 255, 255, 0.05);
+  --selection-fill: rgba(214, 170, 95, 0.28);
+  --shadow-dossier-theme: 0 28px 60px rgba(0, 0, 0, 0.34);
+  --shadow-elevated-theme: 0 38px 90px rgba(0, 0, 0, 0.45);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg-grid: rgba(255, 255, 255, 0.035);
     --bg-glow-brass: rgba(214, 170, 95, 0.16);

@@ -14,8 +14,12 @@ export async function POST(request: Request) {
 
     const payload = (await request.json().catch(() => ({}))) as {
       restart?: boolean;
+      startStep?: number;
     };
-    const session = await createSession(user.id, { restart: payload.restart === true });
+    const session = await createSession(user.id, {
+      restart: payload.restart === true,
+      startStep: typeof payload.startStep === "number" ? payload.startStep : 1
+    });
 
     return NextResponse.json(session);
   } catch (error) {

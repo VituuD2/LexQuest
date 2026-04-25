@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureGameStateDefaults, getFoundationDelta, getInitialGameState, getStep } from "@/lib/game-engine";
+import { ensureGameStateDefaults, getFoundationDelta, getInitialGameState, getPlayableSteps, getStep } from "@/lib/game-engine";
 import type { ActiveGameSession } from "@/lib/auth-types";
 import type { FeedbackState, GameState } from "@/lib/game-types";
 import { getSupabaseAdminClient } from "@/lib/server/supabase";
@@ -46,14 +46,40 @@ export async function getActiveSessionForUser(userId: string): Promise<ActiveGam
   return sanitizeActiveSession(data as SessionRow);
 }
 
-export async function createSession(userId: string, options?: { restart?: boolean }) {
+async function abandonInProgressSessions(userId: string, caseId: string) {
   const supabase = getSupabaseAdminClient();
-  const initialState = getInitialGameState();
+  const { error } = await supabase
+    .from("player_sessions")
+    .update({
+      status: "abandoned",
+      updated_at: new Date().toISOString()
+    })
+    .eq("user_id", userId)
+    .eq("case_id", caseId)
+    .eq("status", "in_progress");
+
+  if (error) {
+    throw new Error(`Failed to abandon prior sessions: ${error.message}`);
+  }
+}
+
+export async function createSession(userId: string, options?: { restart?: boolean; startStep?: number }) {
+  const supabase = getSupabaseAdminClient();
+  const defaultState = getInitialGameState();
+  const playableSteps = getPlayableSteps();
+  const requestedStartStep = options?.startStep ?? 1;
+  const normalizedStartStep = playableSteps.some((step) => step.step_number === requestedStartStep) ? requestedStartStep : 1;
   const activeSession = options?.restart ? null : await getActiveSessionForUser(userId);
 
-  if (activeSession) {
+  if (activeSession && activeSession.gameState.current_step === normalizedStartStep) {
     return activeSession;
   }
+
+  if (activeSession || options?.restart) {
+    await abandonInProgressSessions(userId, defaultState.case_id);
+  }
+
+  const initialState = getInitialGameState(normalizedStartStep);
 
   const { data, error } = await supabase
     .from("player_sessions")

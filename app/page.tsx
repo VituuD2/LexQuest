@@ -25,11 +25,13 @@ import {
 } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
 import { useLexQuestAudio } from "@/lib/use-lexquest-audio";
+import { useThemePreference } from "@/lib/use-theme-preference";
 
 type AppPhase = "home" | "case" | "feedback" | "result";
 
 const caseData = getCaseData();
 const steps = getAllSteps();
+const playableSteps = steps.filter((step) => step.step_number < 6);
 const loseConditions = getLoseConditions();
 const failureThresholds = getFailureThresholdEntries();
 
@@ -47,6 +49,16 @@ function dateLabel(value: string | null) {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR");
+}
+
+function HomeIcon() {
+  return (
+    <svg aria-hidden="true" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+      <path d="M3.75 10.5 12 4l8.25 6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6.75 9.75v9h10.5v-9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 18.75v-5h4v5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export default function HomePage() {
@@ -72,6 +84,7 @@ export default function HomePage() {
   const [gameErrorMessage, setGameErrorMessage] = useState<string | null>(null);
   const [showPhaseRiskOverlay, setShowPhaseRiskOverlay] = useState(false);
   const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
+  const [selectedStartStep, setSelectedStartStep] = useState(1);
   const [loginForm, setLoginForm] = useState({
     login: "",
     password: ""
@@ -93,9 +106,11 @@ export default function HomePage() {
     setMusicVolume,
     setEffectsVolume
   } = useLexQuestAudio();
+  const { themePreference, setThemePreference } = useThemePreference();
 
   const user = authState.user;
   const currentStep = getStep(gameState.current_step);
+  const selectedPhase = playableSteps.find((step) => step.step_number === selectedStartStep) ?? playableSteps[0];
   const unlockedDocuments = useMemo(
     () => getUnlockedDocuments(gameState.documents_unlocked),
     [gameState.documents_unlocked]
@@ -107,6 +122,10 @@ export default function HomePage() {
   );
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
+  const hasInProgressSession =
+    authState.activeGameSession?.status === "in_progress" &&
+    authState.activeGameSession.gameState.current_step < 6;
+  const activePhase = hasInProgressSession ? authState.activeGameSession?.gameState.current_step ?? null : null;
 
   function resetTransientState() {
     setSelectedChoice(null);
@@ -120,6 +139,7 @@ export default function HomePage() {
     if (!activeGameSession) {
       setSessionId(null);
       setGameState(getInitialGameState());
+      setSelectedStartStep(1);
       resetTransientState();
       setShowPhaseRiskOverlay(false);
       setPhase("home");
@@ -128,6 +148,7 @@ export default function HomePage() {
 
     setSessionId(activeGameSession.sessionId);
     setGameState(activeGameSession.gameState);
+    setSelectedStartStep(activeGameSession.gameState.current_step >= 6 ? 1 : activeGameSession.gameState.current_step);
     resetTransientState();
     setPhase(activeGameSession.status === "completed" || activeGameSession.gameState.current_step >= 6 ? "result" : "case");
   }
@@ -220,10 +241,13 @@ export default function HomePage() {
     updateActiveSessionState(nextState);
   }
 
-  async function startCase(restart = false) {
+  async function startCase(options?: { restart?: boolean; startStep?: number }) {
     if (!user) {
       return;
     }
+
+    const restart = options?.restart ?? false;
+    const startStep = options?.startStep ?? selectedStartStep;
 
     unlockAudio();
     setIsPending(true);
@@ -236,7 +260,8 @@ export default function HomePage() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          restart
+          restart,
+          startStep
         })
       });
 
@@ -436,6 +461,12 @@ export default function HomePage() {
     setPhase("case");
   }
 
+  function handleReturnHome() {
+    setOpenDocumentId(null);
+    setShowPhaseRiskOverlay(false);
+    setPhase("home");
+  }
+
   async function handleOpenDocument(documentId: string) {
     playDocumentOpen();
     setOpenDocumentId(documentId);
@@ -531,11 +562,29 @@ export default function HomePage() {
                 <button
                   className="theme-button-primary rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={isPending}
-                  onClick={() => startCase(false)}
+                  onClick={() =>
+                    void startCase({
+                      restart: hasInProgressSession ? activePhase !== selectedStartStep : false,
+                      startStep: selectedStartStep
+                    })
+                  }
                   type="button"
                 >
-                  {isPending ? "Abrindo sessao..." : "Iniciar caso"}
+                  {isPending
+                    ? "Abrindo sessao..."
+                    : hasInProgressSession && activePhase === selectedStartStep
+                      ? `Continuar fase ${selectedStartStep}`
+                      : `Comecar da fase ${selectedStartStep}`}
                 </button>
+                {hasInProgressSession ? (
+                  <button
+                    className="theme-button-secondary rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
+                    onClick={() => setPhase("case")}
+                    type="button"
+                  >
+                    Retomar sessao atual
+                  </button>
+                ) : null}
                 {user.role === "admin" ? (
                   <Link
                     className="theme-button-secondary inline-flex rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
@@ -552,6 +601,52 @@ export default function HomePage() {
                 >
                   Sair
                 </button>
+              </div>
+            ) : null}
+
+            {user ? (
+              <div className="theme-card mt-6 rounded-[28px] border p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Escolha a fase</p>
+                    <h3 className="mt-2 font-serifDisplay text-2xl text-[color:var(--text-primary)]">
+                      Entrar direto em uma fase
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--text-secondary)]">
+                      A numeracao da fase segue o step number do criador. Se voce escolher outra fase, o LexQuest abre uma nova sessao a partir dela.
+                    </p>
+                  </div>
+                  {hasInProgressSession ? (
+                    <div className="theme-pill rounded-[22px] border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+                      Sessao atual: fase {activePhase} salva em {dateLabel(authState.activeGameSession?.updatedAt ?? null)}
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {playableSteps.map((step) => (
+                    <button
+                      className={`rounded-full border px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] transition ${
+                        selectedStartStep === step.step_number
+                          ? "border-brass bg-brass/14 text-[color:var(--text-primary)] shadow-[var(--shadow-dossier-theme)]"
+                          : "theme-button-secondary"
+                      }`}
+                      key={step.step_number}
+                      onClick={() => setSelectedStartStep(step.step_number)}
+                      type="button"
+                    >
+                      Fase {step.step_number}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedPhase ? (
+                  <div className="theme-card-muted mt-4 rounded-[24px] p-4">
+                    <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Fase selecionada</p>
+                    <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{selectedPhase.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{selectedPhase.objective}</p>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -664,7 +759,9 @@ export default function HomePage() {
                   <div className="rounded-[24px] bg-white/8 p-5">
                     <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Progresso</p>
                     <p className="mt-2 text-sm leading-7 text-parchment/85">
-                      Nenhuma sessao em andamento no momento. Inicie o caso para salvar seu progresso nesta conta.
+                      {hasInProgressSession
+                        ? `Sessao em andamento na fase ${activePhase}. Volte ao caso para continuar ou abra outra fase pela home.`
+                        : "Nenhuma sessao em andamento no momento. Inicie o caso para salvar seu progresso nesta conta."}
                     </p>
                   </div>
                 </div>
@@ -678,7 +775,9 @@ export default function HomePage() {
           isOpen={isAudioPanelOpen}
           onEffectsChange={setEffectsVolume}
           onMusicChange={setMusicVolume}
+          onThemeChange={setThemePreference}
           onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+          themePreference={themePreference}
         />
       </>
     );
@@ -692,6 +791,14 @@ export default function HomePage() {
             Conta: <strong>@{user?.username}</strong>
           </div>
           <div className="flex flex-wrap gap-3">
+            <button
+              className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition"
+              onClick={handleReturnHome}
+              type="button"
+            >
+              <HomeIcon />
+              Home
+            </button>
             {user?.role === "admin" ? (
               <Link
                 className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
@@ -710,13 +817,15 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        <FinalReport gameState={gameState} onRestart={() => void startCase(true)} report={finalReport} />
+        <FinalReport gameState={gameState} onRestart={() => void startCase({ restart: true, startStep: 1 })} report={finalReport} />
         <AudioControlPanel
           audioSettings={audioSettings}
           isOpen={isAudioPanelOpen}
           onEffectsChange={setEffectsVolume}
           onMusicChange={setMusicVolume}
+          onThemeChange={setThemePreference}
           onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+          themePreference={themePreference}
         />
       </main>
     );
@@ -734,6 +843,14 @@ export default function HomePage() {
             Conta: <strong>@{user?.username}</strong> {authState.activeGameSession ? `| salvo em ${dateLabel(authState.activeGameSession.updatedAt)}` : ""}
           </div>
           <div className="flex flex-wrap gap-3">
+            <button
+              className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition"
+              onClick={handleReturnHome}
+              type="button"
+            >
+              <HomeIcon />
+              Home
+            </button>
             {user?.role === "admin" ? (
               <Link
                 className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
@@ -838,7 +955,9 @@ export default function HomePage() {
         isOpen={isAudioPanelOpen}
         onEffectsChange={setEffectsVolume}
         onMusicChange={setMusicVolume}
+        onThemeChange={setThemePreference}
         onToggleOpen={() => setIsAudioPanelOpen((current) => !current)}
+        themePreference={themePreference}
       />
 
       {activeDocument ? <DocumentModal document={activeDocument} onClose={handleCloseDocument} /> : null}
