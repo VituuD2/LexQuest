@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { applyChoice, getStep } from "@/lib/game-engine";
+import { getAuthenticatedUser } from "@/lib/server/auth";
 import { reviewStepChoice, isAiEnabled } from "@/lib/server/openai";
 import { getSessionState, saveChoice } from "@/lib/server/session-repository";
 
@@ -20,8 +21,14 @@ type ChoicePayload = {
 
 export async function POST(request: Request, context: RouteContext) {
   try {
+    const user = await getAuthenticatedUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Autenticacao obrigatoria." }, { status: 401 });
+    }
+
     const { sessionId } = await context.params;
-    const session = await getSessionState(sessionId);
+    const session = await getSessionState(sessionId, user.id);
 
     if (!session) {
       return NextResponse.json({ error: "Sessao nao encontrada." }, { status: 404 });
@@ -110,6 +117,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     await saveChoice({
       sessionId,
+      userId: user.id,
       nextState: result.nextState,
       feedback: result.feedback,
       stepNumber: step.step_number,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { GameState } from "@/lib/game-types";
+import { getAuthenticatedUser } from "@/lib/server/auth";
 import { getSessionState, updateSessionState } from "@/lib/server/session-repository";
 
 export const runtime = "nodejs";
@@ -12,8 +13,14 @@ type RouteContext = {
 
 export async function GET(_request: Request, context: RouteContext) {
   try {
+    const user = await getAuthenticatedUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Autenticacao obrigatoria." }, { status: 401 });
+    }
+
     const { sessionId } = await context.params;
-    const session = await getSessionState(sessionId);
+    const session = await getSessionState(sessionId, user.id);
 
     if (!session) {
       return NextResponse.json({ error: "Sessao nao encontrada." }, { status: 404 });
@@ -31,12 +38,18 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
+    const user = await getAuthenticatedUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Autenticacao obrigatoria." }, { status: 401 });
+    }
+
     const { sessionId } = await context.params;
     const payload = (await request.json()) as {
       gameState: GameState;
     };
 
-    await updateSessionState(sessionId, payload.gameState);
+    await updateSessionState(sessionId, user.id, payload.gameState);
 
     return NextResponse.json({
       sessionId,

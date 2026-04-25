@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
+import { getAuthenticatedUser } from "@/lib/server/auth";
 import { createSession } from "@/lib/server/session-repository";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    const session = await createSession();
+    const user = await getAuthenticatedUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Autenticacao obrigatoria." }, { status: 401 });
+    }
+
+    const payload = (await request.json().catch(() => ({}))) as {
+      restart?: boolean;
+    };
+    const session = await createSession(user.id, { restart: payload.restart === true });
 
     return NextResponse.json(session);
   } catch (error) {

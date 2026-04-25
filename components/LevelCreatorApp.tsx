@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { AdminUserRecord, AuthenticatedUser, UserRole } from "@/lib/auth-types";
 import type { PhaseBuilderBlock } from "@/lib/phase-authoring";
 import { blocksToStepDraft, parseJsonStepDraft } from "@/lib/phase-authoring";
 import type { Step } from "@/lib/game-types";
@@ -43,6 +44,10 @@ type DraftReview = {
   suggestions: string[];
 };
 
+type LevelCreatorAppProps = {
+  currentUser: AuthenticatedUser;
+};
+
 const CASE_ID = "hc_48h_001";
 
 function createBlock(type: PhaseBuilderBlock["type"]): PhaseBuilderBlock {
@@ -54,12 +59,16 @@ function createBlock(type: PhaseBuilderBlock["type"]): PhaseBuilderBlock {
   };
 }
 
-function dateLabel(value: string) {
+function dateLabel(value: string | null) {
+  if (!value) {
+    return "ainda sem registro";
+  }
+
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR");
 }
 
-export function LevelCreatorApp() {
+export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
   const [bundle, setBundle] = useState<AuthoringBundle | null>(null);
   const [selectedStepNumber, setSelectedStepNumber] = useState<number>(1);
   const [mode, setMode] = useState<"blocks" | "json">("blocks");
@@ -71,21 +80,45 @@ export function LevelCreatorApp() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [draftReview, setDraftReview] = useState<DraftReview | null>(null);
+  const [users, setUsers] = useState<AdminUserRecord[]>([]);
+  const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
+  const [isUpdatingUserId, setIsUpdatingUserId] = useState<string | null>(null);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadBundle() {
       setIsLoading(true);
       setErrorMessage(null);
+      setUserMessage(null);
 
       try {
-        const response = await fetch(`/api/authoring/cases/${CASE_ID}`);
-        if (!response.ok) {
+        const [bundleResponse, usersResponse] = await Promise.all([
+          fetch(`/api/authoring/cases/${CASE_ID}`),
+          fetch("/api/admin/users")
+        ]);
+
+        if (!bundleResponse.ok) {
           throw new Error("Nao foi possivel carregar o criador de fases.");
         }
 
-        const payload = (await response.json()) as AuthoringBundle;
-        setBundle(payload);
-        setSelectedStepNumber(payload.steps[0]?.stepNumber ?? 1);
+        if (!usersResponse.ok) {
+          throw new Error("Nao foi possivel carregar os usuarios cadastrados.");
+        }
+
+        const bundlePayload = (await bundleResponse.json()) as AuthoringBundle;
+        const usersPayload = (await usersResponse.json()) as {
+          users: AdminUserRecord[];
+        };
+
+        setBundle(bundlePayload);
+        setSelectedStepNumber(bundlePayload.steps[0]?.stepNumber ?? 1);
+        setUsers(usersPayload.users);
+        setRoleDrafts(
+          usersPayload.users.reduce<Record<string, UserRole>>((accumulator, user) => {
+            accumulator[user.id] = user.role;
+            return accumulator;
+          }, {})
+        );
       } catch (error) {
         setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao carregar o criador.");
       } finally {
@@ -168,6 +201,14 @@ export function LevelCreatorApp() {
 
   function addBlock(type: PhaseBuilderBlock["type"]) {
     setBlocks((current) => [...current, createBlock(type)]);
+  }
+
+  async function logout() {
+    await fetch("/api/auth/logout", {
+      method: "POST"
+    });
+
+    window.location.href = "/";
   }
 
   async function saveStep() {
@@ -263,6 +304,47 @@ export function LevelCreatorApp() {
     }
   }
 
+  async function saveUserRole(userId: string) {
+    setIsUpdatingUserId(userId);
+    setUserMessage(null);
+    setErrorMessage(null);
+
+    try {
+      const nextRole = roleDrafts[userId];
+
+      if (!nextRole) {
+        throw new Error("Selecione uma permissao valida antes de salvar.");
+      }
+
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          role: nextRole
+        })
+      });
+
+      const payload = (await response.json()) as AdminUserRecord & { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Nao foi possivel atualizar a permissao.");
+      }
+
+      setUsers((current) => current.map((user) => (user.id === userId ? payload : user)));
+      setRoleDrafts((current) => ({
+        ...current,
+        [userId]: payload.role
+      }));
+      setUserMessage(`Permissao de @${payload.username} atualizada para ${payload.role}.`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao atualizar permissao.");
+    } finally {
+      setIsUpdatingUserId(null);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -292,17 +374,98 @@ export function LevelCreatorApp() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="rounded-2xl border border-ink/10 bg-parchment/55 px-4 py-3 text-sm text-ink/80">
+            Admin logado: @{currentUser.username}
+          </div>
           <Link
             className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
             href="/"
           >
             Voltar ao caso
           </Link>
+          <button
+            className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+            onClick={logout}
+            type="button"
+          >
+            Sair
+          </button>
           <div className="rounded-2xl border border-brass/25 bg-brass/10 px-4 py-3 text-sm text-ink/80">
-            {bundle.version.label} · {bundle.version.status} · atualizada em {dateLabel(bundle.version.updatedAt)}
+            {bundle.version.label} | {bundle.version.status} | atualizada em {dateLabel(bundle.version.updatedAt)}
           </div>
         </div>
       </div>
+
+      <section className="mb-6 rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Central admin</p>
+            <h2 className="mt-2 font-serifDisplay text-3xl text-ink">Permissoes de usuarios</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/75">
+              Somente admins acessam esta tela. Aqui voce promove ou rebaixa usuarios cadastrados sem perder o progresso salvo de cada conta.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-ink/10 bg-parchment/55 px-4 py-3 text-sm text-ink/80">
+            Contas cadastradas: {users.length}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4">
+          {users.map((managedUser) => (
+            <div
+              className="grid gap-4 rounded-[28px] border border-ink/10 bg-[#fffdf8] p-5 lg:grid-cols-[1.5fr_0.8fr_0.9fr_0.8fr]"
+              key={managedUser.id}
+            >
+              <div>
+                <p className="text-lg font-semibold text-ink">@{managedUser.username}</p>
+                <p className="mt-1 text-sm text-ink/72">{managedUser.email}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-ink/45">
+                  Criado em {dateLabel(managedUser.createdAt)} | ultimo acesso {dateLabel(managedUser.lastLoginAt)}
+                </p>
+              </div>
+
+              <div className="rounded-[22px] bg-parchment/55 p-4 text-sm text-ink/78">
+                <p className="text-xs uppercase tracking-[0.16em] text-ink/45">Status</p>
+                <p className="mt-2 font-semibold">{managedUser.isActive ? "Ativo" : "Inativo"}</p>
+              </div>
+
+              <div className="rounded-[22px] bg-parchment/55 p-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-ink/45">Permissao</p>
+                <select
+                  className="mt-3 w-full rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm text-ink outline-none"
+                  onChange={(event) =>
+                    setRoleDrafts((current) => ({
+                      ...current,
+                      [managedUser.id]: event.target.value as UserRole
+                    }))
+                  }
+                  value={roleDrafts[managedUser.id] ?? managedUser.role}
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  className="w-full rounded-full bg-ink px-5 py-3 text-sm font-semibold text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+                  disabled={
+                    isUpdatingUserId === managedUser.id ||
+                    !roleDrafts[managedUser.id] ||
+                    roleDrafts[managedUser.id] === managedUser.role
+                  }
+                  onClick={() => saveUserRole(managedUser.id)}
+                  type="button"
+                >
+                  {isUpdatingUserId === managedUser.id ? "Salvando..." : "Salvar permissao"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {userMessage ? <p className="mt-4 text-sm text-emerald">{userMessage}</p> : null}
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[0.32fr_0.68fr]">
         <aside className="rounded-[32px] border border-ink/10 bg-white/75 p-5 shadow-dossier">
@@ -453,7 +616,11 @@ export function LevelCreatorApp() {
                             })
                           }
                           placeholder="Documentos liberados por esta rota (doc_009, doc_010)"
-                          value={Array.isArray(block.meta?.unlock_documents) ? block.meta?.unlock_documents.join(", ") : String(block.meta?.unlock_documents ?? "")}
+                          value={
+                            Array.isArray(block.meta?.unlock_documents)
+                              ? block.meta?.unlock_documents.join(", ")
+                              : String(block.meta?.unlock_documents ?? "")
+                          }
                         />
                         <input
                           className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none md:col-span-2"
@@ -466,7 +633,11 @@ export function LevelCreatorApp() {
                             })
                           }
                           placeholder="Flags ativadas por esta rota (rota_hc_plantao, tese_escalonada)"
-                          value={Array.isArray(block.meta?.set_flags) ? block.meta?.set_flags.join(", ") : String(block.meta?.set_flags ?? "")}
+                          value={
+                            Array.isArray(block.meta?.set_flags)
+                              ? block.meta?.set_flags.join(", ")
+                              : String(block.meta?.set_flags ?? "")
+                          }
                         />
                       </div>
                     ) : null}
@@ -538,7 +709,9 @@ export function LevelCreatorApp() {
                 </p>
                 <div className="mt-4 space-y-2">
                   {validationIssues.length === 0 ? (
-                    <div className="rounded-2xl bg-emerald/10 px-4 py-3 text-sm text-emerald">Nenhum bloqueio estrutural detectado.</div>
+                    <div className="rounded-2xl bg-emerald/10 px-4 py-3 text-sm text-emerald">
+                      Nenhum bloqueio estrutural detectado.
+                    </div>
                   ) : (
                     validationIssues.map((issue) => (
                       <div className="rounded-2xl bg-garnet/10 px-4 py-3 text-sm text-garnet" key={issue}>

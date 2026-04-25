@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { PhaseBuilderBlock } from "@/lib/phase-authoring";
+import { getAuthenticatedUser } from "@/lib/server/auth";
 import { saveCaseAuthoringStep } from "@/lib/server/authoring-repository";
 
 export const runtime = "nodejs";
@@ -19,6 +20,16 @@ type SaveStepPayload = {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
+    const user = await getAuthenticatedUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Autenticacao obrigatoria." }, { status: 401 });
+    }
+
+    if (user.role !== "admin") {
+      return NextResponse.json({ error: "Acesso restrito a administradores." }, { status: 403 });
+    }
+
     const { caseId, stepNumber } = await context.params;
     const payload = (await request.json()) as SaveStepPayload;
     const parsedStepNumber = Number.parseInt(stepNumber, 10);

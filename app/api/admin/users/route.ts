@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/server/auth";
-import { getCaseAuthoringBundle } from "@/lib/server/authoring-repository";
+import { listUsersForAdmin } from "@/lib/server/user-repository";
 
 export const runtime = "nodejs";
 
-type RouteContext = {
-  params: Promise<{
-    caseId: string;
-  }>;
-};
-
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET() {
   try {
     const user = await getAuthenticatedUser();
 
@@ -22,11 +16,10 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Acesso restrito a administradores." }, { status: 403 });
     }
 
-    const { caseId } = await context.params;
-    const bundle = await getCaseAuthoringBundle(caseId);
-    return NextResponse.json(bundle);
+    const users = await listUsersForAdmin();
+    return NextResponse.json({ users });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao carregar criador de fases.";
+    const message = error instanceof Error ? error.message : "Falha ao listar usuarios.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
