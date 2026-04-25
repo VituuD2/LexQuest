@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAuthSession } from "@/lib/server/auth";
-import { listActiveSessionsForUser } from "@/lib/server/session-repository";
+import { buildAuthSessionPayload } from "@/lib/server/auth-session";
 import { authenticateUser } from "@/lib/server/user-repository";
 
 export const runtime = "nodejs";
@@ -27,14 +27,7 @@ export async function POST(request: Request) {
     }
 
     await createAuthSession(user.id);
-    const activeGameSessions = await listActiveSessionsForUser(user.id);
-    const activeGameSession = activeGameSessions[0] ?? null;
-
-    return NextResponse.json({
-      user,
-      activeGameSession,
-      activeGameSessions
-    });
+    return NextResponse.json(await buildAuthSessionPayload(user));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao autenticar.";
     return NextResponse.json({ error: message }, { status: 500 });

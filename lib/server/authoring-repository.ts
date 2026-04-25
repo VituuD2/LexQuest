@@ -4,6 +4,7 @@ import { getAllSteps, getCaseData, getStep } from "@/lib/game-engine";
 import type { PhaseBuilderBlock } from "@/lib/phase-authoring";
 import { blocksToStepDraft, buildPhaseAuthoringSnapshot, parseJsonStepDraft, validateStepDraft } from "@/lib/phase-authoring";
 import type { Step } from "@/lib/game-types";
+import { getCasePublicationState } from "@/lib/server/game-catalog";
 import { getSupabaseAdminClient } from "@/lib/server/supabase";
 
 type CaseVersionRow = {
@@ -51,6 +52,11 @@ export type AuthoringBundle = {
   caseTitle: string;
   supportedInputs: Array<"blocks" | "json">;
   defaultMode: "blocks" | "json";
+  publication: {
+    status: "draft" | "published" | "archived";
+    publishedAt: string | null;
+    publishedVersionNumber: number | null;
+  };
   version: {
     id: string;
     number: number;
@@ -85,6 +91,21 @@ function buildStepFromBlocks(caseId: string, stepNumber: number, blocks: PhaseBu
   }
 
   return blocksToStepDraft(fallbackStep, blocks);
+}
+
+async function getStepBuildersForVersion(versionId: string) {
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("case_step_builders")
+    .select("id, case_version_id, step_id, step_number, mode, blocks, raw_json, normalized_step, validation, updated_at")
+    .eq("case_version_id", versionId)
+    .order("step_number", { ascending: true });
+
+  if (error) {
+    throw new Error(`Falha ao carregar etapas da versao: ${error.message}`);
+  }
+
+  return (data ?? []) as StepBuilderRow[];
 }
 
 async function ensureCaseRecord(caseId: string) {
@@ -125,7 +146,13 @@ async function ensureCaseRecord(caseId: string) {
   }
 }
 
-async function createDraftVersion(caseId: string) {
+async function createDraftVersion(
+  caseId: string,
+  options?: {
+    sourceMode?: "blocks" | "json";
+    sourceBuilders?: StepBuilderRow[];
+  }
+) {
   const supabase = getSupabaseAdminClient();
   await ensureCaseRecord(caseId);
   const { data: existingVersions, error: versionsError } = await supabase
@@ -140,7 +167,7 @@ async function createDraftVersion(caseId: string) {
 
   const nextVersionNumber = (existingVersions?.[0]?.version_number ?? 0) + 1;
   const caseMeta = getCaseData(caseId);
-  const sourceMode = caseMeta.case.phase_builder?.default_mode ?? "blocks";
+  const sourceMode = options?.sourceMode ?? caseMeta.case.phase_builder?.default_mode ?? "blocks";
 
   const { data: versionData, error: insertVersionError } = await supabase
     .from("case_versions")
@@ -159,22 +186,33 @@ async function createDraftVersion(caseId: string) {
     throw new Error(`Falha ao criar versao em rascunho: ${insertVersionError?.message ?? "desconhecida"}`);
   }
 
-  const defaultBuilders = getAllSteps(caseId)
-    .filter((step) => step.step_number <= 6)
-    .map((step) => {
-      const snapshot = buildDefaultStepBundle(step);
+  const defaultBuilders =
+    options?.sourceBuilders?.map((step) => ({
+      case_version_id: versionData.id,
+      step_id: step.step_id,
+      step_number: step.step_number,
+      mode: step.mode,
+      blocks: step.blocks,
+      raw_json: step.raw_json,
+      normalized_step: step.normalized_step,
+      validation: step.validation
+    })) ??
+    getAllSteps(caseId)
+      .filter((step) => step.step_number <= 6)
+      .map((step) => {
+        const snapshot = buildDefaultStepBundle(step);
 
-      return {
-        case_version_id: versionData.id,
-        step_id: step.id,
-        step_number: step.step_number,
-        mode: snapshot.mode,
-        blocks: snapshot.blocks,
-        raw_json: snapshot.previewStep,
-        normalized_step: snapshot.previewStep,
-        validation: snapshot.validation
-      };
-    });
+        return {
+          case_version_id: versionData.id,
+          step_id: step.id,
+          step_number: step.step_number,
+          mode: snapshot.mode,
+          blocks: snapshot.blocks,
+          raw_json: snapshot.previewStep,
+          normalized_step: snapshot.previewStep,
+          validation: snapshot.validation
+        };
+      });
 
   const { error: buildersError } = await supabase.from("case_step_builders").insert(defaultBuilders);
 
@@ -208,21 +246,10 @@ async function ensureDraftVersion(caseId: string) {
 }
 
 export async function getCaseAuthoringBundle(caseId: string): Promise<AuthoringBundle> {
-  const supabase = getSupabaseAdminClient();
   const version = await ensureDraftVersion(caseId);
   const caseMeta = getCaseData(caseId);
-
-  const { data, error } = await supabase
-    .from("case_step_builders")
-    .select("id, case_version_id, step_id, step_number, mode, blocks, raw_json, normalized_step, validation, updated_at")
-    .eq("case_version_id", version.id)
-    .order("step_number", { ascending: true });
-
-  if (error) {
-    throw new Error(`Falha ao carregar etapas do criador: ${error.message}`);
-  }
-
-  const builders = (data ?? []) as StepBuilderRow[];
+  const builders = await getStepBuildersForVersion(version.id);
+  const publication = await getCasePublicationState(caseId);
   const steps = getAllSteps(caseId)
     .filter((step) => step.step_number <= 6)
     .map((baseStep) => {
@@ -246,6 +273,11 @@ export async function getCaseAuthoringBundle(caseId: string): Promise<AuthoringB
     caseTitle: caseMeta.case.title,
     supportedInputs: caseMeta.case.phase_builder?.supported_inputs ?? ["blocks", "json"],
     defaultMode: caseMeta.case.phase_builder?.default_mode ?? "blocks",
+    publication: publication ?? {
+      status: "draft",
+      publishedAt: null,
+      publishedVersionNumber: null
+    },
     version: {
       id: version.id,
       number: version.version_number,
@@ -323,4 +355,95 @@ export async function saveCaseAuthoringStep(params: {
     validation,
     updatedAt: new Date().toISOString()
   };
+}
+
+export async function publishCaseDraft(caseId: string) {
+  const supabase = getSupabaseAdminClient();
+  const draftVersion = await ensureDraftVersion(caseId);
+  const draftBuilders = await getStepBuildersForVersion(draftVersion.id);
+  const now = new Date().toISOString();
+
+  const { error: archivePublishedError } = await supabase
+    .from("case_versions")
+    .update({
+      status: "archived",
+      updated_at: now
+    })
+    .eq("case_id", caseId)
+    .eq("status", "published");
+
+  if (archivePublishedError) {
+    throw new Error(`Falha ao arquivar versoes publicadas anteriores: ${archivePublishedError.message}`);
+  }
+
+  const { error: publishDraftError } = await supabase
+    .from("case_versions")
+    .update({
+      label: `Publicado ${draftVersion.version_number}`,
+      status: "published",
+      published_at: now,
+      updated_at: now
+    })
+    .eq("id", draftVersion.id);
+
+  if (publishDraftError) {
+    throw new Error(`Falha ao publicar o rascunho atual: ${publishDraftError.message}`);
+  }
+
+  await createDraftVersion(caseId, {
+    sourceMode: draftVersion.source_mode,
+    sourceBuilders: draftBuilders
+  });
+}
+
+export async function unpublishCase(caseId: string) {
+  const supabase = getSupabaseAdminClient();
+  const draftVersion = await ensureDraftVersion(caseId);
+  const draftBuilders = await getStepBuildersForVersion(draftVersion.id);
+  const now = new Date().toISOString();
+
+  const { data: publishedVersions, error: publishedLookupError } = await supabase
+    .from("case_versions")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("status", "published");
+
+  if (publishedLookupError) {
+    throw new Error(`Falha ao consultar versoes publicadas: ${publishedLookupError.message}`);
+  }
+
+  if ((publishedVersions ?? []).length > 0) {
+    const { error: archivePublishedError } = await supabase
+      .from("case_versions")
+      .update({
+        status: "archived",
+        updated_at: now
+      })
+      .eq("case_id", caseId)
+      .eq("status", "published");
+
+    if (archivePublishedError) {
+      throw new Error(`Falha ao retirar o jogo da home: ${archivePublishedError.message}`);
+    }
+
+    return;
+  }
+
+  const { error: archiveDraftError } = await supabase
+    .from("case_versions")
+    .update({
+      label: `Arquivado ${draftVersion.version_number}`,
+      status: "archived",
+      updated_at: now
+    })
+    .eq("id", draftVersion.id);
+
+  if (archiveDraftError) {
+    throw new Error(`Falha ao registrar o estado oculto do jogo: ${archiveDraftError.message}`);
+  }
+
+  await createDraftVersion(caseId, {
+    sourceMode: draftVersion.source_mode,
+    sourceBuilders: draftBuilders
+  });
 }

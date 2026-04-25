@@ -11,6 +11,7 @@ import { PhaseRiskOverlay } from "@/components/PhaseRiskOverlay";
 import { ScoreBars } from "@/components/ScoreBars";
 import { StepCard } from "@/components/StepCard";
 import type { ActiveGameSession, AuthSessionPayload } from "@/lib/auth-types";
+import { DEFAULT_CASE_ID } from "@/lib/case-content";
 import {
   calculateFinalReport,
   getFailureThresholdEntries,
@@ -24,20 +25,21 @@ import {
   markDocumentOpened
 } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
-import { getGameCatalog, getGameCatalogEntry } from "@/lib/game-catalog";
+import { getDefaultGameCatalog } from "@/lib/game-catalog";
 import { useLexQuestAudio } from "@/lib/use-lexquest-audio";
 import { useThemePreference } from "@/lib/use-theme-preference";
 
 type AppPhase = "home" | "case" | "feedback" | "result";
 
-const gameCatalog = getGameCatalog();
-const defaultGameId = gameCatalog[0]?.caseId ?? "hc_48h_001";
+const defaultGameCatalog = getDefaultGameCatalog();
+const defaultGameId = defaultGameCatalog[0]?.caseId ?? DEFAULT_CASE_ID;
 
 function buildDefaultAuthState(): AuthSessionPayload {
   return {
     user: null,
     activeGameSession: null,
-    activeGameSessions: []
+    activeGameSessions: [],
+    gameCatalog: defaultGameCatalog
   };
 }
 
@@ -128,15 +130,18 @@ export default function HomePage() {
   const { themePreference, setThemePreference } = useThemePreference();
 
   const user = authState.user;
-  const homeGame = getGameCatalogEntry(selectedGameId) ?? gameCatalog[0] ?? null;
+  const gameCatalog = authState.gameCatalog;
+  const catalogDefaultGameId = gameCatalog[0]?.caseId ?? DEFAULT_CASE_ID;
+  const homeGame = gameCatalog.find((game) => game.caseId === selectedGameId) ?? gameCatalog[0] ?? null;
   const activeSessionsByCaseId = useMemo(
     () => new Map(authState.activeGameSessions.map((session) => [session.caseId, session])),
     [authState.activeGameSessions]
   );
   const selectedGameSession = activeSessionsByCaseId.get(selectedGameId) ?? null;
-  const homeCaseData = getCaseData(selectedGameId);
+  const homeCaseId = homeGame?.caseId ?? catalogDefaultGameId;
+  const homeCaseData = getCaseData(homeCaseId);
   const caseData = phase === "home" ? homeCaseData : getCaseData(gameState.case_id);
-  const homeCharacter = getPrimaryCharacterLabel(selectedGameId);
+  const homeCharacter = getPrimaryCharacterLabel(homeCaseId);
   const activeCharacter = getPrimaryCharacterLabel(gameState.case_id);
   const steps = getAllSteps(caseData.case.id);
   const loseConditions = getLoseConditions(caseData.case.id);
@@ -154,6 +159,18 @@ export default function HomePage() {
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
   const currentCaseSession = activeSessionsByCaseId.get(gameState.case_id) ?? null;
+  const canStartSelectedGame = Boolean(homeGame) && (homeGame.status === "available" || user?.role === "admin");
+  const primaryGameActionLabel = isPending
+    ? "Abrindo sessao..."
+    : !homeGame
+      ? "Nenhum jogo disponivel"
+      : homeGame.status !== "available" && user?.role !== "admin"
+        ? `${homeGame.label} em breve`
+        : homeGame.status !== "available"
+          ? `Testar ${homeGame.label}`
+          : selectedGameSession
+            ? `Continuar ${homeGame.label}`
+            : `Iniciar ${homeGame.label}`;
 
   function resetTransientState() {
     setSelectedChoice(null);
@@ -163,11 +180,13 @@ export default function HomePage() {
     setFeedback(null);
   }
 
-  function applyActiveGameSession(activeGameSession: ActiveGameSession | null) {
+  function applyActiveGameSession(activeGameSession: ActiveGameSession | null, nextCatalog = authState.gameCatalog) {
+    const nextDefaultGameId = nextCatalog[0]?.caseId ?? DEFAULT_CASE_ID;
+
     if (!activeGameSession) {
       setSessionId(null);
-      setGameState(getInitialGameState(defaultGameId));
-      setSelectedGameId(defaultGameId);
+      setGameState(getInitialGameState(nextDefaultGameId));
+      setSelectedGameId(nextDefaultGameId);
       resetTransientState();
       setShowPhaseRiskOverlay(false);
       setPhase("home");
@@ -189,11 +208,11 @@ export default function HomePage() {
     setAuthState(payload);
 
     if (!payload.user) {
-      applyActiveGameSession(null);
+      applyActiveGameSession(null, payload.gameCatalog);
       return;
     }
 
-    setSelectedGameId(payload.activeGameSessions[0]?.caseId ?? defaultGameId);
+    setSelectedGameId(payload.activeGameSessions[0]?.caseId ?? payload.gameCatalog[0]?.caseId ?? DEFAULT_CASE_ID);
     resetTransientState();
     setShowPhaseRiskOverlay(false);
     setPhase("home");
@@ -628,17 +647,11 @@ export default function HomePage() {
               {user ? (
                 <button
                   className="theme-button-primary rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled={isPending || !homeGame || homeGame.status !== "available"}
+                  disabled={isPending || !canStartSelectedGame}
                   onClick={() => void startCase({ caseId: selectedGameId })}
                   type="button"
                 >
-                  {isPending
-                    ? "Abrindo sessao..."
-                    : homeGame?.status !== "available"
-                      ? `${homeGame?.label ?? "Jogo"} em breve`
-                    : selectedGameSession
-                      ? `Continuar ${homeGame?.label ?? "jogo"}`
-                      : `Iniciar ${homeGame?.label ?? "jogo"}`}
+                  {primaryGameActionLabel}
                 </button>
               ) : (
                 <button
@@ -750,7 +763,9 @@ export default function HomePage() {
                       ? user
                         ? "Pronto para abrir ou continuar."
                         : "Disponivel assim que voce entrar na sua conta."
-                      : "Ainda nao publicado. Pode ser preparado no studio admin."}
+                      : user?.role === "admin"
+                        ? "Rascunho visivel apenas para admin. Use a central admin para publicar."
+                        : "Ainda nao publicado. Pode ser preparado no studio admin."}
                   </p>
                 </div>
               ) : null}

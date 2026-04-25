@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getGameCatalogEntry } from "@/lib/game-catalog";
 import { getAuthenticatedUser } from "@/lib/server/auth";
+import { getVisibleGameCatalogEntry } from "@/lib/server/game-catalog";
 import { createSession } from "@/lib/server/session-repository";
 
 export const runtime = "nodejs";
@@ -17,14 +17,12 @@ export async function POST(request: Request) {
       restart?: boolean;
       caseId?: string;
     };
-    const game = getGameCatalogEntry(typeof payload.caseId === "string" ? payload.caseId : "hc_48h_001");
+    const game = await getVisibleGameCatalogEntry(typeof payload.caseId === "string" ? payload.caseId : "hc_48h_001", {
+      role: user.role
+    });
 
     if (!game) {
       return NextResponse.json({ error: "Jogo nao encontrado." }, { status: 404 });
-    }
-
-    if (game.status !== "available") {
-      return NextResponse.json({ error: "Este jogo ainda nao foi publicado na home." }, { status: 403 });
     }
 
     const session = await createSession(user.id, {

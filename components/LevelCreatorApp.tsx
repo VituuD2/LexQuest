@@ -27,6 +27,11 @@ type AuthoringBundle = {
   caseTitle: string;
   supportedInputs: Array<"blocks" | "json">;
   defaultMode: "blocks" | "json";
+  publication: {
+    status: "draft" | "published" | "archived";
+    publishedAt: string | null;
+    publishedVersionNumber: number | null;
+  };
   version: {
     id: string;
     number: number;
@@ -70,6 +75,7 @@ function dateLabel(value: string | null) {
 
 export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
   const [selectedCaseId, setSelectedCaseId] = useState(games[0]?.caseId ?? "hc_48h_001");
+  const [catalogGames, setCatalogGames] = useState(games);
   const [bundle, setBundle] = useState<AuthoringBundle | null>(null);
   const [selectedStepNumber, setSelectedStepNumber] = useState<number>(1);
   const [mode, setMode] = useState<"blocks" | "json">("blocks");
@@ -78,6 +84,7 @@ export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [draftReview, setDraftReview] = useState<DraftReview | null>(null);
@@ -346,6 +353,48 @@ export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
     }
   }
 
+  async function updatePublication(nextAction: "publish" | "unpublish") {
+    setIsPublishing(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch(`/api/authoring/cases/${selectedCaseId}/publication`, {
+        method: nextAction === "publish" ? "PUT" : "DELETE"
+      });
+
+      const payload = (await response.json()) as AuthoringBundle & { error?: string };
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Nao foi possivel atualizar a publicacao do jogo.");
+      }
+
+      setBundle(payload);
+      setCatalogGames((current) =>
+        current.map((game) =>
+          game.caseId === selectedCaseId
+            ? {
+                ...game,
+                status: payload.publication.status === "published" ? "available" : "coming_soon",
+                publicationStatus: payload.publication.status,
+                publishedAt: payload.publication.publishedAt
+              }
+            : game
+        )
+      );
+      setSelectedStepNumber(payload.steps[0]?.stepNumber ?? 1);
+      setSuccessMessage(
+        nextAction === "publish"
+          ? "Jogo publicado na home. Usuarios comuns agora veem este caso no catalogo."
+          : "Jogo retirado da home. Apenas admins continuam vendo este caso no studio."
+      );
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao atualizar a publicacao.");
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -391,8 +440,28 @@ export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
           >
             Sair
           </button>
+          <button
+            className="rounded-full bg-brass px-4 py-3 text-sm font-semibold text-ink transition hover:bg-[#c79a51] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isPublishing || bundle.publication.status === "published"}
+            onClick={() => void updatePublication("publish")}
+            type="button"
+          >
+            {isPublishing && bundle.publication.status !== "published" ? "Publicando..." : "Publicar na home"}
+          </button>
+          <button
+            className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isPublishing || bundle.publication.status !== "published"}
+            onClick={() => void updatePublication("unpublish")}
+            type="button"
+          >
+            {isPublishing && bundle.publication.status === "published" ? "Retirando..." : "Retirar da home"}
+          </button>
           <div className="rounded-2xl border border-brass/25 bg-brass/10 px-4 py-3 text-sm text-[color:var(--text-secondary)]">
             {bundle.version.label} | {bundle.version.status} | atualizada em {dateLabel(bundle.version.updatedAt)}
+          </div>
+          <div className="rounded-2xl border border-emerald/20 bg-emerald/10 px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+            Home: {bundle.publication.status === "published" ? "publicado" : "oculto"}
+            {bundle.publication.publishedAt ? ` | ${dateLabel(bundle.publication.publishedAt)}` : ""}
           </div>
         </div>
       </div>
@@ -412,7 +481,7 @@ export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
-          {games.map((game) => (
+          {catalogGames.map((game) => (
             <button
               className={`rounded-[24px] border p-5 text-left transition ${
                 selectedCaseId === game.caseId
@@ -423,7 +492,18 @@ export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
               onClick={() => setSelectedCaseId(game.caseId)}
               type="button"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)]">{game.label}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)]">{game.label}</p>
+                <span
+                  className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                    game.publicationStatus === "published"
+                      ? "bg-emerald/12 text-emerald"
+                      : "bg-white/8 text-[color:var(--text-secondary)]"
+                  }`}
+                >
+                  {game.publicationStatus === "published" ? "publicado" : "oculto"}
+                </span>
+              </div>
               <h3 className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{game.title}</h3>
               <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{game.summary}</p>
             </button>

@@ -1,6 +1,6 @@
 import { requireAdminUser } from "@/lib/server/auth";
 import { LevelCreatorApp } from "@/components/LevelCreatorApp";
-import { getGameCatalog } from "@/lib/game-catalog";
+import { listVisibleGameCatalog } from "@/lib/server/game-catalog";
 
 export const metadata = {
   title: "LexQuest Studio",
@@ -9,7 +9,9 @@ export const metadata = {
 
 export default async function CreatorPage() {
   const currentUser = await requireAdminUser();
-  const games = getGameCatalog();
+  const games = await listVisibleGameCatalog({
+    includeUnpublished: true
+  });
 
   return <LevelCreatorApp currentUser={currentUser} games={games} />;
 }
