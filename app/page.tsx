@@ -526,7 +526,7 @@ export default function HomePage() {
   }
 
   async function handleSubmitStep() {
-    if (!currentStep || !sessionId) {
+    if (!currentStep || !sessionId || isPhaseTransitioning) {
       return;
     }
 
@@ -561,7 +561,10 @@ export default function HomePage() {
     }
 
     setIsPending(true);
+    setIsPhaseTransitioning(true);
     setGameErrorMessage(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    gameTopRef.current?.focus({ preventScroll: true });
 
     try {
       const response = await fetch(`/api/session/${sessionId}/choice`, {
@@ -596,7 +599,12 @@ export default function HomePage() {
       setSelectedFoundations([]);
       setSelectedDocumentIds([]);
       setFreeText("");
+      await new Promise((resolve) => window.setTimeout(resolve, 900));
       setPhase("feedback");
+      window.scrollTo({ top: 0, behavior: "auto" });
+      requestAnimationFrame(() => {
+        gameTopRef.current?.focus({ preventScroll: true });
+      });
       if (payload.gameState.current_step >= 6) {
         setShowPhaseRiskOverlay(false);
       }
@@ -605,24 +613,19 @@ export default function HomePage() {
       setGameErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao salvar a escolha.");
     } finally {
       setIsPending(false);
+      setIsPhaseTransitioning(false);
     }
   }
 
-  async function handleContinue() {
-    if (!feedback || isPhaseTransitioning) {
+  function handleContinue() {
+    if (!feedback) {
       return;
     }
-
-    setIsPhaseTransitioning(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    gameTopRef.current?.focus({ preventScroll: true });
-    await new Promise((resolve) => window.setTimeout(resolve, 1250));
 
     setPhase(feedback.nextStep >= 6 ? "result" : "case");
     window.scrollTo({ top: 0, behavior: "auto" });
     requestAnimationFrame(() => {
       gameTopRef.current?.focus({ preventScroll: true });
-      setIsPhaseTransitioning(false);
     });
   }
 
