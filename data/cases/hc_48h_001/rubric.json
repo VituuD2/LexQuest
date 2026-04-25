@@ -1,41 +1,41 @@
 {
-  "rubric_id": "hc_liminar_argumento_001",
+  "rubric_id": "hc_liminar_argumento_estrutural_001",
   "max_score": 30,
   "criteria": [
     {
-      "id": "fundamentacao_generica",
-      "description": "Aponta que a prisao preventiva foi fundamentada de forma generica.",
+      "id": "pedido_liminar_claro",
+      "description": "Formula pedido liminar claro e juridicamente delimitado.",
+      "points": 4
+    },
+    {
+      "id": "vicio_preventiva",
+      "description": "Identifica o vicio central da preventiva: fundamentacao abstrata, sem individualizacao e sem risco concreto atual.",
       "points": 6
     },
     {
-      "id": "ausencia_violencia",
-      "description": "Menciona que o fato nao envolveu violencia ou grave ameaca.",
-      "points": 4
-    },
-    {
-      "id": "bem_recuperado",
-      "description": "Menciona recuperacao integral do bem e baixo dano material.",
-      "points": 4
-    },
-    {
-      "id": "antecedentes",
-      "description": "Diferencia processo anterior sem transito em julgado de condenacao definitiva.",
+      "id": "fatos_concretos_autos",
+      "description": "Usa fatos concretos dos autos favoraveis a Rafael, sem depender de afirmacoes genericas.",
       "points": 5
     },
     {
-      "id": "cautelares_diversas",
-      "description": "Propoe medidas cautelares diversas da prisao como alternativa proporcional.",
+      "id": "enfrenta_fato_desfavoravel",
+      "description": "Enfrenta ao menos um fato desfavoravel, como embalagem aberta, mochila ou video ambiguo.",
+      "points": 4
+    },
+    {
+      "id": "proporcionalidade_cautelares",
+      "description": "Trabalha proporcionalidade e pede cautelares diversas como resposta subsidiaria.",
       "points": 5
     },
     {
-      "id": "tom_tecnico",
-      "description": "Usa linguagem tecnica, objetiva e respeitosa.",
-      "points": 3
+      "id": "coerencia_documentos",
+      "description": "Mantem coerencia entre tese, documentos disponiveis e limites da prova.",
+      "points": 4
     },
     {
-      "id": "coerencia",
-      "description": "Constroi argumento coerente com os documentos do caso.",
-      "points": 3
+      "id": "linguagem_tecnica_objetiva",
+      "description": "Usa linguagem tecnica, objetiva e respeitosa, adequada ao plantao.",
+      "points": 2
     }
   ]
 }

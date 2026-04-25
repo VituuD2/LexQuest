@@ -3,198 +3,209 @@
     "id": "step_001",
     "case_id": "hc_48h_001",
     "step_number": 1,
-    "title": "Triagem defensiva de plantao",
-    "situation": "Sonia Martins chega ao escritorio em uma sexta-feira, por volta de 21h15, com o celular nas maos e visivel estado de desespero. Ela informa que Rafael foi autuado por suposto furto de uma parafusadeira em loja do Centro, que a audiencia de custodia ja ocorreu de forma muito rapida e que a familia ouviu, de forma informal, que a transferencia para o presidio regional pode ocorrer ainda no sabado.\n\nOs documentos que a familia possui naquele momento sao incompletos, mas suficientes para indicar urgencia real. Ha um resumo do auto de prisao em flagrante e mensagens trocadas no grupo da familia. Sonia insiste em saber se o doutor conseguira 'tirar Rafael hoje mesmo', enquanto explica que ele ajuda financeiramente em casa e cuida do irmao menor.\n\nA decisao inicial de atendimento nao e meramente administrativa. Ela define se a defesa vai estruturar uma atuacao responsavel, colher documentos uteis e preservar credibilidade com a familia, ou se vai desperdiçar horas preciosas em medidas mal instruidas, potencialmente vistosas, mas pouco eficazes diante da urgencia processual.",
-    "question": "Qual deve ser a primeira estrategia profissional do doutor diante desse atendimento emergencial?",
-    "objective": "Organizar uma resposta urgente sem prometer resultado, preservando base documental minima e margem para medidas eficazes nas horas seguintes.",
+    "title": "Atendimento emergencial",
+    "situation": "Sonia Martins procura o escritorio em uma sexta-feira, depois do horario forense, com mensagens incompletas no celular e evidente abalo emocional. Ela diz que Rafael foi preso por suposto furto de uma parafusadeira, que a audiencia de custodia foi rapida e que ouviu falar em transferencia para o presidio regional ainda no sabado.\n\nA familia tem poucas pecas: um resumo do flagrante, conversas informais e dados pessoais esparsos. Sonia pergunta se o doutor consegue tirar Rafael imediatamente, mas tambem admite que nao sabe onde ele esta custodiado, se a defesa ja recebeu a decisao e se ha copia completa do auto.\n\nO plantao exige uma escolha delicada. Agir sem prova pode criar protocolo rapido, mas fragil. Esperar demais pode perder a janela de urgencia. A primeira decisao precisa transformar desespero familiar em plano profissional verificavel.",
+    "question": "Qual deve ser a primeira estrategia profissional diante desse atendimento emergencial?",
+    "objective": "Organizar atuacao urgente sem prometer resultado, com coleta minima, controle de prazo e preservacao de credibilidade.",
     "unlock_documents": ["doc_001", "doc_002"],
     "foundation_selection": {
       "enabled": true,
-      "min": 2,
-      "max": 3,
-      "prompt": "Selecione de 2 a 3 fundamentos faticos ou estrategicos para sustentar essa postura inicial."
+      "min": 1,
+      "max": 2,
+      "prompt": "Selecione de 1 a 2 fundamentos praticos para orientar a primeira resposta do plantao."
     },
     "options": [
       {
         "key": "A",
-        "label": "Atuacao emergencial documentada",
-        "text": "O doutor informa a familia de que nenhuma medida seria seria prometida sem leitura dos autos, mas que ha espaco para atuacao urgente naquela mesma noite. Solicita copia integral do auto, local de custodia, contato de familiares, comprovantes de residencia, elementos de trabalho e autorizacao para entrevistar Rafael reservadamente. Explica que a primeira triagem sera dirigida a verificar ilegalidade concreta da preventiva e eventual cabimento de pedido urgente melhor instruido.",
-        "set_flags": ["atendimento_responsavel"]
+        "label": "Coleta estruturada e contato com custodia",
+        "text": "O doutor explica que nao pode prometer soltura, mas assume atuacao imediata. Solicita decisao de custodia, auto, local de prisao, documentos pessoais e contato para entrevista reservada. Em paralelo, tenta confirmar a situacao de transferencia para definir se a medida urgente devera ir ao tribunal ou ao juizo de origem.",
+        "set_flags": ["atendimento_responsavel", "coleta_documental_iniciada"]
       },
       {
         "key": "B",
-        "label": "Habeas corpus imediato com prova minima",
-        "text": "O doutor decide redigir imediatamente um habeas corpus com base no resumo informal apresentado pela mae, enfatizando o baixo valor do bem e a recuperacao do objeto. A providencia tenta ganhar tempo e criar protocolo rapido no plantao, mas corre o risco de chegar ao tribunal com narrativa ainda pouco estabilizada, sem documentos pessoais e sem confronto serio com a decisao de custodia."
+        "label": "HC imediato com relato familiar",
+        "text": "O doutor prepara habeas corpus naquela noite com base no relato da mae, no valor reduzido do bem e na noticia de recuperacao integral. A estrategia tenta ocupar o plantao rapidamente, mas assume risco serio de chegar ao relator sem a decisao completa, sem documentos pessoais e sem enfrentamento preciso do decreto prisional.",
+        "set_flags": ["protocolo_precipitado"]
       },
       {
         "key": "C",
-        "label": "Pedido de reconsideracao no juizo da custodia",
-        "text": "O doutor opta por peticionar ao proprio juizo que converteu o flagrante em preventiva, pedindo reconsideracao imediata e prometendo complementar a prova documental nas horas seguintes. A estrategia preserva deferencia institucional e pode funcionar se houver abertura do gabinete de plantao, mas pode se mostrar lenta demais se a transferencia estiver realmente prestes a ocorrer."
+        "label": "Reconsideracao no plantao de custodia",
+        "text": "O doutor peticiona ao proprio juizo que converteu o flagrante em preventiva, juntando documentos pessoais iniciais e pedindo reconsideracao urgente. A via e institucionalmente plausivel e pode funcionar se houver resposta rapida, mas fica vulneravel ao tempo do cartorio e ao risco de transferencia antes da apreciacao.",
+        "set_flags": ["tentou_reconsideracao_origem"]
       },
       {
         "key": "D",
-        "label": "Coleta defensiva extraprocessual antes da impugnacao",
-        "text": "O doutor prioriza reunir declaracao da loja sobre recuperacao do bem, procurar imagens, checar camera externa e levantar documentos de residencia e trabalho antes de definir a medida urgente. A iniciativa pode robustecer bastante a defesa, mas concentra esforco em diligencias paralelas e pode atrasar o enfrentamento imediato da prisao cautelar se nao vier acompanhada de cronograma muito rigoroso."
+        "label": "Diligencia externa antes de judicializar",
+        "text": "O doutor prioriza localizar familiares, buscar declaracao da loja, tentar obter imagens e reunir comprovantes antes de qualquer medida judicial. O caminho pode produzir material forte, mas desloca energia para fora do processo justamente quando a prisao cautelar ainda nao foi enfrentada.",
+        "set_flags": ["adiou_impugnacao_urgente"]
       }
     ],
     "best_choice": "A",
-    "pedagogical_note": "A melhor resposta nao e a mais ruidosa, e sim a que organiza o plantao com urgencia, sobriedade e lastro documental minimo. B e juridicamente possivel, mas mais exposto a indeferimento por instrucao pobre. C pode ser defensavel em algumas comarcas, embora perca forca se a transferencia estiver iminente. D e util para robustecer o caso, mas nao substitui o enfrentamento urgente da custodia."
+    "pedagogical_note": "A melhor primeira resposta combina urgencia e metodo. B e possivel em situacao extrema, mas fica exposta por falta de lastro. C tem algum merito, mas pode ser lenta. D valoriza prova, porem assume risco alto de perder o timing do plantao."
   },
   {
     "id": "step_002",
     "case_id": "hc_48h_001",
     "step_number": 2,
-    "title": "Leitura critica da custodia",
-    "situation": "Com o termo do seguranca e a decisao de custodia em maos, a defesa percebe que o decreto prisional se apoia em expressoes como 'garantia da ordem publica', 'credibilidade da Justica' e 'crimes patrimoniais recorrentes na comarca'. O texto menciona um registro anterior atribuido a Rafael, mas nao individualiza fatos atuais que demonstrem risco concreto de reiteracao, ameaca a instrucao ou descumprimento de cautelares anteriores.\n\nAo mesmo tempo, o caso nao e completamente limpo. O auto registra que a embalagem estava parcialmente aberta e que o seguranca afirma ter visto Rafael caminhar em direcao a saida apos passar pela area dos caixas. Ha, portanto, elementos que podem sustentar suspeita razoavel, embora nao necessariamente bastem para justificar preventiva com motivacao abstrata.\n\nO desafio do doutor, aqui, nao e apenas perceber um defeito juridico. E decidir qual leitura estrategica da decisao vale mais a pena construir para as proximas pecas, separando aquilo que enfraquece a preventiva daquilo que so serviria para discurso genérico ou exagerado.",
-    "question": "Qual leitura critica da decisao de custodia melhor prepara a atuacao defensiva nas proximas horas?",
-    "objective": "Distinguir fragilidade concreta da fundamentacao cautelar de teses apressadas ou excessivamente amplas.",
+    "title": "Leitura da decisao de custodia",
+    "situation": "A defesa recebe a decisao que converteu o flagrante em preventiva. O texto menciona garantia da ordem publica, credibilidade da Justica e risco de reiteracao, apoiando-se em registro anterior atribuido a Rafael. Apesar disso, nao explica que risco concreto, atual e individualizado ele representaria se respondesse solto.\n\nOs autos tambem nao sao inocuos. O seguranca relata ocultacao do objeto na mochila, a embalagem estava parcialmente aberta e ha mencao a deslocamento pela area dos caixas. Por outro lado, nao houve violencia, o bem foi recuperado e o registro anterior nao aparece como condenacao definitiva.\n\nA leitura correta precisa separar o que ajuda no ataque a cautelar do que apenas parece bom em discurso. O foco nao e afirmar absoluicao antecipada, mas identificar o vicio que melhor sustenta uma medida urgente.",
+    "question": "Qual leitura critica da decisao melhor prepara a defesa para as proximas horas?",
+    "objective": "Identificar o vicio central da preventiva e evitar teses isoladas que nao enfrentem a cautelar.",
     "unlock_documents": ["doc_003", "doc_004"],
     "foundation_selection": {
       "enabled": true,
-      "min": 2,
-      "max": 4,
-      "prompt": "Selecione de 2 a 4 fundamentos relevantes para sustentar essa leitura da decisao."
+      "min": 1,
+      "max": 2,
+      "prompt": "Selecione de 1 a 2 fundamentos que sustentem a critica tecnica da decisao de custodia."
     },
     "options": [
       {
         "key": "A",
-        "label": "Atacar a abstracao da preventiva",
-        "text": "O doutor estrutura a analise destacando que a decisao reproduz fundamentos abstratos sobre ordem publica, credibilidade institucional e combate generico a crimes patrimoniais, sem demonstrar por que Rafael, especificamente, apresentaria risco processual atual. A linha nao ignora a suspeita do fato, mas separa materialidade e indicios de autoria do juizo rigoroso exigido para manter alguem preso cautelarmente."
+        "label": "Genericidade e falta de risco concreto",
+        "text": "O doutor ataca a ausencia de fundamentacao individualizada e contemporanea da preventiva. A estrategia reconhece que ha suspeita do fato, mas sustenta que isso nao basta para manter prisao cautelar sem demonstracao concreta de risco processual ou de insuficiencia de cautelares diversas.",
+        "set_flags": ["identificou_decisao_generica"]
       },
       {
         "key": "B",
-        "label": "Explorar nulidade automatica pelo valor do bem",
-        "text": "O doutor decide sustentar desde logo que a preventiva seria nula porque o valor do objeto e baixo e o bem foi recuperado. A tese pode ter apelo intuitivo e conversar com proporcionalidade, mas, formulada assim, corre o risco de simplificar em excesso o problema juridico e de deixar sem enfrentamento direto a motivacao concreta - ainda que fraca - apresentada na custodia."
+        "label": "Insignificancia como eixo exclusivo",
+        "text": "O doutor concentra a critica no valor reduzido da parafusadeira e na recuperacao do bem. A tese pode dialogar com proporcionalidade, mas fica incompleta se nao enfrentar diretamente por que a decisao de custodia e abstrata e por que a preventiva seria desnecessaria.",
+        "set_flags": ["alegou_insignificancia"]
       },
       {
         "key": "C",
-        "label": "Tratar a decisao como tecnicamente discutivel, mas nao absurda",
-        "text": "O doutor reconhece que a decisao usa formulas padronizadas, mas entende ser prudente construir critica moderada, sem apostar todo o caso em nulidade por genericidade. A estrategia privilegia tom institucional e evita superdimensionar o defeito, embora possa reduzir a contundencia do principal argumento defensivo justamente onde a decisao parece mais vulneravel."
+        "label": "Negativa de autoria e falta de consumacao",
+        "text": "O doutor prefere sustentar que o video inconclusivo e a abordagem antes da porta externa enfraquecem a narrativa acusatoria. O argumento tem utilidade defensiva, mas, usado sozinho, desloca o debate para o merito e deixa a fundamentacao da preventiva menos explorada.",
+        "set_flags": ["focou_merito_antes_cautelar"]
       },
       {
         "key": "D",
-        "label": "Deslocar o foco para a legalidade do flagrante privado",
-        "text": "O doutor passa a concentrar a critica no fato de a abordagem ter sido iniciada por seguranca particular, sugerindo, em tese, irregularidade originaria da constricao. A linha pode gerar discussao sobre cadeia de acontecimentos e prova, mas tem menor aderencia ao problema imediato da cautelar, alem de nao enfrentar com profundidade a motivacao judicial ja existente."
+        "label": "Aceitar a cautelar e preparar instrucao",
+        "text": "O doutor entende que a decisao deve ser enfrentada apenas na defesa futura, priorizando coleta de prova para a instrucao. A postura evita pedido precipitado, mas abandona a janela de revisao urgente mesmo havendo defeito aparente na fundamentacao da prisao.",
+        "set_flags": ["aceitou_preventiva_sem_reagir"]
       }
     ],
     "best_choice": "A",
-    "pedagogical_note": "A linha mais forte e a que enfrenta a decisao onde ela realmente esta fragil: a ausencia de fundamentacao individualizada para a preventiva. B toca em elementos relevantes, mas formula uma nulidade automatica pouco convincente. C e cautelosa, porem pode desperdiçar o melhor argumento do caso. D desloca a discussao para tema lateral, com utilidade menor diante da urgencia da custodia."
+    "pedagogical_note": "A linha mais forte e atacar a preventiva onde ela parece fragil: fundamentacao abstrata e falta de individualizacao. B e C podem integrar uma tese subsidiaria, mas nao devem substituir o ataque cautelar. D perde utilidade pratica no plantao."
   },
   {
     "id": "step_003",
     "case_id": "hc_48h_001",
     "step_number": 3,
-    "title": "Definicao da via urgente",
-    "situation": "Chegam novos documentos: a certidao de antecedentes, a descricao do video interno e a avaliacao comercial do bem. O quadro fica mais interessante. O video mostra Rafael colocando a parafusadeira na mochila enquanto fala ao telefone, mas nao esclarece se ele efetivamente tentou sair sem pagar; a camera frontal nao permite afirmar se houve ingresso em fila ou desvio direto para a saida. A abordagem ocorreu antes da porta externa.\n\nA certidao de antecedentes aponta processo anterior por receptacao culposa, sem indicacao de transito em julgado. O objeto foi recuperado integralmente e nao houve violencia. Ainda assim, a embalagem estava parcialmente aberta, e esse detalhe pode ser lido tanto como indicio de intencao de subtrair quanto como elemento ambiguo de manuseio indevido dentro da loja.\n\nCom a transferencia do custodiado ainda no horizonte, o doutor precisa escolher a via processual que melhor equilibra velocidade, densidade argumentativa e chance de obter providencia util em curto prazo.",
-    "question": "Qual medida urgente deve ser priorizada nesse momento?",
-    "objective": "Escolher a via processual mais apta a enfrentar a cautelar nas proximas horas, sem perder coerencia com a prova ja disponivel.",
+    "title": "Escolha da via processual",
+    "situation": "O relogio do plantao continua correndo. Agora a defesa tem a decisao, o auto, a descricao do video, a certidao de antecedentes e a avaliacao comercial do bem. O conjunto permite trabalhar a fragilidade da preventiva, mas ainda deixa zonas de risco sobre a conduta dentro da loja.\n\nA transferencia de Rafael segue como possibilidade concreta. Ao mesmo tempo, uma medida mal instruida pode ser indeferida rapidamente e dificultar a narrativa defensiva posterior. A escolha da via precisa equilibrar velocidade, lastro documental e chance de uma resposta util.\n\nO dilema nao e entre agir ou estudar para sempre. O dilema e escolher a medida que melhor conversa com o material ja disponivel e com a urgencia real do plantao.",
+    "question": "Qual medida urgente deve ser priorizada neste momento?",
+    "objective": "Escolher uma via processual proporcional ao prazo, aos documentos disponiveis e ao problema central da preventiva.",
     "unlock_documents": ["doc_005", "doc_006", "doc_007"],
     "foundation_selection": {
       "enabled": true,
       "min": 2,
-      "max": 4,
-      "prompt": "Selecione de 2 a 4 fundamentos juridicos ou faticos para sustentar a medida urgente escolhida."
+      "max": 3,
+      "prompt": "Selecione de 2 a 3 fundamentos para sustentar a via processual escolhida."
     },
     "options": [
       {
         "key": "A",
-        "label": "Habeas corpus com liminar bem delimitado",
-        "text": "O doutor prioriza habeas corpus com pedido liminar, focado na deficiencia concreta da fundamentacao da preventiva, no antecedente sem transito em julgado, na ausencia de violencia e na possibilidade de medidas cautelares diversas. A via e agressiva e compativel com a urgencia, mas exige recorte tecnico rigoroso para nao transformar ambiguidades probatorias em afirmacoes absolutas de inocencia.",
+        "label": "HC com liminar e prova minima forte",
+        "text": "O doutor impetra habeas corpus com liminar, focando na fundamentacao generica, na ausencia de violencia, no antecedente sem transito e nas cautelares diversas. A via e veloz e adequada ao risco de transferencia, mas depende de recorte preciso para nao parecer uma discussao completa de merito sem contraditorio.",
         "unlock_documents": ["doc_009"],
         "set_flags": ["escolheu_medida_urgente", "rota_hc_plantao"]
       },
       {
         "key": "B",
-        "label": "Pedido de revogacao da preventiva com documentos pessoais",
-        "text": "O doutor prefere protocolar pedido de revogacao ou substituicao da preventiva ao juizo de origem, instruindo com residencia familiar, rotina de trabalho e circunstancia de o bem ter sido recuperado. A estrategia pode amadurecer melhor a prova pessoal do custodiado, mas tende a ser mais lenta para fins de resposta imediata se comparada ao HC em regime de plantao.",
+        "label": "Revogacao no primeiro grau com cautelares",
+        "text": "O doutor prioriza pedido de revogacao ou substituicao da preventiva ao juizo de origem, juntando documentos pessoais, residencia, recuperacao do bem e proposta concreta de cautelares. A escolha e menos veloz que o HC, mas, neste desenho, organiza melhor o material disponivel e preserva uma rota institucional direta contra a propria decisao.",
         "unlock_documents": ["doc_010"],
-        "set_flags": ["priorizou_origem_com_documentos", "rota_revogacao_origem"]
+        "set_flags": ["priorizou_origem_com_documentos", "tese_cautelares_origem"]
       },
       {
         "key": "C",
-        "label": "Diligencias complementares antes de qualquer impugnacao",
-        "text": "O doutor segura a medida urgente por algumas horas para tentar obter copia integral do video, declaracao da loja e mais documentos pessoais. Isso pode resultar em peticao mais robusta, mas assume o risco relevante de perder a janela temporal mais sensivel do plantao e permitir que a transferencia esvazie a utilidade pratica da atuacao urgente."
+        "label": "Aguardar video integral e declaracao da loja",
+        "text": "O doutor segura a medida por algumas horas para tentar obter video integral, declaracao formal da loja e documentos familiares mais completos. A diligencia pode melhorar a prova, mas assume risco expressivo de perder a janela de urgencia e permitir que a transferencia reduza a utilidade pratica do pedido.",
+        "set_flags": ["adiou_impugnacao_urgente"]
       },
       {
         "key": "D",
-        "label": "Ataque frontal ao merito do furto tentado",
-        "text": "O doutor escolhe uma medida voltada principalmente a sustentar atipicidade, ausencia de dolo e inexistencia de tentativa consumada, buscando resolver desde logo a narrativa do fato. O caminho tem pontos defensivos reais, especialmente por causa do video inconclusivo e da abordagem antes da saida, mas pode dispersar a energia argumentativa e deixar em segundo plano o vicio mais evidente da cautelar."
+        "label": "Peca ampla com tudo que pode ajudar",
+        "text": "O doutor redige uma peca extensa misturando nulidade do flagrante, negativa de autoria, insignificancia, pedido indenizatorio e argumentos constitucionais genericos. A amplitude da peca pode parecer completa, mas tende a dispersar o foco e enfraquecer a resposta urgente contra a prisao preventiva.",
+        "set_flags": ["peca_ampla_dispersiva"]
       }
     ],
-    "best_choice": "A",
-    "pedagogical_note": "No contexto desenhado, o habeas corpus com liminar e a resposta mais proporcional a urgencia. B e boa opcao em ambiente sem risco imediato de transferencia, mas aqui tende a perder tempo. C valoriza instrução, porem pode custar a janela util. D trabalha temas relevantes do merito, embora a prisao preventiva exija ataque mais concentrado na falta de motivacao concreta."
+    "best_choice": "B",
+    "pedagogical_note": "Neste desenho, B e a melhor escolha porque combina documentos pessoais, pedido de cautelares e enfrentamento direto ao juizo que decretou a prisao. A tambem e forte, especialmente se a transferencia estiver confirmada, mas exige recorte muito limpo. C valoriza prova e perde tempo. D confunde volume com estrategia."
   },
   {
     "id": "step_004",
     "case_id": "hc_48h_001",
     "step_number": 4,
-    "title": "Arquitetura da tese central",
-    "situation": "A entrevista reservada com Rafael melhora alguns pontos e complica outros. Ele relata que recebeu ligacao da mae informando que o irmao menor passara mal, diz que colocou a parafusadeira na mochila para liberar as maos e admite que isso foi 'uma burrice'. Afirma que nao saiu da loja, que pretendia pagar ao menos as fitas isolantes e que queria comprar a ferramenta para um trabalho no dia seguinte. Ao mesmo tempo, nao consegue explicar satisfatoriamente por que a etiqueta da embalagem estava parcialmente removida.\n\nEm termos defensivos, isso exige calibragem. Existe espaco para argumentar que a preventiva foi mal fundamentada, que o bem foi integralmente recuperado, que nao houve violencia e que o registro anterior nao equivale a condenacao definitiva. Mas tambem ha risco real em adotar uma tese maximalista, incompatível com as ambiguidades dos autos.\n\nO doutor agora precisa decidir qual arquitetura argumentativa comandara a peca urgente: uma linha institucional e proporcional, uma tese mais combativa sobre o fato, ou um modelo hibrido que pode parecer rico, mas perder foco.",
+    "title": "Construcao da tese",
+    "situation": "A entrevista reservada com Rafael melhora alguns pontos e complica outros. Ele diz que recebeu ligacao da mae sobre o irmao menor, colocou a parafusadeira na mochila para liberar as maos e admite que isso foi uma decisao imprudente. Afirma que nao saiu da loja e que pretendia pagar outros itens.\n\nO problema e que a embalagem estava parcialmente aberta, e o video nao tem audio nem resolve de forma segura se Rafael passou pela linha dos caixas. Ha material para reduzir a forca da preventiva, mas nao para prometer uma absoluicao antecipada como se tudo estivesse esclarecido.\n\nA tese precisa ser adulta: forte o bastante para pressionar a prisao cautelar, honesta o bastante para reconhecer ambiguidades e estrategica o bastante para oferecer uma saida proporcional ao julgador.",
     "question": "Qual linha argumentativa deve ocupar o centro da peca urgente?",
-    "objective": "Construir uma tese principal tecnicamente plausivel, proporcional e consistente com as ambiguidades do caso concreto.",
+    "objective": "Formular tese equilibrada, com hierarquia entre cautelaridade, fatos favoraveis, riscos probatorios e pedido subsidiario.",
     "unlock_documents": ["doc_008"],
     "foundation_selection": {
       "enabled": true,
       "min": 2,
       "max": 4,
-      "prompt": "Selecione de 2 a 4 fundamentos para dar espinha dorsal a essa linha argumentativa."
+      "prompt": "Selecione de 2 a 4 fundamentos que darao espinha dorsal a tese."
     },
     "options": [
       {
         "key": "A",
-        "label": "Enfrentar a cautelar e pedir subsidiariamente cautelares diversas",
-        "text": "O doutor estrutura a peca em torno da ausencia de fundamentacao concreta para a preventiva, do baixo grau de violencia do fato, da recuperacao integral do bem e da inexistencia de condenacao definitiva, sustentando que eventual preocupacao residual pode ser administrada com cautelares diversas. A linha reconhece a controversia sobre o fato sem depender dela para derrubar a prisao."
+        "label": "Preventiva desproporcional e cautelares",
+        "text": "O doutor centra a peca na falta de fundamentacao concreta da preventiva, usando fatos dos autos para demonstrar proporcionalidade: ausencia de violencia, bem recuperado, registro sem transito e possibilidade de cautelares. A tese reconhece a ambiguidade do fato, mas mostra que ela nao justifica prisao cautelar automatica.",
+        "set_flags": ["tese_principal_correta"]
       },
       {
         "key": "B",
-        "label": "Apostar na insignificancia como chave exclusiva do caso",
-        "text": "O doutor decide colocar no centro da peca a irrelevancia material da conduta em razao do valor do bem e da sua recuperacao, tratando os demais argumentos como perifericos. A tese conversa com proporcionalidade, mas, se usada isoladamente, pode ser vulneravel diante da discussao sobre dolo, embalagem violada e suposta passagem pela area dos caixas."
+        "label": "Inocencia plena como tese central",
+        "text": "O doutor afirma que Rafael e inocente e que o video comprova ausencia de dolo. A linha pode tranquilizar a familia e explorar pontos favoraveis, mas ignora a embalagem aberta, a mochila e a limitacao do video, alem de deixar em segundo plano o defeito tecnico da preventiva.",
+        "set_flags": ["exagerou_merito"]
       },
       {
         "key": "C",
-        "label": "Sustentar nulidade do flagrante e inocencia inequívoca",
-        "text": "O doutor escolhe argumentar que a abordagem do seguranca particular contaminou o flagrante e que o video demonstraria, praticamente por si so, ausencia de qualquer intencao de subtrair. O caminho pode soar combativo para a familia, mas se expõe ao risco de exagerar a prova existente e enfraquecer a credibilidade do pedido liminar."
+        "label": "Insignificancia como tese unica",
+        "text": "O doutor sustenta que o baixo valor do bem e sua recuperacao tornam a prisao incompativel com proporcionalidade. A tese tem utilidade subsidiaria, mas, isolada, nao responde bem aos elementos de dolo discutidos nos autos nem ao fundamento judicial de risco de reiteracao.",
+        "set_flags": ["insignificancia_centralizada"]
       },
       {
         "key": "D",
-        "label": "Tese escalonada de cautelaridade e merito minimo",
-        "text": "O doutor combina ataque principal a genericidade da preventiva com bloco subsidiario de proporcionalidade, valor reduzido, abordagem antes da saida definitiva, ausencia de condenacao definitiva e duvida razoavel sobre a intencao de subtracao. E uma estrategia rica e sofisticada, mas exige muito cuidado de redacao para nao transformar a peca urgente em catalogo excessivo de teses sem hierarquia.",
-        "unlock_documents": ["doc_011"],
-        "set_flags": ["tese_escalonada"]
+        "label": "Nulidade total pela abordagem privada",
+        "text": "O doutor tenta derrubar todo o flagrante porque a abordagem foi feita por seguranca privado. A linha pode render debate lateral sobre prova e cadeia de acontecimentos, mas e arriscada como centro da peca porque transforma um ponto acessorio em tese absoluta.",
+        "set_flags": ["nulidade_privada_absolutizada"]
       }
     ],
     "best_choice": "A",
-    "pedagogical_note": "A opcao A e a mais segura e tecnicamente forte porque nao depende de vencer, em liminar, todo o debate sobre o merito do furto. D pode ser excelente se muito bem hierarquizada, mas e mais dificil de executar sob pressao. B tem utilidade parcial. C assume demais sobre prova ainda ambigua e sobre nulidades pouco evidentes."
+    "pedagogical_note": "A melhor tese preserva foco na cautelaridade e usa fatos favoraveis sem exagero. C pode ajudar subsidiariamente, mas nao basta sozinha. B e D parecem fortes no discurso, porem se afastam da prova e tornam a peca menos confiavel."
   },
   {
     "id": "step_005",
     "case_id": "hc_48h_001",
     "step_number": 5,
-    "title": "Redacao do pedido liminar",
-    "situation": "A estrategia ja foi definida, os documentos principais estao separados e o plantao avanca. O desafio deixa de ser apenas escolher o caminho e passa a ser executa-lo com densidade tecnica. Uma boa minuta precisa hierarquizar fundamentos, evitar promessas absolutas de inocencia, demonstrar por que a prisao atual e desproporcional e, se necessario, oferecer cautelares diversas como resposta residual.\n\nTambem e importante lembrar que o tribunal lera essa peca sob forte pressao de tempo. Argumentos dispersos, retoricos ou baseados em certezas que o acervo nao sustenta podem reduzir a chance de uma liminar util. Ja um texto objetivo, tecnicamente calibrado e aderente aos autos pode nao encerrar o debate, mas melhora substancialmente a credibilidade da defesa logo na primeira leitura.",
-    "question": "Redija o nucleo do pedido liminar e selecione os fundamentos que darao sustentacao imediata a ele.",
-    "objective": "Treinar redacao tecnica de urgencia, hierarquia argumentativa e selecao responsavel de fundamentos.",
+    "title": "Redacao livre",
+    "situation": "A estrategia esta definida e os documentos principais foram separados. Agora a defesa precisa transformar escolhas em uma minuta liminar objetiva, com hierarquia argumentativa e aderencia aos autos. Um texto bom nao tenta ganhar todo o processo em poucas linhas; ele mostra por que a prisao, naquele momento, exige revisao urgente.\n\nO relator ou o juiz plantonista lera a peca sob pressao de tempo. Por isso, a minuta deve conter pedido claro, vicio da preventiva, fatos concretos favoraveis, enfrentamento minimo de um ponto ruim e proposta subsidiaria de cautelares diversas.\n\nRedija de 8 a 12 linhas. Evite prometer inocencia plena, inventar precedente ou transformar vulnerabilidade social em excludente automatica. Trabalhe com os documentos que o jogo ja entregou.",
+    "question": "Redija o nucleo do pedido liminar e selecione os fundamentos que sustentam a argumentacao.",
+    "objective": "Treinar argumentacao tecnica de urgencia com pedido claro, estrutura, prova, cautela e coerencia documental.",
     "unlock_documents": [],
     "options": [],
     "foundation_selection": {
       "enabled": true,
-      "min": 2,
+      "min": 3,
       "max": 4,
-      "prompt": "Selecione de 2 a 4 fundamentos que o doutor efetivamente usara no pedido liminar."
+      "prompt": "Selecione de 3 a 4 fundamentos que serao efetivamente usados na minuta."
     },
     "free_text": {
       "enabled": true,
-      "min_lines": 5,
-      "max_lines": 10
+      "min_lines": 8,
+      "max_lines": 12
     },
     "criteria": [
-      "identifica decisao generica",
-      "menciona ausencia de violencia ou grave ameaca",
-      "menciona recuperacao integral do bem",
-      "aponta inexistencia de condenacao definitiva",
-      "propoe cautelares diversas, se necessario",
-      "evita promessa absoluta de inocencia",
-      "usa tom tecnico"
+      "pedido liminar claro",
+      "vicio da preventiva",
+      "fatos concretos favoraveis",
+      "enfrentamento de fato desfavoravel",
+      "cautelares diversas como pedido subsidiario",
+      "coerencia entre tese e documentos",
+      "linguagem tecnica e objetiva"
     ]
   },
   {
@@ -202,27 +213,27 @@
     "case_id": "hc_48h_001",
     "step_number": 6,
     "title": "Resultado",
-    "situation": "O relator examina a qualidade tecnica da medida, a selecao de fundamentos e a coerencia do pedido com os documentos ja juntados.",
+    "situation": "O resultado considera a media das metricas, os documentos desbloqueados e efetivamente lidos, os fundamentos selecionados, a qualidade estrutural do texto livre, a presenca de escolhas arriscadas e as flags ativadas durante o plantao.",
     "question": "Qual foi o resultado obtido pela defesa no plantao judicial?",
-    "objective": "Traduzir a combinacao entre estrategia, fundamentos e redacao em desfecho pedagogico.",
+    "objective": "Traduzir estrategia, prova, fundamentos e redacao em consequencia processual coerente.",
     "unlock_documents": [],
     "options": [],
     "result_bands": [
       {
         "label": "excelente",
-        "description": "Liminar concedida com imposicao de cautelares diversas."
+        "description": "Pedido urgente acolhido ou substituido por cautelares porque a defesa leu documentos-chave, selecionou fundamentos consistentes, evitou teses absolutas e escreveu minuta tecnicamente estruturada."
       },
       {
         "label": "bom",
-        "description": "Relator pede informacoes urgentes e suspende a transferencia ate reavaliacao."
+        "description": "O julgador pede informacoes urgentes, suspende efeito pratico sensivel ou reabre a cautelar porque a estrategia foi coerente, embora com alguma perda de foco ou documentacao incompleta."
       },
       {
         "label": "medio",
-        "description": "Liminar negada, mas o merito e posto em mesa com sinalizacao de exame prioritario."
+        "description": "A medida e processada com prioridade, mas sem tutela imediata, pois houve fundamentos plausiveis misturados a lacunas de prova, texto pouco estruturado ou escolhas arriscadas."
       },
       {
         "label": "ruim",
-        "description": "Pedido e recebido sem forca suficiente para alterar o quadro cautelar de imediato."
+        "description": "A urgencia perde forca porque a defesa ignorou documentos importantes, escolheu fundamentos perigosos, apostou em teses absolutas ou redigiu argumento generico."
       }
     ]
   }

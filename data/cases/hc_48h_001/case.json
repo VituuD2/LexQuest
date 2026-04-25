@@ -57,7 +57,20 @@
       "escolheu_medida_urgente": false,
       "atendimento_responsavel": false,
       "promessa_resultado": false,
-      "tese_principal_correta": false
+      "tese_principal_correta": false,
+      "coleta_documental_iniciada": false,
+      "protocolo_precipitado": false,
+      "tentou_reconsideracao_origem": false,
+      "adiou_impugnacao_urgente": false,
+      "aceitou_preventiva_sem_reagir": false,
+      "focou_merito_antes_cautelar": false,
+      "priorizou_origem_com_documentos": false,
+      "rota_hc_plantao": false,
+      "tese_cautelares_origem": false,
+      "peca_ampla_dispersiva": false,
+      "exagerou_merito": false,
+      "insignificancia_centralizada": false,
+      "nulidade_privada_absolutizada": false
     }
   },
   "metrics": {

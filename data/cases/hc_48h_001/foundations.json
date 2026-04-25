@@ -1,32 +1,24 @@
 [
   {
     "id": "fund_documentacao_minima",
-    "label": "Necessidade de lastro documental minimo",
-    "description": "Medidas urgentes precisam de autos, local de custodia e elementos basicos para evitar pedido generico.",
-    "weight": { "legalidade": 6, "estrategia": 6, "etica": 2 },
-    "valid_for_steps": [1],
+    "label": "Lastro documental minimo",
+    "description": "A defesa precisa confirmar autos, local de custodia, decisao e documentos pessoais antes de formular pedido urgente.",
+    "weight": { "legalidade": 5, "estrategia": 7, "etica": 2 },
+    "valid_for_steps": [1, 3, 5],
     "risk": "baixo"
   },
   {
     "id": "fund_transferencia_iminente",
-    "label": "Transferencia iminente do custodiado",
-    "description": "A proximidade da transferencia aumenta a necessidade de medida imediatamente util.",
-    "weight": { "legalidade": 3, "estrategia": 7, "etica": 0 },
+    "label": "Transferencia iminente",
+    "description": "A noticia de transferencia proxima reduz a margem para diligencias longas e reforca a necessidade de providencia util no plantao.",
+    "weight": { "legalidade": 2, "estrategia": 7, "etica": 0 },
     "valid_for_steps": [1, 3],
-    "risk": "baixo"
-  },
-  {
-    "id": "fund_residencia_fixa",
-    "label": "Residencia familiar identificada",
-    "description": "A existencia de vinculo residencial estavel pode reduzir percepcao de risco processual.",
-    "weight": { "legalidade": 2, "estrategia": 4, "etica": 0 },
-    "valid_for_steps": [1, 3, 4, 5],
     "risk": "baixo"
   },
   {
     "id": "fund_decisao_generica",
     "label": "Fundamentacao generica da preventiva",
-    "description": "A decisao usa expressoes abstratas sem individualizar risco concreto atual.",
+    "description": "A decisao usa expressoes abstratas sem demonstrar risco concreto e atual causado por Rafael.",
     "weight": { "legalidade": 10, "estrategia": 8, "etica": 0 },
     "valid_for_steps": [2, 3, 4, 5],
     "risk": "baixo"
@@ -34,39 +26,31 @@
   {
     "id": "fund_ausencia_violencia",
     "label": "Ausencia de violencia ou grave ameaca",
-    "description": "O fato descrito nao envolve violencia, o que pesa em proporcionalidade cautelar.",
+    "description": "O fato descrito nos autos nao envolve violencia contra pessoa nem grave ameaca.",
     "weight": { "legalidade": 5, "estrategia": 4, "etica": 0 },
     "valid_for_steps": [2, 3, 4, 5],
     "risk": "baixo"
   },
   {
     "id": "fund_bem_recuperado",
-    "label": "Recuperacao integral do bem",
-    "description": "O objeto foi apreendido sem perda patrimonial definitiva para a loja.",
+    "label": "Bem recuperado integralmente",
+    "description": "O objeto foi recuperado sem perda patrimonial definitiva para a loja, o que ajuda na proporcionalidade cautelar.",
     "weight": { "legalidade": 4, "estrategia": 5, "etica": 0 },
-    "valid_for_steps": [3, 4, 5],
+    "valid_for_steps": [2, 3, 4, 5],
     "risk": "baixo"
   },
   {
     "id": "fund_sem_transito",
-    "label": "Registro anterior sem transito em julgado",
-    "description": "O antecedente informado nao equivale, pelos documentos disponiveis, a condenacao definitiva.",
+    "label": "Antecedente sem transito em julgado",
+    "description": "O registro anterior mencionado nos autos nao aparece como condenacao definitiva nos documentos disponiveis.",
     "weight": { "legalidade": 7, "estrategia": 6, "etica": 0 },
     "valid_for_steps": [2, 3, 4, 5],
     "risk": "baixo"
   },
   {
-    "id": "fund_valor_reduzido",
-    "label": "Valor reduzido do bem",
-    "description": "O preco do objeto e relativamente baixo e reforca argumento de proporcionalidade, embora nao resolva tudo sozinho.",
-    "weight": { "legalidade": 3, "estrategia": 4, "etica": 0 },
-    "valid_for_steps": [3, 4, 5],
-    "risk": "medio"
-  },
-  {
     "id": "fund_cautelares_diversas",
     "label": "Possibilidade de cautelares diversas",
-    "description": "Mesmo diante de preocupacoes residuais, ha espaco para resposta menos gravosa que a prisao.",
+    "description": "Eventual risco residual pode ser enfrentado por medidas menos gravosas que a prisao preventiva.",
     "weight": { "legalidade": 8, "estrategia": 7, "etica": 1 },
     "valid_for_steps": [3, 4, 5],
     "risk": "baixo"
@@ -74,41 +58,105 @@
   {
     "id": "fund_abordagem_antes_saida",
     "label": "Abordagem antes da saida definitiva",
-    "description": "A narrativa e o video indicam intervencao antes de Rafael ultrapassar a porta externa da loja.",
+    "description": "O relato e a descricao do video indicam que Rafael foi abordado antes de ultrapassar a porta externa da loja.",
     "weight": { "legalidade": 4, "estrategia": 4, "etica": 0 },
     "valid_for_steps": [3, 4, 5],
-    "risk": "medio"
+    "risk": "baixo"
   },
   {
     "id": "fund_video_inconclusivo",
-    "label": "Video inconclusivo sobre a linha dos caixas",
-    "description": "As imagens mostram ocultacao do objeto, mas nao esclarecem de forma segura o momento de eventual nao pagamento.",
+    "label": "Video inconclusivo",
+    "description": "As imagens mostram conduta suspeita, mas nao esclarecem com seguranca a passagem pela linha dos caixas.",
     "weight": { "legalidade": 4, "estrategia": 5, "etica": 0 },
+    "valid_for_steps": [3, 4, 5],
+    "risk": "baixo"
+  },
+  {
+    "id": "fund_vinculo_familiar_residencia",
+    "label": "Vinculo familiar e residencia",
+    "description": "A presenca de residencia e suporte familiar pode reduzir a percepcao de risco processual.",
+    "weight": { "legalidade": 2, "estrategia": 4, "etica": 0 },
+    "valid_for_steps": [1, 3, 4, 5],
+    "risk": "baixo"
+  },
+  {
+    "id": "fund_valor_reduzido",
+    "label": "Valor reduzido do bem",
+    "description": "O valor do objeto reforca argumento de proporcionalidade, mas nao resolve sozinho autoria, dolo ou cautelaridade.",
+    "weight": { "legalidade": 3, "estrategia": 4, "etica": 0 },
+    "valid_for_steps": [2, 3, 4, 5],
+    "risk": "medio"
+  },
+  {
+    "id": "fund_insignificancia_situacional",
+    "label": "Tese de insignificancia",
+    "description": "Pode ser usada como argumento subsidiario de proporcionalidade, desde que nao substitua o ataque a preventiva.",
+    "weight": { "legalidade": 1, "estrategia": 2, "etica": 0 },
+    "valid_for_steps": [2, 4, 5],
+    "risk": "medio"
+  },
+  {
+    "id": "fund_duvida_consumacao",
+    "label": "Duvida sobre consumacao",
+    "description": "A abordagem antes da porta externa e o video limitado permitem discutir a consumacao, mas o ponto exige cautela.",
+    "weight": { "legalidade": 2, "estrategia": 3, "etica": 0 },
     "valid_for_steps": [3, 4, 5],
     "risk": "medio"
   },
   {
-    "id": "fund_confissao_informal",
-    "label": "Confissao informal de imprudencia",
-    "description": "A admissao de que colocou o objeto na mochila por 'burrice' pode soar sincera, mas tambem pode reforcar leitura acusatoria.",
-    "weight": { "legalidade": -2, "estrategia": -3, "etica": 0 },
-    "valid_for_steps": [4, 5],
-    "risk": "alto"
+    "id": "fund_colaboracao_abordagem",
+    "label": "Colaboracao na abordagem",
+    "description": "A colaboracao reduz a ideia de resistencia ou risco imediato, embora nao elimine a suspeita do fato.",
+    "weight": { "legalidade": 1, "estrategia": 2, "etica": 0 },
+    "valid_for_steps": [2, 3, 4, 5],
+    "risk": "medio"
   },
   {
-    "id": "fund_pressao_social",
-    "label": "Clamor social e repercussao local",
-    "description": "Invocar pressao social para justificar a urgencia tende a contaminar a tecnica com argumento emocional pouco confiavel.",
-    "weight": { "legalidade": -4, "estrategia": -2, "etica": -1 },
+    "id": "fund_trabalho_informal",
+    "label": "Trabalho informal",
+    "description": "A rotina de pequenos reparos ajuda a contextualizar o objeto, mas precisa de documento ou relato minimamente verificavel.",
+    "weight": { "legalidade": 1, "estrategia": 2, "etica": 0 },
+    "valid_for_steps": [1, 3, 4, 5],
+    "risk": "medio"
+  },
+  {
+    "id": "fund_clamor_social_preventiva",
+    "label": "Clamor social autoriza preventiva",
+    "description": "Usar clamor social como justificativa para a prisao repete fundamento abstrato e prejudica a tecnica defensiva.",
+    "weight": { "legalidade": -8, "estrategia": -5, "etica": -1 },
     "valid_for_steps": [2, 3, 4, 5],
     "risk": "alto"
   },
   {
-    "id": "fund_credibilidade_justica",
-    "label": "Credibilidade da Justica",
-    "description": "Repetir fundamento abstrato usado pelo juizo de custodia tende a enfraquecer, e nao a fortalecer, a critica defensiva.",
-    "weight": { "legalidade": -6, "estrategia": -4, "etica": 0 },
+    "id": "fund_todo_antecedente_prende",
+    "label": "Todo antecedente justifica prisao",
+    "description": "Tratar qualquer registro como motivo automatico de preventiva ignora a necessidade de fundamentacao concreta.",
+    "weight": { "legalidade": -9, "estrategia": -6, "etica": -1 },
     "valid_for_steps": [2, 3, 4, 5],
+    "risk": "alto"
+  },
+  {
+    "id": "fund_furto_loja_nunca_crime",
+    "label": "Furto de loja nunca e crime",
+    "description": "Afirmacao absoluta e incompativel com a seriedade tecnica do caso e com os documentos existentes.",
+    "weight": { "legalidade": -10, "estrategia": -8, "etica": -2 },
+    "valid_for_steps": [2, 4, 5],
+    "risk": "alto"
+  },
+  {
+    "id": "fund_seguranca_invalida_flagrante",
+    "label": "Seguranca privado invalida o flagrante",
+    "description": "A atuacao do seguranca privado nao torna automaticamente ilegal toda a prisao, embora possa gerar discussoes pontuais de prova.",
+    "weight": { "legalidade": -8, "estrategia": -7, "etica": -1 },
+    "valid_for_steps": [2, 4, 5],
+    "risk": "alto"
+  },
+  {
+    "id": "fund_baixa_renda_afasta_crime",
+    "label": "Baixa renda afasta crime automaticamente",
+    "description": "A vulnerabilidade social pode contextualizar, mas nao elimina automaticamente tipicidade, cautelaridade ou responsabilidade.",
+    "weight": { "legalidade": -7, "estrategia": -5, "etica": -2 },
+    "valid_for_steps": [3, 4, 5],
     "risk": "alto"
   }
 ]

@@ -2,7 +2,7 @@
   "case": {
     "id": "hc_48h_001",
     "title": "Habeas Corpus em 48h",
-    "description": "Um jovem foi preso por suposto furto de uma parafusadeira. O jogador deve escolher a melhor estrategia urgente para combater a prisao preventiva.",
+    "description": "Simulacao de plantao criminal: o jogador analisa documentos, escolhe via urgente, seleciona fundamentos e redige argumento liminar contra prisao preventiva.",
     "area": "Processo Penal",
     "difficulty": "Iniciante"
   },

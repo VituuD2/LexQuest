@@ -85,6 +85,8 @@ function JudicialDispatch({ order }: { order: FinalOrder }) {
 }
 
 export function FinalReport({ gameState, report, onRestart }: FinalReportProps) {
+  const openedDocumentCount = Object.values(gameState.document_state ?? {}).filter((document) => document.isOpened).length;
+
   return (
     <section className="space-y-6">
       <div className="rounded-[36px] border border-white/10 bg-[var(--surface-contrast)] p-7 text-parchment shadow-[var(--shadow-elevated-theme)]">
@@ -92,7 +94,7 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
         <h2 className="mt-3 font-serifDisplay text-4xl">Resultado final</h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-parchment/85">{report.summary}</p>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-parchment/70">
-          O despacho abaixo muda conforme suas metricas, fundamentos escolhidos e flags ativados ao longo do caso.
+          O despacho abaixo muda conforme suas metricas, documentos lidos, fundamentos escolhidos e flags ativados ao longo do caso.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-4">
@@ -106,7 +108,7 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
           </div>
           <div className="rounded-[24px] bg-white/8 p-5">
             <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Documentos</p>
-            <p className="mt-3 text-lg font-semibold">{gameState.documents_unlocked.length}</p>
+            <p className="mt-3 text-lg font-semibold">{openedDocumentCount}/{gameState.documents_unlocked.length}</p>
           </div>
           <div className="rounded-[24px] bg-white/8 p-5">
             <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Decisoes</p>

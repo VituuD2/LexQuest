@@ -16,13 +16,13 @@ import type {
 } from "@/lib/game-types";
 
 const KEYWORD_MAP: Record<string, string[]> = {
-  fundamentacao_generica: ["generica", "fundamentacao concreta", "ordem publica", "credibilidade da justica"],
-  ausencia_violencia: ["sem violencia", "sem grave ameaca", "ausencia de violencia", "nao houve violencia"],
-  bem_recuperado: ["bem recuperado", "recuperacao integral", "objeto recuperado", "sem dano", "bem foi recuperado"],
-  antecedentes: ["sem transito em julgado", "sem condenacao definitiva", "primariedade tecnica", "processo anterior"],
-  cautelares_diversas: ["medidas cautelares", "cautelares diversas", "comparecimento periodico", "proporcional"],
-  tom_tecnico: ["preventiva", "custodiado", "liminar", "proporcionalidade", "constrangimento ilegal"],
-  coerencia: ["decisao", "bem", "violencia", "cautelares", "antecedente"]
+  pedido_liminar_claro: ["liminar", "alvara", "revogacao", "substituicao da prisao", "liberdade provisoria", "soltura"],
+  vicio_preventiva: ["fundamentacao generica", "fundamentacao abstrata", "decisao generica", "ordem publica", "risco concreto", "individualizacao", "individualizada"],
+  fatos_concretos_autos: ["sem violencia", "ausencia de violencia", "grave ameaca", "bem recuperado", "recuperacao integral", "antecedente", "video", "residencia", "valor reduzido"],
+  enfrenta_fato_desfavoravel: ["embalagem", "mochila", "video", "passou pela area dos caixas", "ainda que", "embora"],
+  proporcionalidade_cautelares: ["cautelares diversas", "medidas cautelares", "proporcionalidade", "menos gravosa"],
+  coerencia_documentos: ["autos", "documentos", "decisao", "certidao", "video", "auto de prisao"],
+  linguagem_tecnica_objetiva: ["preventiva", "custodiado", "liminar", "cautelar", "constrangimento ilegal"]
 };
 
 function getBundle(caseId = DEFAULT_CASE_ID) {
@@ -222,6 +222,62 @@ function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function countKeywordHits(normalizedText: string, keywords: string[]) {
+  return keywords.filter((keyword) => normalizedText.includes(normalizeText(keyword))).length;
+}
+
+function matchesRubricCriterion(criterionId: string, normalizedText: string) {
+  const keywords = KEYWORD_MAP[criterionId] ?? [];
+  const keywordHits = countKeywordHits(normalizedText, keywords);
+
+  if (criterionId === "pedido_liminar_claro") {
+    return normalizedText.includes("liminar") && keywordHits >= 2;
+  }
+
+  if (criterionId === "vicio_preventiva") {
+    return normalizedText.includes("preventiva") && keywordHits >= 2;
+  }
+
+  if (criterionId === "fatos_concretos_autos") {
+    return keywordHits >= 3;
+  }
+
+  if (criterionId === "enfrenta_fato_desfavoravel") {
+    const mentionsBadFact =
+      normalizedText.includes("embalagem") ||
+      normalizedText.includes("mochila") ||
+      normalizedText.includes("video") ||
+      normalizedText.includes("caixa");
+    const usesConcession =
+      normalizedText.includes("embora") ||
+      normalizedText.includes("ainda que") ||
+      normalizedText.includes("nao se ignora") ||
+      normalizedText.includes("sem prejuizo");
+
+    return mentionsBadFact && usesConcession;
+  }
+
+  if (criterionId === "proporcionalidade_cautelares") {
+    return normalizedText.includes("cautelar") && keywordHits >= 2;
+  }
+
+  if (criterionId === "coerencia_documentos") {
+    const avoidsUnsupportedCertainty =
+      !normalizedText.includes("inocencia plena") &&
+      !normalizedText.includes("prova absoluta") &&
+      !normalizedText.includes("automaticamente ilegal");
+
+    return keywordHits >= 2 && avoidsUnsupportedCertainty;
+  }
+
+  if (criterionId === "linguagem_tecnica_objetiva") {
+    const wordCount = normalizedText.split(/\s+/).filter(Boolean).length;
+    return wordCount >= 60 && keywordHits >= 3;
+  }
+
+  return keywordHits > 0;
+}
+
 function getFoundationLabels(caseId: string, foundationIds: string[]) {
   return foundationIds
     .map((foundationId) => getAllFoundations(caseId).find((foundation) => foundation.id === foundationId)?.label)
@@ -339,6 +395,39 @@ function resolveEndingKey(gameState: GameState) {
   }
 
   const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
+  const openedDocumentCount = Object.values(gameState.document_state ?? {}).filter((document) => document.isOpened).length;
+  const lastRubricScore = [...gameState.choices_history]
+    .reverse()
+    .find((entry) => entry.rubricScore !== undefined)?.rubricScore;
+  const selectedFoundationLabels = gameState.choices_history.flatMap((entry) => entry.selectedFoundations ?? []);
+  const riskyFoundationCount = selectedFoundationLabels.filter((label) =>
+    [
+      "Clamor social autoriza preventiva",
+      "Todo antecedente justifica prisao",
+      "Furto de loja nunca e crime",
+      "Seguranca privado invalida o flagrante",
+      "Baixa renda afasta crime automaticamente"
+    ].includes(label)
+  ).length;
+
+  if (riskyFoundationCount >= 2 || gameState.flags.peca_ampla_dispersiva || gameState.flags.nulidade_privada_absolutizada) {
+    return average >= 55 ? "atuacao_defensavel_com_falhas" : "atuacao_fraca";
+  }
+
+  if (lastRubricScore !== undefined && lastRubricScore < 14 && average < 82) {
+    return "atuacao_defensavel_com_falhas";
+  }
+
+  if (
+    average >= 90 &&
+    openedDocumentCount >= 6 &&
+    (lastRubricScore ?? 0) >= 24 &&
+    gameState.flags.atendimento_responsavel &&
+    (gameState.flags.escolheu_medida_urgente || gameState.flags.priorizou_origem_com_documentos) &&
+    gameState.flags.tese_principal_correta
+  ) {
+    return "atuacao_excelente";
+  }
 
   for (const rule of caseData.ending_rules ?? []) {
     if (rule.conditions.every((condition) => matchesCondition(gameState, average, condition))) {
@@ -581,8 +670,7 @@ export function evaluateFreeText(caseId: string, text: string) {
   const matchedCriteria: string[] = [];
 
   for (const criterion of rubric.criteria) {
-    const keywords = KEYWORD_MAP[criterion.id] ?? [];
-    const achieved = keywords.some((keyword) => normalizedText.includes(normalizeText(keyword)));
+    const achieved = matchesRubricCriterion(criterion.id, normalizedText);
 
     if (achieved) {
       totalScore += criterion.points;
@@ -593,7 +681,7 @@ export function evaluateFreeText(caseId: string, text: string) {
   const delta = {
     legalidade: Math.round(totalScore / 3),
     estrategia: Math.round(totalScore / 4),
-    etica: matchedCriteria.some((item) => item.includes("tecnica")) ? 3 : 1
+    etica: matchedCriteria.some((item) => item.includes("tecnica") || item.includes("objetiva")) ? 3 : 1
   };
 
   const feedback =
