@@ -11,8 +11,8 @@ export function ChoiceButton({ choiceKey, label, text, isSelected, onClick }: Ch
     <button
       className={`w-full rounded-3xl border px-5 py-5 text-left transition ${
         isSelected
-          ? "border-brass bg-brass/15 shadow-dossier"
-          : "border-ink/10 bg-white/75 hover:border-brass/60 hover:bg-white"
+          ? "border-brass bg-brass/15 shadow-[var(--shadow-dossier-theme)]"
+          : "theme-card hover:border-brass/60 hover:bg-[var(--surface-card-strong)]"
       }`}
       onClick={onClick}
       type="button"
@@ -22,11 +22,11 @@ export function ChoiceButton({ choiceKey, label, text, isSelected, onClick }: Ch
           {choiceKey}
         </span>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink/45">Estrategia</p>
-          <h4 className="mt-1 text-lg font-semibold text-ink">{label}</h4>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Estrategia</p>
+          <h4 className="mt-1 text-lg font-semibold text-[color:var(--text-primary)]">{label}</h4>
         </div>
       </div>
-      <p className="text-sm leading-7 text-ink/85">{text}</p>
+      <p className="text-sm leading-7 text-[color:var(--text-secondary)]">{text}</p>
     </button>
   );
 }

@@ -12,35 +12,35 @@ function formatDelta(value: number) {
 
 function renderHistoryItem(item: ChoiceHistoryEntry) {
   return (
-    <div className="rounded-[24px] border border-ink/10 bg-white/70 p-5" key={`${item.stepNumber}-${item.choiceKey}`}>
+    <div className="theme-panel rounded-[24px] border p-5 text-[color:var(--text-primary)]" key={`${item.stepNumber}-${item.choiceKey}`}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-ink/45">Etapa {item.stepNumber}</p>
-          <h3 className="font-serifDisplay text-2xl text-ink">{item.stepTitle}</h3>
+          <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Etapa {item.stepNumber}</p>
+          <h3 className="font-serifDisplay text-2xl text-[color:var(--text-primary)]">{item.stepTitle}</h3>
         </div>
-        <div className="rounded-full border border-ink/10 px-3 py-1 text-xs uppercase tracking-[0.14em] text-ink/60">
+        <div className="theme-pill rounded-full border px-3 py-1 text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
           {item.choiceKey}
         </div>
       </div>
-      <p className="text-sm font-semibold text-ink">{item.choiceLabel}</p>
-      <p className="mt-3 text-sm leading-7 text-ink/80">{item.feedback}</p>
+      <p className="text-sm font-semibold text-[color:var(--text-primary)]">{item.choiceLabel}</p>
+      <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">{item.feedback}</p>
       {item.selectedFoundations && item.selectedFoundations.length > 0 ? (
-        <p className="mt-3 text-sm leading-7 text-ink/72">
+        <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
           <strong>Fundamentos:</strong> {item.selectedFoundations.join(", ")}.
         </p>
       ) : null}
       {item.consequence ? (
-        <p className="mt-3 text-sm leading-7 text-ink/72">
+        <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
           <strong>Efeito pratico:</strong> {item.consequence}
         </p>
       ) : null}
       {item.freeText ? (
-        <div className="mt-4 rounded-2xl bg-parchment/45 p-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-ink/45">Trecho redigido</p>
-          <p className="mt-2 whitespace-pre-line text-sm leading-7 text-ink/75">{item.freeText}</p>
+        <div className="theme-card-muted mt-4 rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Trecho redigido</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[color:var(--text-secondary)]">{item.freeText}</p>
         </div>
       ) : null}
-      <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-ink/60">
+      <div className="mt-4 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
         <span>Legalidade {formatDelta(item.scoreDelta.legalidade)}</span>
         <span>Estrategia {formatDelta(item.scoreDelta.estrategia)}</span>
         <span>Etica {formatDelta(item.scoreDelta.etica)}</span>
@@ -87,7 +87,7 @@ function JudicialDispatch({ order }: { order: FinalOrder }) {
 export function FinalReport({ gameState, report, onRestart }: FinalReportProps) {
   return (
     <section className="space-y-6">
-      <div className="rounded-[36px] border border-ink/10 bg-[#1c2128] p-7 text-parchment shadow-dossier">
+      <div className="rounded-[36px] border border-white/10 bg-[var(--surface-contrast)] p-7 text-parchment shadow-[var(--shadow-elevated-theme)]">
         <p className="text-xs uppercase tracking-[0.24em] text-parchment/55">Etapa 6</p>
         <h2 className="mt-3 font-serifDisplay text-4xl">Resultado final</h2>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-parchment/85">{report.summary}</p>
@@ -128,25 +128,25 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
       {report.judgeOrder ? (
         <section className="space-y-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Despacho final</p>
-            <h3 className="mt-2 font-serifDisplay text-3xl text-ink">Decisao judicial recebida</h3>
+            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Despacho final</p>
+            <h3 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">Decisao judicial recebida</h3>
           </div>
           <JudicialDispatch order={report.judgeOrder} />
         </section>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="rounded-[32px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
-          <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Relatorio de aprendizado</p>
-          <h3 className="mt-2 font-serifDisplay text-3xl text-ink">Placar final</h3>
-          <div className="mt-5 space-y-4 text-sm text-ink/85">
-            <div className="rounded-2xl bg-parchment/50 p-4">
+        <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
+          <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Relatorio de aprendizado</p>
+          <h3 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">Placar final</h3>
+          <div className="mt-5 space-y-4 text-sm text-[color:var(--text-secondary)]">
+            <div className="theme-card-muted rounded-2xl p-4">
               <strong>Legalidade:</strong> {gameState.legalidade}/100
             </div>
-            <div className="rounded-2xl bg-parchment/50 p-4">
+            <div className="theme-card-muted rounded-2xl p-4">
               <strong>Estrategia:</strong> {gameState.estrategia}/100
             </div>
-            <div className="rounded-2xl bg-parchment/50 p-4">
+            <div className="theme-card-muted rounded-2xl p-4">
               <strong>Etica:</strong> {gameState.etica}/100
             </div>
           </div>

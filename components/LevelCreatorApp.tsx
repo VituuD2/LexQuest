@@ -348,7 +348,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
   if (isLoading) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-ink/10 bg-white/75 p-8 shadow-dossier">Carregando criador...</div>
+        <div className="theme-panel rounded-[32px] border p-8 text-[color:var(--text-primary)]">Carregando criador...</div>
       </main>
     );
   }
@@ -365,47 +365,47 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
 
   return (
     <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[36px] border border-ink/10 bg-white/70 p-6 shadow-dossier">
+      <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[36px] border p-6 text-[color:var(--text-primary)]">
         <div>
-          <p className="text-xs uppercase tracking-[0.26em] text-ink/45">Studio LexQuest</p>
-          <h1 className="mt-2 font-serifDisplay text-4xl text-ink">Criador de fases</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/75">
+          <p className="text-xs uppercase tracking-[0.26em] text-[color:var(--text-muted)]">Studio LexQuest</p>
+          <h1 className="mt-2 font-serifDisplay text-4xl text-[color:var(--text-primary)]">Criador de fases</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text-secondary)]">
             Edite as etapas em blocos guiados ou JSON bruto, salve no rascunho do Supabase e use a IA para revisar clareza, realismo e dificuldade.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="rounded-2xl border border-ink/10 bg-parchment/55 px-4 py-3 text-sm text-ink/80">
+          <div className="theme-pill rounded-2xl border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
             Admin logado: @{currentUser.username}
           </div>
           <Link
-            className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+            className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
             href="/"
           >
             Voltar ao caso
           </Link>
           <button
-            className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+            className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
             onClick={logout}
             type="button"
           >
             Sair
           </button>
-          <div className="rounded-2xl border border-brass/25 bg-brass/10 px-4 py-3 text-sm text-ink/80">
+          <div className="rounded-2xl border border-brass/25 bg-brass/10 px-4 py-3 text-sm text-[color:var(--text-secondary)]">
             {bundle.version.label} | {bundle.version.status} | atualizada em {dateLabel(bundle.version.updatedAt)}
           </div>
         </div>
       </div>
 
-      <section className="mb-6 rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+      <section className="theme-panel mb-6 rounded-[32px] border p-6 text-[color:var(--text-primary)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Central admin</p>
-            <h2 className="mt-2 font-serifDisplay text-3xl text-ink">Permissoes de usuarios</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-ink/75">
+            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Central admin</p>
+            <h2 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">Permissoes de usuarios</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text-secondary)]">
               Somente admins acessam esta tela. Aqui voce promove ou rebaixa usuarios cadastrados sem perder o progresso salvo de cada conta.
             </p>
           </div>
-          <div className="rounded-2xl border border-ink/10 bg-parchment/55 px-4 py-3 text-sm text-ink/80">
+          <div className="theme-pill rounded-2xl border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
             Contas cadastradas: {users.length}
           </div>
         </div>
@@ -413,26 +413,26 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
         <div className="mt-6 grid gap-4">
           {users.map((managedUser) => (
             <div
-              className="grid gap-4 rounded-[28px] border border-ink/10 bg-[#fffdf8] p-5 lg:grid-cols-[1.5fr_0.8fr_0.9fr_0.8fr]"
+              className="theme-card grid gap-4 rounded-[28px] border p-5 text-[color:var(--text-primary)] lg:grid-cols-[1.5fr_0.8fr_0.9fr_0.8fr]"
               key={managedUser.id}
             >
               <div>
-                <p className="text-lg font-semibold text-ink">@{managedUser.username}</p>
-                <p className="mt-1 text-sm text-ink/72">{managedUser.email}</p>
-                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-ink/45">
+                <p className="text-lg font-semibold text-[color:var(--text-primary)]">@{managedUser.username}</p>
+                <p className="mt-1 text-sm text-[color:var(--text-secondary)]">{managedUser.email}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
                   Criado em {dateLabel(managedUser.createdAt)} | ultimo acesso {dateLabel(managedUser.lastLoginAt)}
                 </p>
               </div>
 
-              <div className="rounded-[22px] bg-parchment/55 p-4 text-sm text-ink/78">
-                <p className="text-xs uppercase tracking-[0.16em] text-ink/45">Status</p>
+              <div className="theme-card-muted rounded-[22px] p-4 text-sm text-[color:var(--text-secondary)]">
+                <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Status</p>
                 <p className="mt-2 font-semibold">{managedUser.isActive ? "Ativo" : "Inativo"}</p>
               </div>
 
-              <div className="rounded-[22px] bg-parchment/55 p-4">
-                <p className="text-xs uppercase tracking-[0.16em] text-ink/45">Permissao</p>
+              <div className="theme-card-muted rounded-[22px] p-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Permissao</p>
                 <select
-                  className="mt-3 w-full rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm text-ink outline-none"
+                  className="theme-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm outline-none"
                   onChange={(event) =>
                     setRoleDrafts((current) => ({
                       ...current,
@@ -448,7 +448,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
 
               <div className="flex items-end">
                 <button
-                  className="w-full rounded-full bg-ink px-5 py-3 text-sm font-semibold text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+                  className="theme-button-primary w-full rounded-full px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={
                     isUpdatingUserId === managedUser.id ||
                     !roleDrafts[managedUser.id] ||
@@ -468,22 +468,22 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[0.32fr_0.68fr]">
-        <aside className="rounded-[32px] border border-ink/10 bg-white/75 p-5 shadow-dossier">
-          <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Etapas do caso</p>
+        <aside className="theme-panel rounded-[32px] border p-5 text-[color:var(--text-primary)]">
+          <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapas do caso</p>
           <div className="mt-4 space-y-3">
             {bundle.steps.map((step) => (
               <button
                 className={`w-full rounded-[24px] border px-4 py-4 text-left transition ${
                   step.stepNumber === selectedStepNumber
-                    ? "border-brass bg-brass/12 shadow-dossier"
-                    : "border-ink/10 bg-parchment/50 hover:border-brass/45"
+                    ? "border-brass bg-brass/12 shadow-[var(--shadow-dossier-theme)]"
+                    : "theme-card-muted border-[color:var(--border-soft)] hover:border-brass/45"
                 }`}
                 key={step.stepNumber}
                 onClick={() => setSelectedStepNumber(step.stepNumber)}
                 type="button"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-ink">Etapa {step.stepNumber}</p>
+                  <p className="text-sm font-semibold text-[color:var(--text-primary)]">Etapa {step.stepNumber}</p>
                   <span
                     className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                       step.validation.isValid ? "bg-emerald/12 text-emerald" : "bg-garnet/12 text-garnet"
@@ -492,24 +492,24 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                     {step.validation.isValid ? "ok" : "ajustar"}
                   </span>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-ink/75">{step.previewStep.title}</p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">{step.previewStep.title}</p>
               </button>
             ))}
           </div>
         </aside>
 
         <section className="space-y-6">
-          <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
+          <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Etapa {selectedStep.stepNumber}</p>
-                <h2 className="mt-2 font-serifDisplay text-3xl text-ink">{previewStep.title || "Nova etapa"}</h2>
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapa {selectedStep.stepNumber}</p>
+                <h2 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">{previewStep.title || "Nova etapa"}</h2>
               </div>
-              <div className="flex gap-2 rounded-full border border-ink/10 bg-parchment/55 p-1">
+              <div className="theme-pill flex gap-2 rounded-full border p-1">
                 {bundle.supportedInputs.map((supportedMode) => (
                   <button
                     className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      mode === supportedMode ? "bg-ink text-parchment" : "text-ink/65"
+                      mode === supportedMode ? "bg-ink text-parchment" : "text-[color:var(--text-secondary)]"
                     }`}
                     key={supportedMode}
                     onClick={() => setMode(supportedMode)}
@@ -526,7 +526,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 <div className="flex flex-wrap gap-2">
                   {(["title", "situation", "question", "objective", "option", "foundation_prompt", "note", "result_band"] as const).map((blockType) => (
                     <button
-                      className="rounded-full border border-ink/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink/65 transition hover:border-brass/40 hover:bg-brass/10"
+                      className="theme-button-secondary rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition hover:border-brass/40 hover:bg-brass/10"
                       key={blockType}
                       onClick={() => addBlock(blockType)}
                       type="button"
@@ -537,9 +537,9 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 </div>
 
                 {blocks.map((block) => (
-                  <div className="rounded-[24px] border border-ink/10 bg-[#fffdf8] p-4" key={block.id}>
+                  <div className="theme-card rounded-[24px] border p-4" key={block.id}>
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <div className="rounded-full bg-ink/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink/60">
+                      <div className="theme-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
                         {block.type}
                       </div>
                       <button
@@ -554,7 +554,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                     {block.type === "option" ? (
                       <div className="mb-3 grid gap-3 md:grid-cols-2">
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -567,7 +567,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                           value={String(block.meta?.key ?? "")}
                         />
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -580,7 +580,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                           value={String(block.meta?.label ?? "")}
                         />
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -593,7 +593,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                           value={String(block.meta?.next_step ?? "")}
                         />
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -606,7 +606,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                           value={String(block.meta?.ending_key ?? "")}
                         />
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none md:col-span-2"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none md:col-span-2"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -623,7 +623,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                           }
                         />
                         <input
-                          className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-sm outline-none md:col-span-2"
+                          className="theme-input rounded-2xl border px-4 py-3 text-sm outline-none md:col-span-2"
                           onChange={(event) =>
                             updateBlock(block.id, {
                               meta: {
@@ -643,7 +643,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                     ) : null}
 
                     <textarea
-                      className="min-h-[120px] w-full rounded-[20px] border border-ink/10 bg-white px-4 py-3 text-sm leading-7 text-ink outline-none"
+                      className="theme-input min-h-[120px] w-full rounded-[20px] border px-4 py-3 text-sm leading-7 outline-none"
                       onChange={(event) => updateBlock(block.id, { content: event.target.value })}
                       placeholder="Conteudo do bloco"
                       value={block.content}
@@ -653,7 +653,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
               </div>
             ) : (
               <textarea
-                className="mt-6 min-h-[520px] w-full rounded-[24px] border border-ink/10 bg-[#11161e] px-5 py-4 font-mono text-sm leading-7 text-parchment outline-none"
+                className="theme-code-surface mt-6 min-h-[520px] w-full rounded-[24px] border border-[color:var(--border-soft)] px-5 py-4 font-mono text-sm leading-7 text-parchment outline-none"
                 onChange={(event) => setRawJson(event.target.value)}
                 value={rawJson}
               />
@@ -661,7 +661,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <button
-                className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+                className="theme-button-primary rounded-full px-6 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={isSaving}
                 onClick={saveStep}
                 type="button"
@@ -669,7 +669,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 {isSaving ? "Salvando..." : "Salvar rascunho"}
               </button>
               <button
-                className="rounded-full border border-brass/35 bg-brass/10 px-6 py-3 text-sm font-semibold text-ink transition hover:bg-brass/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-brass/35 bg-brass/10 px-6 py-3 text-sm font-semibold text-[color:var(--text-primary)] transition hover:bg-brass/20 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isReviewing}
                 onClick={reviewWithAi}
                 type="button"
@@ -683,26 +683,26 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
-              <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Preview estruturado</p>
-              <h3 className="mt-2 text-2xl font-semibold text-ink">{previewStep.title}</h3>
-              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-ink/75">{previewStep.question}</p>
+            <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
+              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Preview estruturado</p>
+              <h3 className="mt-2 text-2xl font-semibold text-[color:var(--text-primary)]">{previewStep.title}</h3>
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-[color:var(--text-secondary)]">{previewStep.question}</p>
               <div className="mt-5 grid gap-3">
                 {previewStep.options.map((option) => (
-                  <div className="rounded-2xl border border-ink/10 bg-parchment/55 p-4" key={option.key}>
-                    <p className="text-sm font-semibold text-ink">
+                  <div className="theme-card-muted rounded-2xl border border-[color:var(--border-soft)] p-4" key={option.key}>
+                    <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {option.key}. {option.label}
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-ink/75">{option.text}</p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">{option.text}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Validacao rapida</p>
-                <p className="mt-3 text-sm leading-7 text-ink/75">
+              <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Validacao rapida</p>
+                <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
                   {validationIssues.length === 0
                     ? "A estrutura minima da etapa esta consistente para seguir refinando."
                     : "Ainda ha pontos estruturais para ajustar antes de publicar."}
@@ -722,13 +722,13 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 </div>
               </div>
 
-              <div className="rounded-[32px] border border-ink/10 bg-white/75 p-6 shadow-dossier">
-                <p className="text-xs uppercase tracking-[0.22em] text-ink/45">Parecer da IA</p>
+              <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Parecer da IA</p>
                 {draftReview ? (
-                  <div className="mt-4 space-y-4 text-sm leading-7 text-ink/75">
+                  <div className="mt-4 space-y-4 text-sm leading-7 text-[color:var(--text-secondary)]">
                     <p>{draftReview.summary}</p>
                     <div>
-                      <p className="font-semibold text-ink">Forcas</p>
+                      <p className="font-semibold text-[color:var(--text-primary)]">Forcas</p>
                       <div className="mt-2 space-y-2">
                         {draftReview.strengths.map((item) => (
                           <div className="rounded-2xl bg-emerald/10 px-4 py-3 text-emerald" key={item}>
@@ -738,7 +738,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                       </div>
                     </div>
                     <div>
-                      <p className="font-semibold text-ink">Riscos</p>
+                      <p className="font-semibold text-[color:var(--text-primary)]">Riscos</p>
                       <div className="mt-2 space-y-2">
                         {draftReview.risks.map((item) => (
                           <div className="rounded-2xl bg-garnet/10 px-4 py-3 text-garnet" key={item}>
@@ -748,10 +748,10 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                       </div>
                     </div>
                     <div>
-                      <p className="font-semibold text-ink">Sugestoes</p>
+                      <p className="font-semibold text-[color:var(--text-primary)]">Sugestoes</p>
                       <div className="mt-2 space-y-2">
                         {draftReview.suggestions.map((item) => (
-                          <div className="rounded-2xl bg-brass/10 px-4 py-3 text-ink" key={item}>
+                          <div className="rounded-2xl bg-brass/10 px-4 py-3 text-[color:var(--text-primary)]" key={item}>
                             {item}
                           </div>
                         ))}
@@ -759,7 +759,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-3 text-sm leading-7 text-ink/70">
+                  <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
                     Use "Revisar com IA" para receber leitura tecnica sobre realismo, dificuldade, coerencia e valor pedagogico da etapa.
                   </p>
                 )}

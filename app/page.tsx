@@ -71,7 +71,6 @@ export default function HomePage() {
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   const [gameErrorMessage, setGameErrorMessage] = useState<string | null>(null);
   const [showPhaseRiskOverlay, setShowPhaseRiskOverlay] = useState(false);
-  const [seenRiskSteps, setSeenRiskSteps] = useState<number[]>([]);
   const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
   const [loginForm, setLoginForm] = useState({
     login: "",
@@ -199,21 +198,6 @@ export default function HomePage() {
     stopTensionPulse();
   }, [phase, currentStep?.step_number, playTensionPulse, stopTensionPulse]);
 
-  useEffect(() => {
-    if (phase !== "case") {
-      return;
-    }
-
-    if (seenRiskSteps.includes(gameState.current_step)) {
-      return;
-    }
-
-    setShowPhaseRiskOverlay(true);
-    setSeenRiskSteps((current) =>
-      current.includes(gameState.current_step) ? current : [...current, gameState.current_step]
-    );
-  }, [phase, gameState.current_step, seenRiskSteps]);
-
   async function persistSessionState(nextState: GameState) {
     if (!sessionId) {
       return;
@@ -264,7 +248,6 @@ export default function HomePage() {
       const payload = (await response.json()) as ActiveGameSession;
 
       if (restart) {
-        setSeenRiskSteps([]);
         setShowPhaseRiskOverlay(false);
       }
 
@@ -273,6 +256,7 @@ export default function HomePage() {
         activeGameSession: payload
       }));
       applyActiveGameSession(payload);
+      setShowPhaseRiskOverlay(payload.gameState.current_step === 1);
       playTensionPulse();
     } catch (error) {
       setGameErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao iniciar o caso.");
@@ -341,7 +325,6 @@ export default function HomePage() {
         confirmPassword: ""
       });
       applyAuthPayload(buildDefaultAuthState());
-      setSeenRiskSteps([]);
       setShowPhaseRiskOverlay(false);
     } catch (error) {
       setAuthErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao sair.");
@@ -478,7 +461,7 @@ export default function HomePage() {
   if (isBootstrapping) {
     return (
       <main className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="w-full rounded-[36px] border border-ink/10 bg-white/75 p-8 shadow-dossier">
+        <div className="theme-panel w-full rounded-[36px] border p-8 text-[color:var(--text-primary)]">
           Carregando conta e progresso salvo...
         </div>
       </main>
@@ -490,36 +473,36 @@ export default function HomePage() {
       <>
         <main className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-10 sm:px-6 lg:px-8">
           <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-[40px] border border-ink/10 bg-white/70 p-8 shadow-dossier backdrop-blur">
+          <div className="theme-panel rounded-[40px] border p-8 text-[color:var(--text-primary)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-ink/45">LexQuest MVP</p>
-                <h1 className="mt-4 max-w-3xl font-serifDisplay text-5xl leading-tight text-ink">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--text-muted)]">LexQuest MVP</p>
+                <h1 className="mt-4 max-w-3xl font-serifDisplay text-5xl leading-tight text-[color:var(--text-primary)]">
                   Habeas Corpus em 48h
                 </h1>
               </div>
               {user ? (
-                <div className="rounded-[24px] border border-ink/10 bg-parchment/55 px-4 py-3 text-sm text-ink/80">
+                <div className="theme-pill rounded-[24px] border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
                   <p className="font-semibold">@{user.username}</p>
                   <p className="capitalize">{user.role}</p>
                 </div>
               ) : null}
             </div>
 
-            <p className="mt-5 max-w-2xl text-base leading-8 text-ink/80">{caseData.case.description}</p>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-[color:var(--text-secondary)]">{caseData.case.description}</p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <div className="rounded-[24px] bg-parchment/65 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-ink/45">Area</p>
-                <p className="mt-2 text-lg font-semibold text-ink">{caseData.case.area}</p>
+              <div className="theme-card-muted rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Area</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{caseData.case.area}</p>
               </div>
-              <div className="rounded-[24px] bg-parchment/65 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-ink/45">Dificuldade</p>
-                <p className="mt-2 text-lg font-semibold text-ink">{caseData.case.difficulty}</p>
+              <div className="theme-card-muted rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Dificuldade</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{caseData.case.difficulty}</p>
               </div>
-              <div className="rounded-[24px] bg-parchment/65 p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-ink/45">Duracao</p>
-                <p className="mt-2 text-lg font-semibold text-ink">
+              <div className="theme-card-muted rounded-[24px] p-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Duracao</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">
                   {caseData.case.estimated_duration_minutes.min}-{caseData.case.estimated_duration_minutes.max} min
                 </p>
               </div>
@@ -527,7 +510,9 @@ export default function HomePage() {
 
             <div
               className={`mt-6 rounded-[24px] border p-4 text-sm leading-7 ${
-                aiStatus?.enabled ? "border-emerald/25 bg-emerald/10 text-ink" : "border-garnet/25 bg-garnet/10 text-ink"
+                aiStatus?.enabled
+                  ? "border-emerald/25 bg-emerald/10 text-[color:var(--text-primary)]"
+                  : "border-garnet/25 bg-garnet/10 text-[color:var(--text-primary)]"
               }`}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">
@@ -544,7 +529,7 @@ export default function HomePage() {
             {user ? (
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
-                  className="rounded-full bg-ink px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-parchment transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:bg-ink/40"
+                  className="theme-button-primary rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-40"
                   disabled={isPending}
                   onClick={() => startCase(false)}
                   type="button"
@@ -553,14 +538,14 @@ export default function HomePage() {
                 </button>
                 {user.role === "admin" ? (
                   <Link
-                    className="inline-flex rounded-full border border-ink/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition hover:bg-ink/5"
+                    className="theme-button-secondary inline-flex rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
                     href="/creator"
                   >
                     Abrir central admin
                   </Link>
                 ) : null}
                 <button
-                  className="rounded-full border border-ink/10 px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-ink transition hover:bg-ink/5"
+                  className="theme-button-secondary rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
                   disabled={isAuthPending}
                   onClick={logout}
                   type="button"
@@ -574,7 +559,7 @@ export default function HomePage() {
             {authErrorMessage && user ? <p className="mt-4 text-sm text-garnet">{authErrorMessage}</p> : null}
           </div>
 
-          <aside className="rounded-[40px] border border-ink/10 bg-[#1f232b] p-8 text-parchment shadow-dossier">
+          <aside className="rounded-[40px] border border-white/10 bg-[var(--surface-contrast)] p-8 text-parchment shadow-[var(--shadow-elevated-theme)]">
             {!user ? (
               <>
                 <p className="text-xs uppercase tracking-[0.28em] text-parchment/55">Conta obrigatoria</p>
@@ -601,27 +586,27 @@ export default function HomePage() {
                 {authMode === "register" ? (
                   <div className="mt-6 space-y-3">
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, username: event.target.value }))}
                       placeholder="Username"
                       value={registerForm.username}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))}
                       placeholder="Email"
                       type="email"
                       value={registerForm.email}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
                       placeholder="Senha"
                       type="password"
                       value={registerForm.password}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) =>
                         setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
                       }
@@ -641,13 +626,13 @@ export default function HomePage() {
                 ) : (
                   <div className="mt-6 space-y-3">
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) => setLoginForm((current) => ({ ...current, login: event.target.value }))}
                       placeholder="Email ou username"
                       value={loginForm.login}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/15 bg-[#1f232b] px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
+                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/60 focus:border-brass/45"
                       onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
                       placeholder="Senha"
                       type="password"
@@ -702,21 +687,21 @@ export default function HomePage() {
   if (phase === "result") {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-ink/10 bg-white/70 px-5 py-4 shadow-dossier">
-          <div className="text-sm text-ink/72">
+        <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border px-5 py-4 text-[color:var(--text-primary)]">
+          <div className="text-sm text-[color:var(--text-secondary)]">
             Conta: <strong>@{user?.username}</strong>
           </div>
           <div className="flex flex-wrap gap-3">
             {user?.role === "admin" ? (
               <Link
-                className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+                className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
                 href="/creator"
               >
                 Central admin
               </Link>
             ) : null}
             <button
-              className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+              className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
               disabled={isAuthPending}
               onClick={logout}
               type="button"
@@ -744,21 +729,21 @@ export default function HomePage() {
           activeDocument ? "pointer-events-none blur-[2px] brightness-75" : ""
         }`}
       >
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-ink/10 bg-white/70 px-5 py-4 shadow-dossier">
-          <div className="text-sm text-ink/72">
+        <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border px-5 py-4 text-[color:var(--text-primary)]">
+          <div className="text-sm text-[color:var(--text-secondary)]">
             Conta: <strong>@{user?.username}</strong> {authState.activeGameSession ? `| salvo em ${dateLabel(authState.activeGameSession.updatedAt)}` : ""}
           </div>
           <div className="flex flex-wrap gap-3">
             {user?.role === "admin" ? (
               <Link
-                className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+                className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
                 href="/creator"
               >
                 Central admin
               </Link>
             ) : null}
             <button
-              className="rounded-full border border-ink/10 px-4 py-3 text-sm font-semibold text-ink transition hover:bg-ink/5"
+              className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
               disabled={isAuthPending}
               onClick={logout}
               type="button"
@@ -770,32 +755,32 @@ export default function HomePage() {
 
         <div className="mb-6 grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
           <div className="space-y-6">
-            <div className="rounded-[36px] border border-ink/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.82),rgba(239,228,206,0.72))] p-6 shadow-dossier">
+            <div className="theme-panel-strong rounded-[36px] border p-6 text-[color:var(--text-primary)]">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-ink/45">Sandbox juridico</p>
-                  <h1 className="mt-2 font-serifDisplay text-4xl text-ink">{caseData.case.title}</h1>
+                  <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Sandbox juridico</p>
+                  <h1 className="mt-2 font-serifDisplay text-4xl text-[color:var(--text-primary)]">{caseData.case.title}</h1>
                 </div>
                 <div className="rounded-2xl border border-garnet/20 bg-garnet/10 px-4 py-3 text-right">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-garnet/70">Nivel de tensao</p>
                   <p className="font-serifDisplay text-3xl text-garnet">{Math.max(0, 100 - remainingSteps * 14)}</p>
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-7 text-ink/75">
+              <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
                 Custodiado: Rafael Martins de Oliveira. Situacao atual:{" "}
                 <span className="font-semibold capitalize">{gameState.client_status.replaceAll("_", " ")}</span>.
               </p>
-              <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-ink/55">
+              <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
                 {sessionId ? (
-                  <span className="rounded-full border border-ink/10 px-3 py-2">Sessao: {sessionId.slice(0, 8)}</span>
+                  <span className="theme-pill rounded-full border px-3 py-2">Sessao: {sessionId.slice(0, 8)}</span>
                 ) : null}
-                <span className="rounded-full border border-ink/10 px-3 py-2">
+                <span className="theme-pill rounded-full border px-3 py-2">
                   Prazo restante: {Math.max(0, gameState.deadline_hours - gameState.choices_history.length * 8)}h
                 </span>
-                <span className="rounded-full border border-ink/10 px-3 py-2">
+                <span className="theme-pill rounded-full border px-3 py-2">
                   Etapas restantes: {Math.max(0, remainingSteps)}
                 </span>
-                <span className="rounded-full border border-ink/10 px-3 py-2">
+                <span className="theme-pill rounded-full border px-3 py-2">
                   nao lidos: {unlockedDocuments.filter((document) => !gameState.document_state[document.id]?.isOpened).length}
                 </span>
               </div>

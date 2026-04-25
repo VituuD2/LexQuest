@@ -16,8 +16,8 @@ type AudioController = {
 };
 
 const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
-  musicVolume: 0.14,
-  effectsVolume: 0.55
+  musicVolume: 0.03,
+  effectsVolume: 0.6
 };
 
 const STORAGE_KEY = "lexquest-audio-settings";
@@ -112,6 +112,10 @@ export function useLexQuestAudio(): AudioController {
   const unlockAudio = useCallback(() => {
     if (globalBgm && globalBgm.paused && audioSettings.musicVolume > 0) {
       globalBgm.play().catch(console.error);
+    }
+
+    if (globalTension && globalTension.paused && audioSettings.musicVolume > 0) {
+      globalTension.play().catch(console.error);
     }
   }, [audioSettings.musicVolume]);
 
