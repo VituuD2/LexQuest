@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getGameCatalogEntry } from "@/lib/game-catalog";
 import { getAuthenticatedUser } from "@/lib/server/auth";
 import { createSession } from "@/lib/server/session-repository";
 
@@ -14,11 +15,21 @@ export async function POST(request: Request) {
 
     const payload = (await request.json().catch(() => ({}))) as {
       restart?: boolean;
-      startStep?: number;
+      caseId?: string;
     };
+    const game = getGameCatalogEntry(typeof payload.caseId === "string" ? payload.caseId : "hc_48h_001");
+
+    if (!game) {
+      return NextResponse.json({ error: "Jogo nao encontrado." }, { status: 404 });
+    }
+
+    if (game.status !== "available") {
+      return NextResponse.json({ error: "Este jogo ainda nao foi publicado na home." }, { status: 403 });
+    }
+
     const session = await createSession(user.id, {
       restart: payload.restart === true,
-      startStep: typeof payload.startStep === "number" ? payload.startStep : 1
+      caseId: game.caseId
     });
 
     return NextResponse.json(session);

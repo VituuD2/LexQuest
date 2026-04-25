@@ -1,0 +1,21 @@
+{
+  "rubric_id": "trabalho_plantao_002_rubric",
+  "max_score": 30,
+  "criteria": [
+    {
+      "id": "fatos_relevantes",
+      "description": "Identifica os fatos realmente relevantes do novo caso.",
+      "points": 10
+    },
+    {
+      "id": "medida_adequada",
+      "description": "Escolhe uma medida compativel com a urgencia apresentada.",
+      "points": 10
+    },
+    {
+      "id": "tom_tecnico",
+      "description": "Mantem linguagem tecnica, proporcional e objetiva.",
+      "points": 10
+    }
+  ]
+}

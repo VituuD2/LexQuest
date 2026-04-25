@@ -98,7 +98,9 @@ export function StepCard({
       {step.foundation_selection?.enabled ? (
         <div className="theme-card mt-7 rounded-[28px] border p-5">
           <div className="mb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--text-muted)]">Fase 2</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
+              Etapa complementar
+            </p>
             <h3 className="mt-2 font-serifDisplay text-2xl text-[color:var(--text-primary)]">Selecao de fundamentos</h3>
             <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{step.foundation_selection.prompt}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">

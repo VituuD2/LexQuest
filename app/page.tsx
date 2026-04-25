@@ -24,21 +24,20 @@ import {
   markDocumentOpened
 } from "@/lib/game-engine";
 import type { FeedbackState, GameState } from "@/lib/game-types";
+import { getGameCatalog, getGameCatalogEntry } from "@/lib/game-catalog";
 import { useLexQuestAudio } from "@/lib/use-lexquest-audio";
 import { useThemePreference } from "@/lib/use-theme-preference";
 
 type AppPhase = "home" | "case" | "feedback" | "result";
 
-const caseData = getCaseData();
-const steps = getAllSteps();
-const playableSteps = steps.filter((step) => step.step_number < 6);
-const loseConditions = getLoseConditions();
-const failureThresholds = getFailureThresholdEntries();
+const gameCatalog = getGameCatalog();
+const defaultGameId = gameCatalog[0]?.caseId ?? "hc_48h_001";
 
 function buildDefaultAuthState(): AuthSessionPayload {
   return {
     user: null,
-    activeGameSession: null
+    activeGameSession: null,
+    activeGameSessions: []
   };
 }
 
@@ -49,6 +48,26 @@ function dateLabel(value: string | null) {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR");
+}
+
+function getPrimaryCharacterLabel(caseId: string) {
+  const caseData = getCaseData(caseId);
+  const primaryCharacter =
+    caseData.characters?.find((character) => character.role.toLowerCase().includes("cliente")) ??
+    caseData.characters?.find((character) => character.id !== "player") ??
+    null;
+
+  if (!primaryCharacter) {
+    return {
+      subjectLabel: "Parte assistida",
+      summary: "Caso em andamento com analise tatico-processual."
+    };
+  }
+
+  return {
+    subjectLabel: primaryCharacter.name,
+    summary: primaryCharacter.situation ?? primaryCharacter.role
+  };
 }
 
 function HomeIcon() {
@@ -68,7 +87,7 @@ export default function HomePage() {
     missingEnv: string[];
   } | null>(null);
   const [phase, setPhase] = useState<AppPhase>("home");
-  const [gameState, setGameState] = useState<GameState>(getInitialGameState());
+  const [gameState, setGameState] = useState<GameState>(getInitialGameState(defaultGameId));
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [selectedFoundations, setSelectedFoundations] = useState<string[]>([]);
@@ -84,7 +103,7 @@ export default function HomePage() {
   const [gameErrorMessage, setGameErrorMessage] = useState<string | null>(null);
   const [showPhaseRiskOverlay, setShowPhaseRiskOverlay] = useState(false);
   const [isAudioPanelOpen, setIsAudioPanelOpen] = useState(false);
-  const [selectedStartStep, setSelectedStartStep] = useState(1);
+  const [selectedGameId, setSelectedGameId] = useState(defaultGameId);
   const [loginForm, setLoginForm] = useState({
     login: "",
     password: ""
@@ -109,23 +128,32 @@ export default function HomePage() {
   const { themePreference, setThemePreference } = useThemePreference();
 
   const user = authState.user;
-  const currentStep = getStep(gameState.current_step);
-  const selectedPhase = playableSteps.find((step) => step.step_number === selectedStartStep) ?? playableSteps[0];
+  const homeGame = getGameCatalogEntry(selectedGameId) ?? gameCatalog[0] ?? null;
+  const activeSessionsByCaseId = useMemo(
+    () => new Map(authState.activeGameSessions.map((session) => [session.caseId, session])),
+    [authState.activeGameSessions]
+  );
+  const selectedGameSession = activeSessionsByCaseId.get(selectedGameId) ?? null;
+  const homeCaseData = getCaseData(selectedGameId);
+  const caseData = phase === "home" ? homeCaseData : getCaseData(gameState.case_id);
+  const homeCharacter = getPrimaryCharacterLabel(selectedGameId);
+  const activeCharacter = getPrimaryCharacterLabel(gameState.case_id);
+  const steps = getAllSteps(caseData.case.id);
+  const loseConditions = getLoseConditions(caseData.case.id);
+  const failureThresholds = getFailureThresholdEntries(caseData.case.id);
+  const currentStep = getStep(gameState.case_id, gameState.current_step);
   const unlockedDocuments = useMemo(
-    () => getUnlockedDocuments(gameState.documents_unlocked),
-    [gameState.documents_unlocked]
+    () => getUnlockedDocuments(gameState.case_id, gameState.documents_unlocked),
+    [gameState.case_id, gameState.documents_unlocked]
   );
   const activeDocument = unlockedDocuments.find((document) => document.id === openDocumentId) ?? null;
   const availableFoundations = useMemo(
-    () => (currentStep ? getFoundationsForStep(currentStep.step_number) : []),
-    [currentStep]
+    () => (currentStep ? getFoundationsForStep(gameState.case_id, currentStep.step_number) : []),
+    [currentStep, gameState.case_id]
   );
   const finalReport = useMemo(() => calculateFinalReport(gameState), [gameState]);
   const remainingSteps = steps.filter((step) => step.step_number <= 5).length - gameState.choices_history.length;
-  const hasInProgressSession =
-    authState.activeGameSession?.status === "in_progress" &&
-    authState.activeGameSession.gameState.current_step < 6;
-  const activePhase = hasInProgressSession ? authState.activeGameSession?.gameState.current_step ?? null : null;
+  const currentCaseSession = activeSessionsByCaseId.get(gameState.case_id) ?? null;
 
   function resetTransientState() {
     setSelectedChoice(null);
@@ -138,39 +166,69 @@ export default function HomePage() {
   function applyActiveGameSession(activeGameSession: ActiveGameSession | null) {
     if (!activeGameSession) {
       setSessionId(null);
-      setGameState(getInitialGameState());
-      setSelectedStartStep(1);
+      setGameState(getInitialGameState(defaultGameId));
+      setSelectedGameId(defaultGameId);
       resetTransientState();
       setShowPhaseRiskOverlay(false);
       setPhase("home");
       return;
     }
 
+    setAuthState((current) => ({
+      ...current,
+      activeGameSession
+    }));
     setSessionId(activeGameSession.sessionId);
     setGameState(activeGameSession.gameState);
-    setSelectedStartStep(activeGameSession.gameState.current_step >= 6 ? 1 : activeGameSession.gameState.current_step);
+    setSelectedGameId(activeGameSession.caseId);
     resetTransientState();
     setPhase(activeGameSession.status === "completed" || activeGameSession.gameState.current_step >= 6 ? "result" : "case");
   }
 
   function applyAuthPayload(payload: AuthSessionPayload) {
     setAuthState(payload);
-    applyActiveGameSession(payload.activeGameSession);
+
+    if (!payload.user) {
+      applyActiveGameSession(null);
+      return;
+    }
+
+    setSelectedGameId(payload.activeGameSessions[0]?.caseId ?? defaultGameId);
+    resetTransientState();
+    setShowPhaseRiskOverlay(false);
+    setPhase("home");
   }
 
-  function updateActiveSessionState(nextState: GameState) {
+  function updateActiveSessionState(nextState: GameState, nextSessionId = sessionId) {
     setAuthState((current) => ({
       ...current,
       activeGameSession:
-        current.activeGameSession && sessionId
+        current.activeGameSession && nextSessionId
           ? {
               ...current.activeGameSession,
-              sessionId,
+              sessionId: nextSessionId,
+              caseId: nextState.case_id,
+              caseTitle: nextState.title,
               gameState: nextState,
               status: nextState.current_step >= 6 ? "completed" : "in_progress",
               updatedAt: new Date().toISOString()
             }
-          : current.activeGameSession
+          : current.activeGameSession,
+      activeGameSessions:
+        nextState.current_step >= 6 || !nextSessionId
+          ? current.activeGameSessions.filter((session) => session.caseId !== nextState.case_id)
+          : [
+              {
+                sessionId: nextSessionId,
+                caseId: nextState.case_id,
+                caseTitle: nextState.title,
+                gameState: nextState,
+                status: "in_progress",
+                updatedAt: new Date().toISOString(),
+                finalAverage: null
+              },
+              ...current.activeGameSessions.filter((session) => session.caseId !== nextState.case_id)
+            ]
     }));
   }
 
@@ -241,13 +299,13 @@ export default function HomePage() {
     updateActiveSessionState(nextState);
   }
 
-  async function startCase(options?: { restart?: boolean; startStep?: number }) {
+  async function startCase(options?: { restart?: boolean; caseId?: string }) {
     if (!user) {
       return;
     }
 
     const restart = options?.restart ?? false;
-    const startStep = options?.startStep ?? selectedStartStep;
+    const caseId = options?.caseId ?? selectedGameId;
 
     unlockAudio();
     setIsPending(true);
@@ -261,13 +319,13 @@ export default function HomePage() {
         },
         body: JSON.stringify({
           restart,
-          startStep
+          caseId
         })
       });
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(payload.error ?? "Nao foi possivel iniciar a sessao do caso.");
+        throw new Error(payload.error ?? "Nao foi possivel iniciar a sessao do jogo.");
       }
 
       const payload = (await response.json()) as ActiveGameSession;
@@ -278,13 +336,14 @@ export default function HomePage() {
 
       setAuthState((current) => ({
         ...current,
-        activeGameSession: payload
+        activeGameSession: payload,
+        activeGameSessions: [payload, ...current.activeGameSessions.filter((session) => session.caseId !== payload.caseId)]
       }));
       applyActiveGameSession(payload);
       setShowPhaseRiskOverlay(payload.gameState.current_step === 1);
       playTensionPulse();
     } catch (error) {
-      setGameErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao iniciar o caso.");
+      setGameErrorMessage(error instanceof Error ? error.message : "Falha inesperada ao iniciar o jogo.");
     } finally {
       setIsPending(false);
     }
@@ -507,9 +566,11 @@ export default function HomePage() {
           <div className="theme-panel rounded-[40px] border p-8 text-[color:var(--text-primary)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--text-muted)]">LexQuest MVP</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[color:var(--text-muted)]">
+                  {homeGame?.label ?? "Jogo"} | Catalogo LexQuest
+                </p>
                 <h1 className="mt-4 max-w-3xl font-serifDisplay text-5xl leading-tight text-[color:var(--text-primary)]">
-                  Habeas Corpus em 48h
+                  {homeGame?.title ?? caseData.case.title}
                 </h1>
               </div>
               {user ? (
@@ -521,6 +582,12 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 max-w-2xl text-base leading-8 text-[color:var(--text-secondary)]">{caseData.case.description}</p>
+
+            <div className="theme-card-muted mt-6 rounded-[24px] p-5">
+              <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Foco narrativo</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{homeCharacter.subjectLabel}</p>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{homeCharacter.summary}</p>
+            </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               <div className="theme-card-muted rounded-[24px] p-5">
@@ -557,42 +624,49 @@ export default function HomePage() {
               </p>
             </div>
 
-            {user ? (
-              <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
+              {user ? (
                 <button
                   className="theme-button-primary rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled={isPending}
-                  onClick={() =>
-                    void startCase({
-                      restart: hasInProgressSession ? activePhase !== selectedStartStep : false,
-                      startStep: selectedStartStep
-                    })
-                  }
+                  disabled={isPending || !homeGame || homeGame.status !== "available"}
+                  onClick={() => void startCase({ caseId: selectedGameId })}
                   type="button"
                 >
                   {isPending
                     ? "Abrindo sessao..."
-                    : hasInProgressSession && activePhase === selectedStartStep
-                      ? `Continuar fase ${selectedStartStep}`
-                      : `Comecar da fase ${selectedStartStep}`}
+                    : homeGame?.status !== "available"
+                      ? `${homeGame?.label ?? "Jogo"} em breve`
+                    : selectedGameSession
+                      ? `Continuar ${homeGame?.label ?? "jogo"}`
+                      : `Iniciar ${homeGame?.label ?? "jogo"}`}
                 </button>
-                {hasInProgressSession ? (
-                  <button
-                    className="theme-button-secondary rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
-                    onClick={() => setPhase("case")}
-                    type="button"
-                  >
-                    Retomar sessao atual
-                  </button>
-                ) : null}
-                {user.role === "admin" ? (
-                  <Link
-                    className="theme-button-secondary inline-flex rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
-                    href="/creator"
-                  >
-                    Abrir central admin
-                  </Link>
-                ) : null}
+              ) : (
+                <button
+                  className="theme-button-primary rounded-full px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
+                  onClick={() => setAuthMode("register")}
+                  type="button"
+                >
+                  Criar conta para jogar
+                </button>
+              )}
+              {selectedGameSession ? (
+                <button
+                  className="theme-button-secondary rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
+                  onClick={() => applyActiveGameSession(selectedGameSession)}
+                  type="button"
+                >
+                  Retomar progresso salvo
+                </button>
+              ) : null}
+              {user?.role === "admin" ? (
+                <Link
+                  className="theme-button-secondary inline-flex rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
+                  href="/creator"
+                >
+                  Abrir central admin
+                </Link>
+              ) : null}
+              {user ? (
                 <button
                   className="theme-button-secondary rounded-full border px-7 py-4 text-sm font-semibold uppercase tracking-[0.14em] transition"
                   disabled={isAuthPending}
@@ -601,54 +675,86 @@ export default function HomePage() {
                 >
                   Sair
                 </button>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
 
-            {user ? (
-              <div className="theme-card mt-6 rounded-[28px] border p-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Escolha a fase</p>
-                    <h3 className="mt-2 font-serifDisplay text-2xl text-[color:var(--text-primary)]">
-                      Entrar direto em uma fase
-                    </h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--text-secondary)]">
-                      A numeracao da fase segue o step number do criador. Se voce escolher outra fase, o LexQuest abre uma nova sessao a partir dela.
-                    </p>
-                  </div>
-                  {hasInProgressSession ? (
-                    <div className="theme-pill rounded-[22px] border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
-                      Sessao atual: fase {activePhase} salva em {dateLabel(authState.activeGameSession?.updatedAt ?? null)}
-                    </div>
-                  ) : null}
+            <div className="theme-card mt-6 rounded-[28px] border p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Escolha o jogo</p>
+                  <h3 className="mt-2 font-serifDisplay text-2xl text-[color:var(--text-primary)]">
+                    Catalogo de jogos LexQuest
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--text-secondary)]">
+                    A home agora funciona como hub central. Volte para ca para trocar entre os jogos e continuar o progresso salvo de cada caso.
+                  </p>
                 </div>
-
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {playableSteps.map((step) => (
-                    <button
-                      className={`rounded-full border px-4 py-3 text-sm font-semibold uppercase tracking-[0.14em] transition ${
-                        selectedStartStep === step.step_number
-                          ? "border-brass bg-brass/14 text-[color:var(--text-primary)] shadow-[var(--shadow-dossier-theme)]"
-                          : "theme-button-secondary"
-                      }`}
-                      key={step.step_number}
-                      onClick={() => setSelectedStartStep(step.step_number)}
-                      type="button"
-                    >
-                      Fase {step.step_number}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedPhase ? (
-                  <div className="theme-card-muted mt-4 rounded-[24px] p-4">
-                    <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Fase selecionada</p>
-                    <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{selectedPhase.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{selectedPhase.objective}</p>
+                {selectedGameSession ? (
+                  <div className="theme-pill rounded-[22px] border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+                    Progresso salvo em {dateLabel(selectedGameSession.updatedAt)}
                   </div>
                 ) : null}
               </div>
-            ) : null}
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                {gameCatalog.map((game) => {
+                  const gameSession = activeSessionsByCaseId.get(game.caseId) ?? null;
+                  const isSelected = selectedGameId === game.caseId;
+
+                  return (
+                    <button
+                      className={`rounded-[26px] border p-5 text-left transition ${
+                        isSelected
+                          ? "border-brass bg-brass/12 shadow-[var(--shadow-dossier-theme)]"
+                          : "theme-card hover:border-brass/35 hover:bg-[var(--surface-card-strong)]"
+                      }`}
+                      key={game.caseId}
+                      onClick={() => setSelectedGameId(game.caseId)}
+                      type="button"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
+                            {game.label}
+                          </p>
+                          <h4 className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{game.title}</h4>
+                        </div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                            game.status === "available"
+                              ? "bg-emerald/12 text-emerald"
+                              : "bg-white/8 text-[color:var(--text-secondary)]"
+                          }`}
+                        >
+                          {game.status === "available" ? "disponivel" : "em breve"}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">{game.summary}</p>
+                      {gameSession ? (
+                        <p className="mt-4 text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                          Progresso salvo no passo {gameSession.gameState.current_step}
+                        </p>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {homeGame ? (
+                <div className="theme-card-muted mt-4 rounded-[24px] p-4">
+                  <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">Jogo selecionado</p>
+                  <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{homeGame.title}</p>
+                  <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{homeGame.summary}</p>
+                  <p className="mt-3 text-xs uppercase tracking-[0.14em] text-[color:var(--text-muted)]">
+                    {homeGame.status === "available"
+                      ? user
+                        ? "Pronto para abrir ou continuar."
+                        : "Disponivel assim que voce entrar na sua conta."
+                      : "Ainda nao publicado. Pode ser preparado no studio admin."}
+                  </p>
+                </div>
+              ) : null}
+            </div>
 
             {gameErrorMessage ? <p className="mt-4 text-sm text-garnet">{gameErrorMessage}</p> : null}
             {authErrorMessage && user ? <p className="mt-4 text-sm text-garnet">{authErrorMessage}</p> : null}
@@ -759,9 +865,9 @@ export default function HomePage() {
                   <div className="rounded-[24px] bg-white/8 p-5">
                     <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Progresso</p>
                     <p className="mt-2 text-sm leading-7 text-parchment/85">
-                      {hasInProgressSession
-                        ? `Sessao em andamento na fase ${activePhase}. Volte ao caso para continuar ou abra outra fase pela home.`
-                        : "Nenhuma sessao em andamento no momento. Inicie o caso para salvar seu progresso nesta conta."}
+                      {authState.activeGameSessions.length > 0
+                        ? `${authState.activeGameSessions.length} jogo(s) com progresso salvo. Volte para a home para escolher qual retomar.`
+                        : "Nenhum jogo em andamento no momento. Inicie um jogo para salvar seu progresso nesta conta."}
                     </p>
                   </div>
                 </div>
@@ -817,7 +923,7 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        <FinalReport gameState={gameState} onRestart={() => void startCase({ restart: true, startStep: 1 })} report={finalReport} />
+        <FinalReport gameState={gameState} onRestart={() => void startCase({ restart: true, caseId: gameState.case_id })} report={finalReport} />
         <AudioControlPanel
           audioSettings={audioSettings}
           isOpen={isAudioPanelOpen}
@@ -840,7 +946,7 @@ export default function HomePage() {
       >
         <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border px-5 py-4 text-[color:var(--text-primary)]">
           <div className="text-sm text-[color:var(--text-secondary)]">
-            Conta: <strong>@{user?.username}</strong> {authState.activeGameSession ? `| salvo em ${dateLabel(authState.activeGameSession.updatedAt)}` : ""}
+            Conta: <strong>@{user?.username}</strong> {currentCaseSession ? `| salvo em ${dateLabel(currentCaseSession.updatedAt)}` : ""}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -884,7 +990,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
-                Custodiado: Rafael Martins de Oliveira. Situacao atual:{" "}
+                Parte central: {activeCharacter.subjectLabel}. Contexto atual: {activeCharacter.summary}. Situacao do jogo:{" "}
                 <span className="font-semibold capitalize">{gameState.client_status.replaceAll("_", " ")}</span>.
               </p>
               <div className="mt-5 flex flex-wrap gap-3 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">

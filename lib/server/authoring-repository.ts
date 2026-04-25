@@ -77,8 +77,8 @@ function buildDefaultStepBundle(step: Step): Omit<AuthoringStepBundle, "updatedA
   };
 }
 
-function buildStepFromBlocks(stepNumber: number, blocks: PhaseBuilderBlock[]) {
-  const fallbackStep = getStep(stepNumber);
+function buildStepFromBlocks(caseId: string, stepNumber: number, blocks: PhaseBuilderBlock[]) {
+  const fallbackStep = getStep(caseId, stepNumber);
 
   if (!fallbackStep) {
     throw new Error("Etapa base nao encontrada para autoria.");
@@ -87,8 +87,47 @@ function buildStepFromBlocks(stepNumber: number, blocks: PhaseBuilderBlock[]) {
   return blocksToStepDraft(fallbackStep, blocks);
 }
 
+async function ensureCaseRecord(caseId: string) {
+  const supabase = getSupabaseAdminClient();
+  const caseMeta = getCaseData(caseId);
+  const { data, error } = await supabase
+    .from("cases")
+    .select("id")
+    .eq("id", caseId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Falha ao consultar caso base no banco: ${error.message}`);
+  }
+
+  if (data) {
+    return;
+  }
+
+  const { error: insertError } = await supabase.from("cases").insert({
+    id: caseMeta.case.id,
+    title: caseMeta.case.title,
+    description: caseMeta.case.description,
+    area: caseMeta.case.area,
+    difficulty: caseMeta.case.difficulty,
+    estimated_duration_minutes: caseMeta.case.estimated_duration_minutes,
+    target_audience: caseMeta.case.target_audience,
+    score_bands: caseMeta.score_bands,
+    characters: [],
+    authoring_schema: {
+      source: "local-case-catalog"
+    },
+    ai_config: {}
+  });
+
+  if (insertError) {
+    throw new Error(`Falha ao registrar caso base no banco: ${insertError.message}`);
+  }
+}
+
 async function createDraftVersion(caseId: string) {
   const supabase = getSupabaseAdminClient();
+  await ensureCaseRecord(caseId);
   const { data: existingVersions, error: versionsError } = await supabase
     .from("case_versions")
     .select("version_number")
@@ -100,7 +139,7 @@ async function createDraftVersion(caseId: string) {
   }
 
   const nextVersionNumber = (existingVersions?.[0]?.version_number ?? 0) + 1;
-  const caseMeta = getCaseData();
+  const caseMeta = getCaseData(caseId);
   const sourceMode = caseMeta.case.phase_builder?.default_mode ?? "blocks";
 
   const { data: versionData, error: insertVersionError } = await supabase
@@ -120,7 +159,7 @@ async function createDraftVersion(caseId: string) {
     throw new Error(`Falha ao criar versao em rascunho: ${insertVersionError?.message ?? "desconhecida"}`);
   }
 
-  const defaultBuilders = getAllSteps()
+  const defaultBuilders = getAllSteps(caseId)
     .filter((step) => step.step_number <= 6)
     .map((step) => {
       const snapshot = buildDefaultStepBundle(step);
@@ -171,7 +210,7 @@ async function ensureDraftVersion(caseId: string) {
 export async function getCaseAuthoringBundle(caseId: string): Promise<AuthoringBundle> {
   const supabase = getSupabaseAdminClient();
   const version = await ensureDraftVersion(caseId);
-  const caseMeta = getCaseData();
+  const caseMeta = getCaseData(caseId);
 
   const { data, error } = await supabase
     .from("case_step_builders")
@@ -184,7 +223,7 @@ export async function getCaseAuthoringBundle(caseId: string): Promise<AuthoringB
   }
 
   const builders = (data ?? []) as StepBuilderRow[];
-  const steps = getAllSteps()
+  const steps = getAllSteps(caseId)
     .filter((step) => step.step_number <= 6)
     .map((baseStep) => {
       const builder = builders.find((item) => item.step_number === baseStep.step_number);
@@ -228,14 +267,17 @@ export async function saveCaseAuthoringStep(params: {
 }) {
   const supabase = getSupabaseAdminClient();
   const version = await ensureDraftVersion(params.caseId);
-  const fallbackStep = getStep(params.stepNumber);
+  const fallbackStep = getStep(params.caseId, params.stepNumber);
 
   if (!fallbackStep) {
     throw new Error("Etapa nao encontrada.");
   }
 
   const blocks = params.mode === "blocks" ? params.blocks ?? buildPhaseAuthoringSnapshot(fallbackStep) : buildPhaseAuthoringSnapshot(fallbackStep);
-  const normalizedStep = params.mode === "blocks" ? buildStepFromBlocks(params.stepNumber, blocks) : parseJsonStepDraft(params.rawJson ?? JSON.stringify(fallbackStep, null, 2), fallbackStep);
+  const normalizedStep =
+    params.mode === "blocks"
+      ? buildStepFromBlocks(params.caseId, params.stepNumber, blocks)
+      : parseJsonStepDraft(params.rawJson ?? JSON.stringify(fallbackStep, null, 2), fallbackStep);
   const validation = validateStepDraft(normalizedStep);
 
   const { error } = await supabase.from("case_step_builders").upsert(

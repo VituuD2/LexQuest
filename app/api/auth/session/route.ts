@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/server/auth";
-import { getActiveSessionForUser } from "@/lib/server/session-repository";
+import { listActiveSessionsForUser } from "@/lib/server/session-repository";
 
 export const runtime = "nodejs";
 
@@ -11,15 +11,18 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({
         user: null,
-        activeGameSession: null
+        activeGameSession: null,
+        activeGameSessions: []
       });
     }
 
-    const activeGameSession = await getActiveSessionForUser(user.id);
+    const activeGameSessions = await listActiveSessionsForUser(user.id);
+    const activeGameSession = activeGameSessions[0] ?? null;
 
     return NextResponse.json({
       user,
-      activeGameSession
+      activeGameSession,
+      activeGameSessions
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao carregar sessao autenticada.";

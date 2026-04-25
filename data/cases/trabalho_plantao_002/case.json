@@ -1,0 +1,89 @@
+{
+  "case": {
+    "id": "trabalho_plantao_002",
+    "title": "Plantao trabalhista de madrugada",
+    "description": "Uma nova simulacao de urgencia trabalhista esta sendo preparada para ampliar o catalogo de jogos do LexQuest.",
+    "area": "Direito do Trabalho",
+    "difficulty": "Intermediario",
+    "estimated_duration_minutes": {
+      "min": 25,
+      "max": 45
+    },
+    "target_audience": [
+      "estudantes de Direito",
+      "advogados iniciantes",
+      "concurseiros"
+    ],
+    "phase_builder": {
+      "supported_inputs": ["blocks", "json"],
+      "default_mode": "blocks",
+      "description": "Caso base em construcao para futura publicacao no catalogo."
+    },
+    "lose_conditions": {
+      "metric_floor": 18,
+      "average_floor": 28,
+      "ending_key": "derrota_tecnica_antecipada"
+    }
+  },
+  "initial_state": {
+    "case_id": "trabalho_plantao_002",
+    "title": "Plantao trabalhista de madrugada",
+    "current_step": 1,
+    "client_status": "caso_em_construcao",
+    "deadline_hours": 48,
+    "legalidade": 50,
+    "estrategia": 50,
+    "etica": 50,
+    "documents_unlocked": [],
+    "document_state": {},
+    "flags": {
+      "triagem_concluida": false,
+      "tese_cautelar_desenhada": false,
+      "prova_minima_reunida": false
+    }
+  },
+  "score_bands": [
+    {
+      "min": 0,
+      "max": 39,
+      "label": "atuacao_fraca"
+    },
+    {
+      "min": 40,
+      "max": 69,
+      "label": "atuacao_defensavel_com_falhas"
+    },
+    {
+      "min": 70,
+      "max": 89,
+      "label": "boa_atuacao"
+    },
+    {
+      "min": 90,
+      "max": 100,
+      "label": "atuacao_excelente"
+    }
+  ],
+  "final_orders": {
+    "derrota_tecnica_antecipada": {
+      "template": "judicial_order",
+      "title": "Rascunho de despacho indisponivel",
+      "issuer": {
+        "name": "LexQuest Studio",
+        "branch": "Caso em preparacao",
+        "location": "Ambiente interno"
+      },
+      "meta": {
+        "reference": "draft",
+        "date": "25/04/2026",
+        "page": "rascunho"
+      },
+      "sections": [
+        {
+          "heading": "Observacao",
+          "body": "Este jogo ainda esta em construcao. Use o studio admin para escrever as fases, os documentos e os desfechos antes de publica-lo na home."
+        }
+      ]
+    }
+  }
+}

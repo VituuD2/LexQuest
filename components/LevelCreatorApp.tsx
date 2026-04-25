@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { AdminUserRecord, AuthenticatedUser, UserRole } from "@/lib/auth-types";
+import type { GameCatalogEntry } from "@/lib/game-catalog";
 import type { PhaseBuilderBlock } from "@/lib/phase-authoring";
 import { blocksToStepDraft, parseJsonStepDraft } from "@/lib/phase-authoring";
 import type { Step } from "@/lib/game-types";
@@ -46,9 +47,8 @@ type DraftReview = {
 
 type LevelCreatorAppProps = {
   currentUser: AuthenticatedUser;
+  games: GameCatalogEntry[];
 };
-
-const CASE_ID = "hc_48h_001";
 
 function createBlock(type: PhaseBuilderBlock["type"]): PhaseBuilderBlock {
   return {
@@ -68,7 +68,8 @@ function dateLabel(value: string | null) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR");
 }
 
-export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
+export function LevelCreatorApp({ currentUser, games }: LevelCreatorAppProps) {
+  const [selectedCaseId, setSelectedCaseId] = useState(games[0]?.caseId ?? "hc_48h_001");
   const [bundle, setBundle] = useState<AuthoringBundle | null>(null);
   const [selectedStepNumber, setSelectedStepNumber] = useState<number>(1);
   const [mode, setMode] = useState<"blocks" | "json">("blocks");
@@ -93,12 +94,12 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
 
       try {
         const [bundleResponse, usersResponse] = await Promise.all([
-          fetch(`/api/authoring/cases/${CASE_ID}`),
+          fetch(`/api/authoring/cases/${selectedCaseId}`),
           fetch("/api/admin/users")
         ]);
 
         if (!bundleResponse.ok) {
-          throw new Error("Nao foi possivel carregar o criador de fases.");
+          throw new Error("Nao foi possivel carregar o studio de jogos.");
         }
 
         if (!usersResponse.ok) {
@@ -127,7 +128,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
     }
 
     void loadBundle();
-  }, []);
+  }, [selectedCaseId]);
 
   const selectedStep = useMemo(
     () => bundle?.steps.find((step) => step.stepNumber === selectedStepNumber) ?? null,
@@ -221,7 +222,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
     setSuccessMessage(null);
 
     try {
-      const response = await fetch(`/api/authoring/cases/${CASE_ID}/steps/${selectedStep.stepNumber}`, {
+      const response = await fetch(`/api/authoring/cases/${selectedCaseId}/steps/${selectedStep.stepNumber}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -357,7 +358,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
     return (
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="rounded-[32px] border border-garnet/20 bg-garnet/10 p-8 text-garnet">
-          {errorMessage ?? "Nao foi possivel iniciar o criador de fases."}
+          {errorMessage ?? "Nao foi possivel iniciar o studio de jogos."}
         </div>
       </main>
     );
@@ -368,10 +369,9 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
       <div className="theme-panel mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[36px] border p-6 text-[color:var(--text-primary)]">
         <div>
           <p className="text-xs uppercase tracking-[0.26em] text-[color:var(--text-muted)]">Studio LexQuest</p>
-          <h1 className="mt-2 font-serifDisplay text-4xl text-[color:var(--text-primary)]">Criador de fases</h1>
+          <h1 className="mt-2 font-serifDisplay text-4xl text-[color:var(--text-primary)]">Studio de jogos</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text-secondary)]">
-            Edite as etapas em blocos guiados ou JSON bruto, salve no rascunho do Supabase e use a IA para revisar clareza, realismo e dificuldade.
-            A numeracao de cada etapa tambem define a fase inicial exibida para o jogador na home.
+            Edite cada jogo do catalogo em blocos guiados ou JSON bruto, salve no rascunho do Supabase e use a IA para revisar clareza, realismo e dificuldade.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -382,7 +382,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
             className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
             href="/"
           >
-            Voltar ao caso
+            Voltar aos jogos
           </Link>
           <button
             className="theme-button-secondary rounded-full border px-4 py-3 text-sm font-semibold transition"
@@ -396,6 +396,40 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
           </div>
         </div>
       </div>
+
+      <section className="theme-panel mb-6 rounded-[32px] border p-6 text-[color:var(--text-primary)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Catalogo de jogos</p>
+            <h2 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">Selecione o jogo que sera editado</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text-secondary)]">
+              O studio usa o mesmo catalogo exibido na home. Assim o admin prepara cada jogo/caso no mesmo eixo em que o jogador vai navegar.
+            </p>
+          </div>
+          <div className="theme-pill rounded-2xl border px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+            Caso ativo: {bundle.caseTitle}
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {games.map((game) => (
+            <button
+              className={`rounded-[24px] border p-5 text-left transition ${
+                selectedCaseId === game.caseId
+                  ? "border-brass bg-brass/12 shadow-[var(--shadow-dossier-theme)]"
+                  : "theme-card hover:border-brass/35 hover:bg-[var(--surface-card-strong)]"
+              }`}
+              key={game.caseId}
+              onClick={() => setSelectedCaseId(game.caseId)}
+              type="button"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)]">{game.label}</p>
+              <h3 className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">{game.title}</h3>
+              <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{game.summary}</p>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section className="theme-panel mb-6 rounded-[32px] border p-6 text-[color:var(--text-primary)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -484,7 +518,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
                 type="button"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-[color:var(--text-primary)]">Etapa {step.stepNumber} · Fase {step.stepNumber}</p>
+                  <p className="text-sm font-semibold text-[color:var(--text-primary)]">Etapa {step.stepNumber} | Caso {bundle.caseId}</p>
                   <span
                     className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
                       step.validation.isValid ? "bg-emerald/12 text-emerald" : "bg-garnet/12 text-garnet"
@@ -503,7 +537,7 @@ export function LevelCreatorApp({ currentUser }: LevelCreatorAppProps) {
           <div className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapa {selectedStep.stepNumber} · Fase {selectedStep.stepNumber}</p>
+                <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Etapa {selectedStep.stepNumber} | Caso {bundle.caseId}</p>
                 <h2 className="mt-2 font-serifDisplay text-3xl text-[color:var(--text-primary)]">{previewStep.title || "Nova etapa"}</h2>
               </div>
               <div className="theme-pill flex gap-2 rounded-full border p-1">

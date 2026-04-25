@@ -1,9 +1,4 @@
-import caseData from "@/data/cases/hc_48h_001/case.json";
-import documents from "@/data/cases/hc_48h_001/documents.json";
-import foundations from "@/data/cases/hc_48h_001/foundations.json";
-import rubric from "@/data/cases/hc_48h_001/rubric.json";
-import scoringRules from "@/data/cases/hc_48h_001/scoring-rules.json";
-import steps from "@/data/cases/hc_48h_001/steps.json";
+import { DEFAULT_CASE_ID, getCaseContent } from "@/lib/case-content";
 import type {
   MetricKey,
   BranchCondition,
@@ -20,13 +15,6 @@ import type {
   Step
 } from "@/lib/game-types";
 
-const typedCaseData = caseData as CaseData;
-const typedDocuments = documents as CaseDocument[];
-const typedSteps = steps as Step[];
-const typedScoringRules = scoringRules as ScoringRule[];
-const typedRubric = rubric as Rubric;
-const typedFoundations = foundations as Foundation[];
-
 const KEYWORD_MAP: Record<string, string[]> = {
   fundamentacao_generica: ["generica", "fundamentacao concreta", "ordem publica", "credibilidade da justica"],
   ausencia_violencia: ["sem violencia", "sem grave ameaca", "ausencia de violencia", "nao houve violencia"],
@@ -36,6 +24,10 @@ const KEYWORD_MAP: Record<string, string[]> = {
   tom_tecnico: ["preventiva", "custodiado", "liminar", "proporcionalidade", "constrangimento ilegal"],
   coerencia: ["decisao", "bem", "violencia", "cautelares", "antecedente"]
 };
+
+function getBundle(caseId = DEFAULT_CASE_ID) {
+  return getCaseContent(caseId);
+}
 
 function initializeDocumentState(documentIds: string[], existingState?: DocumentStateMap) {
   const baseState: DocumentStateMap = { ...(existingState ?? {}) };
@@ -75,16 +67,16 @@ function mergeUnlockedDocumentState(currentState: DocumentStateMap, existingUnlo
   return mergedState;
 }
 
-export function getCaseData() {
-  return typedCaseData;
+export function getCaseData(caseId = DEFAULT_CASE_ID) {
+  return getBundle(caseId).caseData;
 }
 
-export function getLoseConditions() {
-  return typedCaseData.case.lose_conditions ?? null;
+export function getLoseConditions(caseId = DEFAULT_CASE_ID) {
+  return getCaseData(caseId).case.lose_conditions ?? null;
 }
 
-export function getFailureThresholdEntries(): Array<{ key: MetricKey; label: string; floor: number }> {
-  const loseConditions = getLoseConditions();
+export function getFailureThresholdEntries(caseId = DEFAULT_CASE_ID): Array<{ key: MetricKey; label: string; floor: number }> {
+  const loseConditions = getLoseConditions(caseId);
   const floor = loseConditions?.metric_floor ?? 0;
 
   return [
@@ -94,37 +86,37 @@ export function getFailureThresholdEntries(): Array<{ key: MetricKey; label: str
   ];
 }
 
-export function getAllSteps() {
-  return typedSteps;
+export function getAllSteps(caseId = DEFAULT_CASE_ID) {
+  return getBundle(caseId).steps;
 }
 
-export function getPlayableSteps() {
-  return typedSteps.filter((step) => step.step_number < 6);
+export function getPlayableSteps(caseId = DEFAULT_CASE_ID) {
+  return getAllSteps(caseId).filter((step) => step.step_number < 6);
 }
 
-export function getAllDocuments() {
-  return typedDocuments;
+export function getAllDocuments(caseId = DEFAULT_CASE_ID) {
+  return getBundle(caseId).documents;
 }
 
-export function getRubric() {
-  return typedRubric;
+export function getRubric(caseId = DEFAULT_CASE_ID) {
+  return getBundle(caseId).rubric;
 }
 
-export function getAllFoundations() {
-  return typedFoundations;
+export function getAllFoundations(caseId = DEFAULT_CASE_ID) {
+  return getBundle(caseId).foundations;
 }
 
-export function getFoundationsForStep(stepNumber: number) {
-  return typedFoundations.filter((foundation) => foundation.valid_for_steps.includes(stepNumber));
+export function getFoundationsForStep(caseId: string, stepNumber: number) {
+  return getAllFoundations(caseId).filter((foundation) => foundation.valid_for_steps.includes(stepNumber));
 }
 
-export function getInitialGameState(startStep = 1): GameState {
-  const baseState = typedCaseData.initial_state;
-  const playableSteps = getPlayableSteps();
+export function getInitialGameState(caseId = DEFAULT_CASE_ID, startStep = 1): GameState {
+  const baseState = getCaseData(caseId).initial_state;
+  const playableSteps = getPlayableSteps(caseId);
   const normalizedStartStep = playableSteps.some((step) => step.step_number === startStep) ? startStep : 1;
   const unlockedDocuments = uniqueIds([
     ...baseState.documents_unlocked,
-    ...typedDocuments
+    ...getAllDocuments(caseId)
       .filter((document) => document.unlock_step <= normalizedStartStep)
       .map((document) => document.id)
   ]);
@@ -148,12 +140,12 @@ export function ensureGameStateDefaults(gameState: GameState): GameState {
   };
 }
 
-export function getStep(stepNumber: number) {
-  return typedSteps.find((step) => step.step_number === stepNumber);
+export function getStep(caseId: string, stepNumber: number) {
+  return getAllSteps(caseId).find((step) => step.step_number === stepNumber);
 }
 
-export function getUnlockedDocuments(documentIds: string[]) {
-  return typedDocuments.filter((document) => documentIds.includes(document.id));
+export function getUnlockedDocuments(caseId: string, documentIds: string[]) {
+  return getAllDocuments(caseId).filter((document) => documentIds.includes(document.id));
 }
 
 export function markDocumentOpened(gameState: GameState, documentId: string): GameState {
@@ -173,8 +165,8 @@ export function markDocumentOpened(gameState: GameState, documentId: string): Ga
   };
 }
 
-export function getScoringRule(stepNumber: number, choiceKey: string) {
-  return typedScoringRules.find((rule) => rule.step === stepNumber && rule.choice === choiceKey);
+export function getScoringRule(caseId: string, stepNumber: number, choiceKey: string) {
+  return getBundle(caseId).scoringRules.find((rule) => rule.step === stepNumber && rule.choice === choiceKey);
 }
 
 function getMentorRules(step: Step, selectedFoundationIds: string[]) {
@@ -230,16 +222,16 @@ function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function getFoundationLabels(foundationIds: string[]) {
+function getFoundationLabels(caseId: string, foundationIds: string[]) {
   return foundationIds
-    .map((foundationId) => typedFoundations.find((foundation) => foundation.id === foundationId)?.label)
+    .map((foundationId) => getAllFoundations(caseId).find((foundation) => foundation.id === foundationId)?.label)
     .filter((label): label is string => Boolean(label));
 }
 
-export function getFoundationDelta(foundationIds: string[]) {
+export function getFoundationDelta(caseId: string, foundationIds: string[]) {
   return foundationIds.reduce(
     (accumulator, foundationId) => {
-      const foundation = typedFoundations.find((item) => item.id === foundationId);
+      const foundation = getAllFoundations(caseId).find((item) => item.id === foundationId);
 
       if (!foundation) {
         return accumulator;
@@ -284,8 +276,8 @@ function buildChoiceHistoryEntry(params: {
   };
 }
 
-function buildFoundationFeedback(foundationIds: string[]) {
-  const selected = typedFoundations.filter((foundation) => foundationIds.includes(foundation.id));
+function buildFoundationFeedback(caseId: string, foundationIds: string[]) {
+  const selected = getAllFoundations(caseId).filter((foundation) => foundationIds.includes(foundation.id));
 
   if (selected.length === 0) {
     return "";
@@ -340,13 +332,15 @@ function matchesCondition(gameState: GameState, average: number, condition: Bran
 }
 
 function resolveEndingKey(gameState: GameState) {
+  const caseData = getCaseData(gameState.case_id);
+
   if (gameState.ending_key) {
     return gameState.ending_key;
   }
 
   const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
 
-  for (const rule of typedCaseData.ending_rules ?? []) {
+  for (const rule of caseData.ending_rules ?? []) {
     if (rule.conditions.every((condition) => matchesCondition(gameState, average, condition))) {
       return rule.key;
     }
@@ -368,7 +362,7 @@ function resolveEndingKey(gameState: GameState) {
 }
 
 function applyFailureIfNeeded(nextState: GameState) {
-  const loseConditions = typedCaseData.case.lose_conditions;
+  const loseConditions = getCaseData(nextState.case_id).case.lose_conditions;
 
   if (!loseConditions) {
     return nextState;
@@ -401,9 +395,10 @@ export function applyChoice(params: {
   selectedFoundationIds?: string[];
 }) {
   const { gameState, step, choiceKey, freeText, selectedFoundationIds = [] } = params;
+  const caseId = gameState.case_id;
   const choice = step.options.find((option) => option.key === choiceKey);
   const nextStep = choice?.next_step ?? step.step_number + 1;
-  const nextStepData = getStep(nextStep);
+  const nextStepData = getStep(caseId, nextStep);
   const unlockedDocuments = uniqueIds([
     ...gameState.documents_unlocked,
     ...(choice?.unlock_documents ?? []),
@@ -414,12 +409,12 @@ export function applyChoice(params: {
     gameState.documents_unlocked,
     unlockedDocuments
   );
-  const foundationDelta = getFoundationDelta(selectedFoundationIds);
-  const foundationFeedback = buildFoundationFeedback(selectedFoundationIds);
-  const foundationLabels = getFoundationLabels(selectedFoundationIds);
+  const foundationDelta = getFoundationDelta(caseId, selectedFoundationIds);
+  const foundationFeedback = buildFoundationFeedback(caseId, selectedFoundationIds);
+  const foundationLabels = getFoundationLabels(caseId, selectedFoundationIds);
 
   if (step.free_text?.enabled) {
-    const evaluation = evaluateFreeText(freeText ?? "");
+    const evaluation = evaluateFreeText(caseId, freeText ?? "");
     const combinedDelta = {
       legalidade: evaluation.delta.legalidade + foundationDelta.legalidade,
       estrategia: evaluation.delta.estrategia + foundationDelta.estrategia,
@@ -478,7 +473,7 @@ export function applyChoice(params: {
     };
   }
 
-  const matchedRule = getScoringRule(step.step_number, choiceKey);
+  const matchedRule = getScoringRule(caseId, step.step_number, choiceKey);
   const fallbackFeedback = "Escolha juridicamente fraca ou inadequada para o objetivo da etapa.";
   const strategyDelta = matchedRule
     ? {
@@ -579,12 +574,13 @@ function buildNarrative(step: Step, consequence?: string) {
   return `A decisao tomada na etapa "${step.title}" reposiciona a defesa e altera o ritmo do plantao.`;
 }
 
-export function evaluateFreeText(text: string) {
+export function evaluateFreeText(caseId: string, text: string) {
   const normalizedText = normalizeText(text);
+  const rubric = getRubric(caseId);
   let totalScore = 0;
   const matchedCriteria: string[] = [];
 
-  for (const criterion of typedRubric.criteria) {
+  for (const criterion of rubric.criteria) {
     const keywords = KEYWORD_MAP[criterion.id] ?? [];
     const achieved = keywords.some((keyword) => normalizedText.includes(normalizeText(keyword)));
 
@@ -602,7 +598,7 @@ export function evaluateFreeText(text: string) {
 
   const feedback =
     matchedCriteria.length > 0
-      ? `A redacao contemplou ${matchedCriteria.length} dos ${typedRubric.criteria.length} elementos esperados pela rubrica.`
+      ? `A redacao contemplou ${matchedCriteria.length} dos ${rubric.criteria.length} elementos esperados pela rubrica.`
       : "O argumento ainda esta generico e precisa enfrentar melhor os fundamentos da preventiva.";
 
   const narrative =
@@ -611,7 +607,7 @@ export function evaluateFreeText(text: string) {
       : "A peca foi apresentada, mas ainda carece de foco e densidade para pressionar revisao imediata da custodia.";
 
   return {
-    score: Math.min(typedRubric.max_score, totalScore),
+    score: Math.min(rubric.max_score, totalScore),
     delta,
     feedback,
     narrative
@@ -621,6 +617,7 @@ export function evaluateFreeText(text: string) {
 export function calculateFinalReport(gameState: GameState): FinalReportData {
   const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
   const endingKey = resolveEndingKey(gameState);
+  const caseData = getCaseData(gameState.case_id);
 
   const summaries: Record<string, string> = {
     atuacao_excelente:
@@ -640,6 +637,6 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     endingKey,
     label: endingKey.replaceAll("_", " "),
     summary: summaries[endingKey] ?? summaries.atuacao_fraca,
-    judgeOrder: typedCaseData.final_orders?.[endingKey]
+    judgeOrder: caseData.final_orders?.[endingKey]
   };
 }

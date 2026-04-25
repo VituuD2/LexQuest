@@ -1,5 +1,5 @@
 import "server-only";
-import { ensureGameStateDefaults, getFoundationDelta, getInitialGameState, getPlayableSteps, getStep } from "@/lib/game-engine";
+import { ensureGameStateDefaults, getFoundationDelta, getInitialGameState, getStep } from "@/lib/game-engine";
 import type { ActiveGameSession } from "@/lib/auth-types";
 import type { FeedbackState, GameState } from "@/lib/game-types";
 import { getSupabaseAdminClient } from "@/lib/server/supabase";
@@ -13,37 +13,42 @@ type SessionRow = {
 };
 
 function sanitizeActiveSession(row: SessionRow): ActiveGameSession {
+  const gameState = ensureGameStateDefaults(row.state);
+
   return {
     sessionId: row.id,
-    gameState: ensureGameStateDefaults(row.state),
+    caseId: gameState.case_id,
+    caseTitle: gameState.title,
+    gameState,
     status: row.status,
     updatedAt: row.updated_at,
     finalAverage: row.final_average
   };
 }
 
-export async function getActiveSessionForUser(userId: string): Promise<ActiveGameSession | null> {
+export async function listActiveSessionsForUser(userId: string): Promise<ActiveGameSession[]> {
   const supabase = getSupabaseAdminClient();
-  const initialState = getInitialGameState();
   const { data, error } = await supabase
     .from("player_sessions")
     .select("id, state, status, updated_at, final_average")
     .eq("user_id", userId)
-    .eq("case_id", initialState.case_id)
     .eq("status", "in_progress")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("updated_at", { ascending: false });
 
   if (error) {
-    throw new Error(`Failed to fetch active session: ${error.message}`);
+    throw new Error(`Failed to fetch active sessions: ${error.message}`);
   }
 
   if (!data) {
-    return null;
+    return [];
   }
 
-  return sanitizeActiveSession(data as SessionRow);
+  return (data as SessionRow[]).map(sanitizeActiveSession);
+}
+
+export async function getActiveSessionForUser(userId: string, caseId: string): Promise<ActiveGameSession | null> {
+  const activeSessions = await listActiveSessionsForUser(userId);
+  return activeSessions.find((session) => session.caseId === caseId) ?? null;
 }
 
 async function abandonInProgressSessions(userId: string, caseId: string) {
@@ -63,23 +68,20 @@ async function abandonInProgressSessions(userId: string, caseId: string) {
   }
 }
 
-export async function createSession(userId: string, options?: { restart?: boolean; startStep?: number }) {
+export async function createSession(userId: string, options?: { restart?: boolean; caseId?: string }) {
   const supabase = getSupabaseAdminClient();
-  const defaultState = getInitialGameState();
-  const playableSteps = getPlayableSteps();
-  const requestedStartStep = options?.startStep ?? 1;
-  const normalizedStartStep = playableSteps.some((step) => step.step_number === requestedStartStep) ? requestedStartStep : 1;
-  const activeSession = options?.restart ? null : await getActiveSessionForUser(userId);
+  const caseId = options?.caseId ?? getInitialGameState().case_id;
+  const activeSession = options?.restart ? null : await getActiveSessionForUser(userId, caseId);
 
-  if (activeSession && activeSession.gameState.current_step === normalizedStartStep) {
+  if (activeSession) {
     return activeSession;
   }
 
   if (activeSession || options?.restart) {
-    await abandonInProgressSessions(userId, defaultState.case_id);
+    await abandonInProgressSessions(userId, caseId);
   }
 
-  const initialState = getInitialGameState(normalizedStartStep);
+  const initialState = getInitialGameState(caseId);
 
   const { data, error } = await supabase
     .from("player_sessions")
@@ -141,9 +143,9 @@ export async function saveChoice(params: {
 }) {
   const { sessionId, userId, nextState, feedback, stepNumber, choiceKey, freeText, selectedFoundationIds = [], aiMessage } = params;
   const supabase = getSupabaseAdminClient();
-  const step = getStep(stepNumber);
+  const step = getStep(nextState.case_id, stepNumber);
   const option = step?.options.find((item) => item.key === choiceKey);
-  const foundationDelta = getFoundationDelta(selectedFoundationIds);
+  const foundationDelta = getFoundationDelta(nextState.case_id, selectedFoundationIds);
   const selectedFoundations = feedback.selectedFoundations ?? [];
   const isFinished = nextState.current_step >= 6;
   const finalAverage = isFinished

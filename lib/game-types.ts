@@ -57,10 +57,32 @@ export type CaseData = {
     };
   };
   initial_state: InitialCaseState;
+  metrics?: Record<
+    MetricKey,
+    {
+      description: string;
+    }
+  >;
   score_bands: Array<{
     min: number;
     max: number;
     label: string;
+  }>;
+  characters?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    goal?: string;
+    age?: number;
+    occupation?: string;
+    situation?: string;
+    background?: string;
+    version?: string;
+    narrative_function?: string;
+    relevant_info?: string;
+    observation?: string;
+    legal_issue?: string;
+    thesis?: string;
   }>;
   ending_rules?: Array<{
     key: string;

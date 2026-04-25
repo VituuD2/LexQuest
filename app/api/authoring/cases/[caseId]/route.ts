@@ -26,7 +26,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const bundle = await getCaseAuthoringBundle(caseId);
     return NextResponse.json(bundle);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao carregar criador de fases.";
+    const message = error instanceof Error ? error.message : "Falha ao carregar o studio de jogos.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

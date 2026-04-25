@@ -25,7 +25,7 @@ export function PhaseRiskOverlay({ averageFloor, currentStep, onClose, threshold
       <div className="w-full max-w-3xl rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(28,33,40,0.98),rgba(22,25,31,0.96))] p-7 text-parchment shadow-[0_32px_90px_rgba(0,0,0,0.35)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-parchment/50">Alerta de fase</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-parchment/50">Alerta de etapa</p>
             <h2 className="mt-2 font-serifDisplay text-4xl text-white">O caso pode morrer cedo</h2>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-parchment/82">
               Etapa {currentStep}. Cada decisao mexe nas metricas. Se voce afundar demais uma delas ou deixar a media geral despencar, o plantao fecha antes do melhor ataque defensivo.

@@ -1,0 +1,103 @@
+[
+  {
+    "id": "trab_step_001",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 1,
+    "title": "Recebimento do caso no plantao",
+    "situation": "Rascunho inicial do Jogo 2. Defina aqui o contexto de entrada do novo caso trabalhista.",
+    "question": "Qual e a primeira resposta do advogado de plantao?",
+    "objective": "Criar a triagem inicial do novo jogo.",
+    "unlock_documents": [],
+    "options": [],
+    "foundation_selection": {
+      "enabled": false,
+      "min": 0,
+      "max": 0,
+      "prompt": ""
+    }
+  },
+  {
+    "id": "trab_step_002",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 2,
+    "title": "Leitura das primeiras provas",
+    "situation": "Rascunho inicial do Jogo 2. Estruture os documentos e as tensoes da segunda etapa.",
+    "question": "Que leitura estrategica deve prevalecer neste ponto?",
+    "objective": "Construir a segunda decisao do novo jogo.",
+    "unlock_documents": [],
+    "options": [],
+    "foundation_selection": {
+      "enabled": false,
+      "min": 0,
+      "max": 0,
+      "prompt": ""
+    }
+  },
+  {
+    "id": "trab_step_003",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 3,
+    "title": "Escolha da medida urgente",
+    "situation": "Rascunho inicial do Jogo 2. Defina a tensao central da providencia urgente.",
+    "question": "Qual medida gera mais utilidade pratica sem comprometer a tese?",
+    "objective": "Escrever a terceira virada do novo jogo.",
+    "unlock_documents": [],
+    "options": [],
+    "foundation_selection": {
+      "enabled": false,
+      "min": 0,
+      "max": 0,
+      "prompt": ""
+    }
+  },
+  {
+    "id": "trab_step_004",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 4,
+    "title": "Reacao da parte contraria",
+    "situation": "Rascunho inicial do Jogo 2. Modele a resposta adversa e o ajuste de rota.",
+    "question": "Como a defesa recalibra a estrategia?",
+    "objective": "Dar profundidade ao meio do caso.",
+    "unlock_documents": [],
+    "options": [],
+    "foundation_selection": {
+      "enabled": false,
+      "min": 0,
+      "max": 0,
+      "prompt": ""
+    }
+  },
+  {
+    "id": "trab_step_005",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 5,
+    "title": "Fechamento da tese",
+    "situation": "Rascunho inicial do Jogo 2. Estruture a consolidacao final antes da decisao.",
+    "question": "Qual fechamento tecnico o jogador deve entregar?",
+    "objective": "Preparar o desfecho do novo jogo.",
+    "unlock_documents": [],
+    "options": [],
+    "free_text": {
+      "enabled": true,
+      "min_lines": 8,
+      "max_lines": 18
+    },
+    "foundation_selection": {
+      "enabled": false,
+      "min": 0,
+      "max": 0,
+      "prompt": ""
+    }
+  },
+  {
+    "id": "trab_step_006",
+    "case_id": "trabalho_plantao_002",
+    "step_number": 6,
+    "title": "Resultado final",
+    "situation": "Etapa de encerramento do Jogo 2.",
+    "question": "Resultado final.",
+    "objective": "Fechar o jogo.",
+    "unlock_documents": [],
+    "options": []
+  }
+]

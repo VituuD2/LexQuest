@@ -12,6 +12,8 @@ export type AuthenticatedUser = {
 
 export type ActiveGameSession = {
   sessionId: string;
+  caseId: string;
+  caseTitle: string;
   gameState: GameState;
   status: string;
   updatedAt: string;
@@ -21,6 +23,7 @@ export type ActiveGameSession = {
 export type AuthSessionPayload = {
   user: AuthenticatedUser | null;
   activeGameSession: ActiveGameSession | null;
+  activeGameSessions: ActiveGameSession[];
 };
 
 export type AdminUserRecord = AuthenticatedUser & {

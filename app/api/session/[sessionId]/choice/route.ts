@@ -35,7 +35,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     const payload = (await request.json()) as ChoicePayload;
-    const step = getStep(payload.stepNumber);
+    const step = getStep(session.case_id, payload.stepNumber);
 
     if (!step) {
       return NextResponse.json({ error: "Etapa nao encontrada." }, { status: 400 });

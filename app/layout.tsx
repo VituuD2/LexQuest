@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "LexQuest MVP",
-  description: "Prototipo jogavel do caso Habeas Corpus em 48h."
+  description: "Catalogo jogavel de casos juridicos com progresso salvo, studio admin e multiplos jogos sincronizados."
 };
 
 export const viewport: Viewport = {

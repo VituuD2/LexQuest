@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAuthSession } from "@/lib/server/auth";
-import { getActiveSessionForUser } from "@/lib/server/session-repository";
+import { listActiveSessionsForUser } from "@/lib/server/session-repository";
 import { registerUser } from "@/lib/server/user-repository";
 
 export const runtime = "nodejs";
@@ -51,11 +51,13 @@ export async function POST(request: Request) {
     const parsed = validateRegisterPayload(payload);
     const user = await registerUser(parsed);
     await createAuthSession(user.id);
-    const activeGameSession = await getActiveSessionForUser(user.id);
+    const activeGameSessions = await listActiveSessionsForUser(user.id);
+    const activeGameSession = activeGameSessions[0] ?? null;
 
     return NextResponse.json({
       user,
-      activeGameSession
+      activeGameSession,
+      activeGameSessions
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao criar conta.";
