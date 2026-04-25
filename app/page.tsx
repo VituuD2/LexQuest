@@ -552,27 +552,27 @@ export default function HomePage() {
                 {authMode === "register" ? (
                   <div className="mt-6 space-y-3">
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, username: event.target.value }))}
                       placeholder="Username"
                       value={registerForm.username}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))}
                       placeholder="Email"
                       type="email"
                       value={registerForm.email}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
                       placeholder="Senha"
                       type="password"
                       value={registerForm.password}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) =>
                         setRegisterForm((current) => ({ ...current, confirmPassword: event.target.value }))
                       }
@@ -592,13 +592,13 @@ export default function HomePage() {
                 ) : (
                   <div className="mt-6 space-y-3">
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) => setLoginForm((current) => ({ ...current, login: event.target.value }))}
                       placeholder="Email ou username"
                       value={loginForm.login}
                     />
                     <input
-                      className="w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-parchment outline-none placeholder:text-parchment/35"
+                      className="w-full rounded-2xl border border-white/15 bg-white/12 px-4 py-3 text-sm text-white outline-none placeholder:text-parchment/70"
                       onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
                       placeholder="Senha"
                       type="password"
