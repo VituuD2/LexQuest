@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "LexQuest MVP",
-  description: "Protótipo jogável do caso Habeas Corpus em 48h."
+  description: "Prototipo jogavel do caso Habeas Corpus em 48h."
 };
 
 export default function RootLayout({
