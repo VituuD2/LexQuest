@@ -614,10 +614,6 @@ export default function HomePage() {
                     </button>
                   </div>
                 )}
-
-                <div className="mt-5 rounded-[24px] bg-white/8 p-5 text-sm leading-7 text-parchment/85">
-                  A primeira conta criada vira admin automaticamente para liberar a central administrativa.
-                </div>
                 {authErrorMessage ? <p className="mt-4 text-sm text-[#f8aca6]">{authErrorMessage}</p> : null}
               </>
             ) : (
