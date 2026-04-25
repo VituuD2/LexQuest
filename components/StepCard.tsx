@@ -1,14 +1,18 @@
 import { ChoiceButton } from "@/components/ChoiceButton";
-import type { Foundation, Step } from "@/lib/game-types";
+import type { CaseDocument, Foundation, Step } from "@/lib/game-types";
 
 type StepCardProps = {
   step: Step;
   foundations: Foundation[];
+  documents: CaseDocument[];
   selectedChoice: string | null;
   selectedFoundations: string[];
+  selectedDocumentIds: string[];
   freeText: string;
   onSelectChoice: (choiceKey: string) => void;
   onToggleFoundation: (foundationId: string) => void;
+  onToggleDocument: (documentId: string) => void;
+  onOpenDocument: (documentId: string) => void;
   onFreeTextChange: (value: string) => void;
   onSubmit: () => void;
   disabled?: boolean;
@@ -26,14 +30,28 @@ function riskTone(risk: Foundation["risk"]) {
   return "border-emerald/35 bg-emerald/10 text-emerald";
 }
 
+function documentSummary(document: CaseDocument) {
+  const rawSummary = document.content || document.sections?.[0]?.body || "";
+
+  if (rawSummary.length <= 180) {
+    return rawSummary;
+  }
+
+  return `${rawSummary.slice(0, 177).trim()}...`;
+}
+
 export function StepCard({
   step,
   foundations,
+  documents,
   selectedChoice,
   selectedFoundations,
+  selectedDocumentIds,
   freeText,
   onSelectChoice,
   onToggleFoundation,
+  onToggleDocument,
+  onOpenDocument,
   onFreeTextChange,
   onSubmit,
   disabled
@@ -44,7 +62,19 @@ export function StepCard({
   const validFoundationCount =
     !step.foundation_selection?.enabled ||
     (selectedFoundations.length >= minFoundations && selectedFoundations.length <= maxFoundations);
-  const canSubmit = isFreeTextStep ? freeText.trim().length > 0 && validFoundationCount : Boolean(selectedChoice) && validFoundationCount;
+  const minDocuments = step.document_selection?.min ?? 0;
+  const maxDocuments = step.document_selection?.max ?? 0;
+  const documentSelection = step.document_selection;
+  const validDocumentCount =
+    !documentSelection?.enabled ||
+    (selectedDocumentIds.length >= minDocuments && selectedDocumentIds.length <= maxDocuments);
+  const selectableDocumentIds = documentSelection?.enabled
+    ? [...documentSelection.relevant_document_ids, ...documentSelection.risky_document_ids]
+    : [];
+  const selectableDocuments = documents.filter((document) => selectableDocumentIds.includes(document.id));
+  const canSubmit = isFreeTextStep
+    ? freeText.trim().length > 0 && validFoundationCount && validDocumentCount
+    : Boolean(selectedChoice) && validFoundationCount && validDocumentCount;
 
   return (
     <section className="theme-panel rounded-[32px] border p-6 text-[color:var(--text-primary)]">
@@ -131,6 +161,61 @@ export function StepCard({
                   </div>
                   <p className="mt-3 text-sm leading-6 text-[color:var(--text-secondary)]">{foundation.description}</p>
                 </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {step.document_selection?.enabled ? (
+        <div className="theme-card mt-7 rounded-[28px] border p-5">
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
+              Prova documental
+            </p>
+            <h3 className="mt-2 font-serifDisplay text-2xl text-[color:var(--text-primary)]">Selecao de prova documental</h3>
+            <p className="mt-2 text-sm leading-7 text-[color:var(--text-secondary)]">{step.document_selection.prompt}</p>
+            <p className="mt-2 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
+              Selecionados: {selectedDocumentIds.length} de {step.document_selection.min} a {step.document_selection.max}
+            </p>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {selectableDocuments.map((document) => {
+              const isSelected = selectedDocumentIds.includes(document.id);
+              const isRisky = step.document_selection?.risky_document_ids.includes(document.id);
+
+              return (
+                <div
+                  className={`rounded-3xl border p-4 transition ${
+                    isSelected
+                      ? "border-brass bg-brass/14 shadow-[var(--shadow-dossier-theme)]"
+                      : "theme-card hover:border-brass/45 hover:bg-[var(--surface-card-strong)]"
+                  }`}
+                  key={document.id}
+                >
+                  <button className="w-full text-left" onClick={() => onToggleDocument(document.id)} type="button">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-base font-semibold text-[color:var(--text-primary)]">{document.title}</h4>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">{document.type}</p>
+                      </div>
+                      {isRisky ? (
+                        <span className="rounded-full border border-brass/35 bg-brass/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8d641c]">
+                          uso sensivel
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--text-secondary)]">{documentSummary(document)}</p>
+                  </button>
+                  <button
+                    className="theme-button-secondary mt-4 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition"
+                    onClick={() => onOpenDocument(document.id)}
+                    type="button"
+                  >
+                    Abrir documento completo
+                  </button>
+                </div>
               );
             })}
           </div>

@@ -93,6 +93,7 @@ export default function HomePage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [selectedFoundations, setSelectedFoundations] = useState<string[]>([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<string[]>([]);
   const [freeText, setFreeText] = useState("");
   const [openDocumentId, setOpenDocumentId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
@@ -175,6 +176,7 @@ export default function HomePage() {
   function resetTransientState() {
     setSelectedChoice(null);
     setSelectedFoundations([]);
+    setSelectedDocumentIds([]);
     setFreeText("");
     setOpenDocumentId(null);
     setFeedback(null);
@@ -456,6 +458,26 @@ export default function HomePage() {
     });
   }
 
+  function toggleDocumentSelection(documentId: string) {
+    const documentSelection = currentStep?.document_selection;
+
+    if (!documentSelection?.enabled) {
+      return;
+    }
+
+    setSelectedDocumentIds((current) => {
+      if (current.includes(documentId)) {
+        return current.filter((item) => item !== documentId);
+      }
+
+      if (current.length >= documentSelection.max) {
+        return current;
+      }
+
+      return [...current, documentId];
+    });
+  }
+
   async function handleSubmitStep() {
     if (!currentStep || !sessionId) {
       return;
@@ -480,6 +502,17 @@ export default function HomePage() {
       return;
     }
 
+    const minDocuments = currentStep.document_selection?.min ?? 0;
+    const maxDocuments = currentStep.document_selection?.max ?? Number.MAX_SAFE_INTEGER;
+
+    if (
+      currentStep.document_selection?.enabled &&
+      (selectedDocumentIds.length < minDocuments || selectedDocumentIds.length > maxDocuments)
+    ) {
+      setGameErrorMessage(`Selecione entre ${minDocuments} e ${maxDocuments} documentos antes de confirmar.`);
+      return;
+    }
+
     setIsPending(true);
     setGameErrorMessage(null);
 
@@ -493,7 +526,8 @@ export default function HomePage() {
           stepNumber: currentStep.step_number,
           choiceKey: selectedChoice ?? "FREE_TEXT",
           freeText,
-          selectedFoundationIds: selectedFoundations
+          selectedFoundationIds: selectedFoundations,
+          selectedDocumentIds
         })
       });
 
@@ -513,6 +547,7 @@ export default function HomePage() {
       setFeedback(payload.feedback);
       setSelectedChoice(null);
       setSelectedFoundations([]);
+      setSelectedDocumentIds([]);
       setFreeText("");
       setPhase("feedback");
       if (payload.gameState.current_step >= 6) {
@@ -1043,13 +1078,17 @@ export default function HomePage() {
         {phase === "case" && currentStep ? (
           <StepCard
             disabled={isPending}
+            documents={unlockedDocuments}
             foundations={availableFoundations}
             freeText={freeText}
             onFreeTextChange={setFreeText}
+            onOpenDocument={handleOpenDocument}
             onSelectChoice={setSelectedChoice}
             onSubmit={handleSubmitStep}
+            onToggleDocument={toggleDocumentSelection}
             onToggleFoundation={toggleFoundation}
             selectedChoice={selectedChoice}
+            selectedDocumentIds={selectedDocumentIds}
             selectedFoundations={selectedFoundations}
             step={currentStep}
           />

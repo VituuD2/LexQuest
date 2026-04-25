@@ -82,6 +82,7 @@ create table public.case_steps (
   best_choice text,
   pedagogical_note text,
   foundation_selection jsonb,
+  document_selection jsonb,
   free_text jsonb,
   criteria jsonb,
   result_bands jsonb,

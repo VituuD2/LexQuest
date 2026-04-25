@@ -57,6 +57,7 @@ alter table public.case_steps add column if not exists objective text;
 alter table public.case_steps add column if not exists best_choice text;
 alter table public.case_steps add column if not exists pedagogical_note text;
 alter table public.case_steps add column if not exists foundation_selection jsonb;
+alter table public.case_steps add column if not exists document_selection jsonb;
 alter table public.case_steps add column if not exists free_text jsonb;
 alter table public.case_steps add column if not exists criteria jsonb;
 alter table public.case_steps add column if not exists result_bands jsonb;

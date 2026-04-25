@@ -284,6 +284,83 @@ function getFoundationLabels(caseId: string, foundationIds: string[]) {
     .filter((label): label is string => Boolean(label));
 }
 
+function getDocumentTitles(caseId: string, documentIds: string[]) {
+  return documentIds
+    .map((documentId) => getAllDocuments(caseId).find((document) => document.id === documentId)?.title)
+    .filter((title): title is string => Boolean(title));
+}
+
+function hasAdequateFoundationForRiskyDocument(documentId: string, foundationIds: string[]) {
+  const adequateFoundationsByDocument: Record<string, string[]> = {
+    doc_003: ["fund_decisao_generica", "fund_ausencia_violencia", "fund_colaboracao_abordagem"],
+    doc_006: ["fund_video_inconclusivo", "fund_abordagem_antes_saida", "fund_duvida_consumacao"],
+    doc_008: ["fund_cautelares_diversas", "fund_vinculo_familiar_residencia", "fund_trabalho_informal"]
+  };
+  const adequateFoundations = adequateFoundationsByDocument[documentId] ?? [
+    "fund_decisao_generica",
+    "fund_cautelares_diversas"
+  ];
+
+  return adequateFoundations.some((foundationId) => foundationIds.includes(foundationId));
+}
+
+function evaluateDocumentSelection(caseId: string, step: Step, selectedDocumentIds: string[], selectedFoundationIds: string[]) {
+  const config = step.document_selection;
+
+  if (!config?.enabled) {
+    return {
+      delta: { legalidade: 0, estrategia: 0, etica: 0 },
+      selected: [] as string[],
+      wellChosen: [] as string[],
+      ignored: [] as string[],
+      risky: [] as string[],
+      feedback: ""
+    };
+  }
+
+  const selectedRelevantIds = selectedDocumentIds.filter((documentId) => config.relevant_document_ids.includes(documentId));
+  const ignoredRelevantIds = config.relevant_document_ids.filter((documentId) => !selectedDocumentIds.includes(documentId));
+  const riskyWithoutSupportIds = selectedDocumentIds.filter(
+    (documentId) =>
+      config.risky_document_ids.includes(documentId) &&
+      !hasAdequateFoundationForRiskyDocument(documentId, selectedFoundationIds)
+  );
+
+  const missingPenalty = Math.min(12, ignoredRelevantIds.length * config.missing_important_document_penalty);
+  const riskyPenalty = riskyWithoutSupportIds.length * 3;
+  const delta = {
+    legalidade: selectedRelevantIds.length * 2 - riskyWithoutSupportIds.length * 2,
+    estrategia: selectedRelevantIds.length * 3 - missingPenalty - riskyPenalty,
+    etica: 0
+  };
+  const selected = getDocumentTitles(caseId, selectedDocumentIds);
+  const wellChosen = getDocumentTitles(caseId, selectedRelevantIds);
+  const ignored = getDocumentTitles(caseId, ignoredRelevantIds);
+  const risky = getDocumentTitles(caseId, riskyWithoutSupportIds);
+  const feedbackParts: string[] = [];
+
+  if (wellChosen.length > 0) {
+    feedbackParts.push(`Provas bem escolhidas: ${wellChosen.join(", ")}.`);
+  }
+
+  if (ignored.length > 0) {
+    feedbackParts.push(`Provas importantes ignoradas: ${ignored.join(", ")}.`);
+  }
+
+  if (risky.length > 0) {
+    feedbackParts.push(`Provas arriscadas usadas sem amarracao suficiente: ${risky.join(", ")}.`);
+  }
+
+  return {
+    delta,
+    selected,
+    wellChosen,
+    ignored,
+    risky,
+    feedback: feedbackParts.join(" ")
+  };
+}
+
 export function getFoundationDelta(caseId: string, foundationIds: string[]) {
   return foundationIds.reduce(
     (accumulator, foundationId) => {
@@ -315,6 +392,8 @@ function buildChoiceHistoryEntry(params: {
   consequence?: string;
   scoreDelta: FeedbackState["scoreDelta"];
   selectedFoundations?: string[];
+  selectedDocuments?: string[];
+  documentEvidence?: ChoiceHistoryEntry["documentEvidence"];
   freeText?: string;
   rubricScore?: number;
 }): ChoiceHistoryEntry {
@@ -327,6 +406,8 @@ function buildChoiceHistoryEntry(params: {
     consequence: params.consequence,
     scoreDelta: params.scoreDelta,
     selectedFoundations: params.selectedFoundations,
+    selectedDocuments: params.selectedDocuments,
+    documentEvidence: params.documentEvidence,
     freeText: params.freeText,
     rubricScore: params.rubricScore
   };
@@ -400,6 +481,14 @@ function resolveEndingKey(gameState: GameState) {
     .reverse()
     .find((entry) => entry.rubricScore !== undefined)?.rubricScore;
   const selectedFoundationLabels = gameState.choices_history.flatMap((entry) => entry.selectedFoundations ?? []);
+  const ignoredDocumentCount = gameState.choices_history.reduce(
+    (total, entry) => total + (entry.documentEvidence?.ignored.length ?? 0),
+    0
+  );
+  const riskyDocumentCount = gameState.choices_history.reduce(
+    (total, entry) => total + (entry.documentEvidence?.risky.length ?? 0),
+    0
+  );
   const riskyFoundationCount = selectedFoundationLabels.filter((label) =>
     [
       "Clamor social autoriza preventiva",
@@ -410,17 +499,24 @@ function resolveEndingKey(gameState: GameState) {
     ].includes(label)
   ).length;
 
-  if (riskyFoundationCount >= 2 || gameState.flags.peca_ampla_dispersiva || gameState.flags.nulidade_privada_absolutizada) {
+  if (
+    riskyFoundationCount >= 2 ||
+    riskyDocumentCount >= 2 ||
+    gameState.flags.peca_ampla_dispersiva ||
+    gameState.flags.nulidade_privada_absolutizada
+  ) {
     return average >= 55 ? "atuacao_defensavel_com_falhas" : "atuacao_fraca";
   }
 
-  if (lastRubricScore !== undefined && lastRubricScore < 14 && average < 82) {
+  if ((lastRubricScore !== undefined && lastRubricScore < 14 && average < 82) || ignoredDocumentCount >= 4) {
     return "atuacao_defensavel_com_falhas";
   }
 
   if (
     average >= 90 &&
     openedDocumentCount >= 6 &&
+    ignoredDocumentCount <= 1 &&
+    riskyDocumentCount === 0 &&
     (lastRubricScore ?? 0) >= 24 &&
     gameState.flags.atendimento_responsavel &&
     (gameState.flags.escolheu_medida_urgente || gameState.flags.priorizou_origem_com_documentos) &&
@@ -482,8 +578,9 @@ export function applyChoice(params: {
   choiceKey: string;
   freeText?: string;
   selectedFoundationIds?: string[];
+  selectedDocumentIds?: string[];
 }) {
-  const { gameState, step, choiceKey, freeText, selectedFoundationIds = [] } = params;
+  const { gameState, step, choiceKey, freeText, selectedFoundationIds = [], selectedDocumentIds = [] } = params;
   const caseId = gameState.case_id;
   const choice = step.options.find((option) => option.key === choiceKey);
   const nextStep = choice?.next_step ?? step.step_number + 1;
@@ -501,13 +598,24 @@ export function applyChoice(params: {
   const foundationDelta = getFoundationDelta(caseId, selectedFoundationIds);
   const foundationFeedback = buildFoundationFeedback(caseId, selectedFoundationIds);
   const foundationLabels = getFoundationLabels(caseId, selectedFoundationIds);
+  const documentEvaluation = evaluateDocumentSelection(caseId, step, selectedDocumentIds, selectedFoundationIds);
+  const hasDocumentSelection = Boolean(step.document_selection?.enabled);
+  const documentEvidence = hasDocumentSelection
+    ? {
+        wellChosen: documentEvaluation.wellChosen,
+        ignored: documentEvaluation.ignored,
+        risky: documentEvaluation.risky
+      }
+    : undefined;
+  const combinedFeedbackParts = (primaryFeedback: string) =>
+    [primaryFeedback, foundationFeedback, documentEvaluation.feedback].filter(Boolean).join(" ");
 
   if (step.free_text?.enabled) {
     const evaluation = evaluateFreeText(caseId, freeText ?? "");
     const combinedDelta = {
-      legalidade: evaluation.delta.legalidade + foundationDelta.legalidade,
-      estrategia: evaluation.delta.estrategia + foundationDelta.estrategia,
-      etica: evaluation.delta.etica + foundationDelta.etica
+      legalidade: evaluation.delta.legalidade + foundationDelta.legalidade + documentEvaluation.delta.legalidade,
+      estrategia: evaluation.delta.estrategia + foundationDelta.estrategia + documentEvaluation.delta.estrategia,
+      etica: evaluation.delta.etica + foundationDelta.etica + documentEvaluation.delta.etica
     };
 
     const nextState: GameState = {
@@ -530,10 +638,12 @@ export function applyChoice(params: {
           step,
           choiceKey: "FREE_TEXT",
           choiceLabel: "Minuta liminar",
-          feedback: `${evaluation.feedback} ${foundationFeedback}`.trim(),
+          feedback: combinedFeedbackParts(evaluation.feedback),
           consequence: "A qualidade da redacao e dos fundamentos escolhidos passa a definir a forca persuasiva do pedido urgente.",
           scoreDelta: combinedDelta,
           selectedFoundations: foundationLabels,
+          selectedDocuments: hasDocumentSelection ? documentEvaluation.selected : undefined,
+          documentEvidence,
           freeText,
           rubricScore: evaluation.score
         })
@@ -545,7 +655,7 @@ export function applyChoice(params: {
     const feedback: FeedbackState = {
       title: "Minuta protocolada",
       narrative: evaluation.narrative,
-      juridicalFeedback: `${evaluation.feedback} ${foundationFeedback}`.trim(),
+      juridicalFeedback: combinedFeedbackParts(evaluation.feedback),
       mentorTitle: "Leitura do advogado senior",
       mentorSummary: buildMentorSummary(step, combinedDelta),
       mentorRules: getMentorRules(step, selectedFoundationIds),
@@ -553,7 +663,9 @@ export function applyChoice(params: {
       scoreDelta: combinedDelta,
       unlockedDocuments,
       nextStep: adjustedState.current_step,
-      selectedFoundations: foundationLabels
+      selectedFoundations: foundationLabels,
+      selectedDocuments: hasDocumentSelection ? documentEvaluation.selected : undefined,
+      documentEvidence
     };
 
     return {
@@ -577,9 +689,9 @@ export function applyChoice(params: {
       };
 
   const delta = {
-    legalidade: strategyDelta.legalidade + foundationDelta.legalidade,
-    estrategia: strategyDelta.estrategia + foundationDelta.estrategia,
-    etica: strategyDelta.etica + foundationDelta.etica
+    legalidade: strategyDelta.legalidade + foundationDelta.legalidade + documentEvaluation.delta.legalidade,
+    estrategia: strategyDelta.estrategia + foundationDelta.estrategia + documentEvaluation.delta.estrategia,
+    etica: strategyDelta.etica + foundationDelta.etica + documentEvaluation.delta.etica
   };
 
   const activatedFlags = matchedRule?.flags ?? [];
@@ -625,10 +737,12 @@ export function applyChoice(params: {
         step,
         choiceKey,
         choiceLabel: choice ? `${choice.label} - ${choice.text}` : choiceKey,
-        feedback: `${matchedRule?.explanation ?? fallbackFeedback} ${foundationFeedback}`.trim(),
+        feedback: combinedFeedbackParts(matchedRule?.explanation ?? fallbackFeedback),
         consequence: matchedRule?.consequence,
         scoreDelta: delta,
-        selectedFoundations: foundationLabels
+        selectedFoundations: foundationLabels,
+        selectedDocuments: hasDocumentSelection ? documentEvaluation.selected : undefined,
+        documentEvidence
       })
     ]
   };
@@ -638,7 +752,7 @@ export function applyChoice(params: {
   const feedback: FeedbackState = {
     title: choice?.label ?? step.title,
     narrative: buildNarrative(step, matchedRule?.consequence),
-    juridicalFeedback: `${matchedRule?.explanation ?? fallbackFeedback} ${foundationFeedback}`.trim(),
+    juridicalFeedback: combinedFeedbackParts(matchedRule?.explanation ?? fallbackFeedback),
     mentorTitle: "Leitura do advogado senior",
     mentorSummary: buildMentorSummary(step, delta),
     mentorRules: getMentorRules(step, selectedFoundationIds),
@@ -646,7 +760,9 @@ export function applyChoice(params: {
     scoreDelta: delta,
     unlockedDocuments,
     nextStep: nextState.current_step,
-    selectedFoundations: foundationLabels
+    selectedFoundations: foundationLabels,
+    selectedDocuments: hasDocumentSelection ? documentEvaluation.selected : undefined,
+    documentEvidence
   };
 
   return {
@@ -702,10 +818,176 @@ export function evaluateFreeText(caseId: string, text: string) {
   };
 }
 
+function clampRating(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function getRiskyFoundationCount(gameState: GameState) {
+  const selectedFoundationLabels = gameState.choices_history.flatMap((entry) => entry.selectedFoundations ?? []);
+
+  return selectedFoundationLabels.filter((label) =>
+    [
+      "Clamor social autoriza preventiva",
+      "Todo antecedente justifica prisao",
+      "Furto de loja nunca e crime",
+      "Seguranca privado invalida o flagrante",
+      "Baixa renda afasta crime automaticamente"
+    ].includes(label)
+  ).length;
+}
+
+function getFinalRubricScore(gameState: GameState) {
+  return [...gameState.choices_history]
+    .reverse()
+    .find((entry) => entry.rubricScore !== undefined)?.rubricScore;
+}
+
+function getDocumentEvidenceTotals(gameState: GameState) {
+  return gameState.choices_history.reduce(
+    (totals, entry) => ({
+      wellChosen: totals.wellChosen + (entry.documentEvidence?.wellChosen.length ?? 0),
+      ignored: totals.ignored + (entry.documentEvidence?.ignored.length ?? 0),
+      risky: totals.risky + (entry.documentEvidence?.risky.length ?? 0)
+    }),
+    {
+      wellChosen: 0,
+      ignored: 0,
+      risky: 0
+    }
+  );
+}
+
+function resolveRatingLabel(score: number) {
+  if (score >= 95) {
+    return {
+      label: "Advogado multinacional",
+      headline: "Atuacao de alto nivel: tecnica, prova e timing trabalharam juntos."
+    };
+  }
+
+  if (score >= 85) {
+    return {
+      label: "Estrategista de tribunal",
+      headline: "Leitura madura de autos, com boa calibragem de risco."
+    };
+  }
+
+  if (score >= 72) {
+    return {
+      label: "Advogado senior",
+      headline: "Conducao consistente, com poucos ajustes para virar excelencia."
+    };
+  }
+
+  if (score >= 58) {
+    return {
+      label: "Advogado de comarca",
+      headline: "Boa intuicao pratica, mas ainda com oscilacao tecnica."
+    };
+  }
+
+  if (score >= 42) {
+    return {
+      label: "Advogado amador",
+      headline: "Voce enxergou partes do problema, mas perdeu pontos de metodo."
+    };
+  }
+
+  return {
+    label: "Estagiario em plantao",
+    headline: "A partida mostrou urgencia, mas ainda faltou estrutura profissional."
+  };
+}
+
+function calculatePerformanceRating(gameState: GameState, average: number): FinalReportData["performanceRating"] {
+  const openedDocumentCount = Object.values(gameState.document_state ?? {}).filter((document) => document.isOpened).length;
+  const unlockedDocumentCount = Math.max(1, gameState.documents_unlocked.length);
+  const openedDocumentRatio = openedDocumentCount / unlockedDocumentCount;
+  const finalRubricScore = getFinalRubricScore(gameState);
+  const documentTotals = getDocumentEvidenceTotals(gameState);
+  const riskyFoundationCount = getRiskyFoundationCount(gameState);
+  const riskyChoiceCount = [
+    gameState.flags.protocolo_precipitado,
+    gameState.flags.adiou_impugnacao_urgente,
+    gameState.flags.peca_ampla_dispersiva,
+    gameState.flags.exagerou_merito,
+    gameState.flags.nulidade_privada_absolutizada
+  ].filter(Boolean).length;
+
+  const rubricModifier =
+    finalRubricScore === undefined ? -4 : finalRubricScore >= 24 ? 6 : finalRubricScore >= 18 ? 3 : finalRubricScore >= 12 ? 0 : -7;
+  const documentModifier = openedDocumentRatio >= 0.75 ? 4 : openedDocumentRatio >= 0.5 ? 1 : -5;
+  const evidenceModifier = documentTotals.wellChosen * 2 - documentTotals.ignored * 2 - documentTotals.risky * 4;
+  const riskModifier = riskyFoundationCount * -4 + riskyChoiceCount * -3;
+  const ethicsModifier = gameState.etica >= 80 ? 3 : gameState.etica < 35 ? -7 : 0;
+  const score = clampRating(Math.round(average + rubricModifier + documentModifier + evidenceModifier + riskModifier + ethicsModifier));
+  const resolved = resolveRatingLabel(score);
+  const strengths: string[] = [];
+  const improvements: string[] = [];
+
+  if (gameState.flags.identificou_decisao_generica) {
+    strengths.push("Identificou o problema central da preventiva.");
+  }
+
+  if (documentTotals.wellChosen >= 6) {
+    strengths.push("Usou documentos como prova, nao apenas como leitura de contexto.");
+  }
+
+  if ((finalRubricScore ?? 0) >= 24) {
+    strengths.push("Redigiu uma minuta com boa estrutura argumentativa.");
+  }
+
+  if (gameState.etica >= 75) {
+    strengths.push("Manteve postura etica e tecnica sob pressao.");
+  }
+
+  if (documentTotals.ignored >= 3) {
+    improvements.push("Ler e selecionar melhor os documentos essenciais antes de confirmar a estrategia.");
+  }
+
+  if (documentTotals.risky > 0 || riskyFoundationCount > 0) {
+    improvements.push("Evitar usar prova ou fundamento sensivel sem amarracao tecnica suficiente.");
+  }
+
+  if ((finalRubricScore ?? 0) < 18) {
+    improvements.push("Melhorar a estrutura do pedido liminar: pedido, vicio, fatos, risco e cautelares.");
+  }
+
+  if (riskyChoiceCount >= 2) {
+    improvements.push("Reduzir escolhas impulsivas e manter uma linha processual mais coerente.");
+  }
+
+  if (strengths.length === 0) {
+    strengths.push("Conseguiu concluir o plantao e receber um diagnostico completo da atuacao.");
+  }
+
+  if (improvements.length === 0) {
+    improvements.push("Refinar detalhes de prova e redacao para transformar uma boa atuacao em excelencia.");
+  }
+
+  return {
+    score,
+    label: resolved.label,
+    headline: resolved.headline,
+    summary: `Rating calculado por parametros do caso: media final, documentos lidos, provas escolhidas, rubrica da minuta, fundamentos sensiveis e escolhas de risco.`,
+    strengths: strengths.slice(0, 3),
+    improvements: improvements.slice(0, 3),
+    parameters: [
+      { label: "Media tecnica", value: `${average}/100` },
+      { label: "Documentos lidos", value: `${openedDocumentCount}/${unlockedDocumentCount}` },
+      { label: "Provas bem escolhidas", value: `${documentTotals.wellChosen}` },
+      { label: "Provas ignoradas", value: `${documentTotals.ignored}` },
+      { label: "Provas arriscadas", value: `${documentTotals.risky}` },
+      { label: "Rubrica da minuta", value: finalRubricScore === undefined ? "nao avaliada" : `${finalRubricScore}/30` }
+    ]
+  };
+}
+
 export function calculateFinalReport(gameState: GameState): FinalReportData {
   const average = Math.round((gameState.legalidade + gameState.estrategia + gameState.etica) / 3);
   const endingKey = resolveEndingKey(gameState);
   const caseData = getCaseData(gameState.case_id);
+  const performanceRating = calculatePerformanceRating(gameState, average);
 
   const summaries: Record<string, string> = {
     atuacao_excelente:
@@ -725,6 +1007,7 @@ export function calculateFinalReport(gameState: GameState): FinalReportData {
     endingKey,
     label: endingKey.replaceAll("_", " "),
     summary: summaries[endingKey] ?? summaries.atuacao_fraca,
+    performanceRating,
     judgeOrder: caseData.final_orders?.[endingKey]
   };
 }

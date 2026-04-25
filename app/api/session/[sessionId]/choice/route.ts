@@ -17,6 +17,7 @@ type ChoicePayload = {
   choiceKey: string;
   freeText?: string;
   selectedFoundationIds?: string[];
+  selectedDocumentIds?: string[];
 };
 
 export async function POST(request: Request, context: RouteContext) {
@@ -46,7 +47,8 @@ export async function POST(request: Request, context: RouteContext) {
       step,
       choiceKey: payload.choiceKey,
       freeText: payload.freeText,
-      selectedFoundationIds: payload.selectedFoundationIds
+      selectedFoundationIds: payload.selectedFoundationIds,
+      selectedDocumentIds: payload.selectedDocumentIds
     });
 
     let aiMessage:
@@ -70,6 +72,7 @@ export async function POST(request: Request, context: RouteContext) {
             },
             choice: payload.choiceKey,
             selected_foundations: payload.selectedFoundationIds ?? [],
+            selected_documents: payload.selectedDocumentIds ?? [],
             free_text: payload.freeText ?? null,
             current_feedback: result.feedback,
             current_scores: result.nextState
@@ -124,6 +127,7 @@ export async function POST(request: Request, context: RouteContext) {
       choiceKey: payload.choiceKey,
       freeText: payload.freeText,
       selectedFoundationIds: payload.selectedFoundationIds,
+      selectedDocumentIds: payload.selectedDocumentIds,
       aiMessage
     });
 

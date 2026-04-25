@@ -58,6 +58,15 @@
       "max": 2,
       "prompt": "Selecione de 1 a 2 fundamentos que sustentem a critica tecnica da decisao de custodia."
     },
+    "document_selection": {
+      "enabled": true,
+      "min": 1,
+      "max": 2,
+      "prompt": "Selecione os documentos que demonstram o vicio central da preventiva.",
+      "relevant_document_ids": ["doc_004", "doc_003"],
+      "risky_document_ids": ["doc_003"],
+      "missing_important_document_penalty": 4
+    },
     "options": [
       {
         "key": "A",
@@ -101,6 +110,15 @@
       "min": 2,
       "max": 3,
       "prompt": "Selecione de 2 a 3 fundamentos para sustentar a via processual escolhida."
+    },
+    "document_selection": {
+      "enabled": true,
+      "min": 2,
+      "max": 3,
+      "prompt": "Selecione as provas que devem acompanhar a medida urgente.",
+      "relevant_document_ids": ["doc_004", "doc_005", "doc_006"],
+      "risky_document_ids": ["doc_003", "doc_006"],
+      "missing_important_document_penalty": 5
     },
     "options": [
       {
@@ -148,6 +166,15 @@
       "max": 4,
       "prompt": "Selecione de 2 a 4 fundamentos que darao espinha dorsal a tese."
     },
+    "document_selection": {
+      "enabled": true,
+      "min": 2,
+      "max": 4,
+      "prompt": "Selecione os documentos que a tese deve usar como prova principal.",
+      "relevant_document_ids": ["doc_004", "doc_006", "doc_008"],
+      "risky_document_ids": ["doc_003", "doc_008"],
+      "missing_important_document_penalty": 5
+    },
     "options": [
       {
         "key": "A",
@@ -192,6 +219,15 @@
       "min": 3,
       "max": 4,
       "prompt": "Selecione de 3 a 4 fundamentos que serao efetivamente usados na minuta."
+    },
+    "document_selection": {
+      "enabled": true,
+      "min": 3,
+      "max": 4,
+      "prompt": "Selecione as provas documentais que precisam aparecer na minuta liminar.",
+      "relevant_document_ids": ["doc_004", "doc_005", "doc_006", "doc_007"],
+      "risky_document_ids": ["doc_003", "doc_008"],
+      "missing_important_document_penalty": 4
     },
     "free_text": {
       "enabled": true,

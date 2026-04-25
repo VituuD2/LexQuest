@@ -135,13 +135,24 @@ export async function saveChoice(params: {
   choiceKey: string;
   freeText?: string;
   selectedFoundationIds?: string[];
+  selectedDocumentIds?: string[];
   aiMessage?: {
     role: string;
     content: string;
     metadata?: Record<string, unknown>;
   };
 }) {
-  const { sessionId, userId, nextState, feedback, stepNumber, choiceKey, freeText, selectedFoundationIds = [], aiMessage } = params;
+  const {
+    sessionId,
+    userId,
+    nextState,
+    feedback,
+    stepNumber,
+    choiceKey,
+    freeText,
+    selectedFoundationIds = [],
+    aiMessage
+  } = params;
   const supabase = getSupabaseAdminClient();
   const step = getStep(nextState.case_id, stepNumber);
   const option = step?.options.find((item) => item.key === choiceKey);

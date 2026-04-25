@@ -29,6 +29,19 @@ function renderHistoryItem(item: ChoiceHistoryEntry) {
           <strong>Fundamentos:</strong> {item.selectedFoundations.join(", ")}.
         </p>
       ) : null}
+      {item.selectedDocuments && item.selectedDocuments.length > 0 ? (
+        <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
+          <strong>Provas documentais:</strong> {item.selectedDocuments.join(", ")}.
+        </p>
+      ) : null}
+      {item.documentEvidence ? (
+        <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
+          <strong>Leitura das provas:</strong>{" "}
+          bem escolhidas: {item.documentEvidence.wellChosen.length > 0 ? item.documentEvidence.wellChosen.join(", ") : "nenhuma"};
+          ignoradas: {item.documentEvidence.ignored.length > 0 ? item.documentEvidence.ignored.join(", ") : "nenhuma"};
+          arriscadas: {item.documentEvidence.risky.length > 0 ? item.documentEvidence.risky.join(", ") : "nenhuma"}.
+        </p>
+      ) : null}
       {item.consequence ? (
         <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
           <strong>Efeito pratico:</strong> {item.consequence}
@@ -113,6 +126,54 @@ export function FinalReport({ gameState, report, onRestart }: FinalReportProps) 
           <div className="rounded-[24px] bg-white/8 p-5">
             <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Decisoes</p>
             <p className="mt-3 text-lg font-semibold">{gameState.choices_history.length}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-[28px] border border-brass/30 bg-brass/10 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Rating do mentor</p>
+              <h3 className="mt-2 font-serifDisplay text-3xl text-white">{report.performanceRating.label}</h3>
+              <p className="mt-2 max-w-3xl text-sm leading-7 text-parchment/82">{report.performanceRating.headline}</p>
+            </div>
+            <div className="rounded-[22px] border border-white/10 bg-white/8 px-5 py-4 text-center">
+              <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">Nota de carreira</p>
+              <p className="mt-2 font-serifDisplay text-4xl text-white">{report.performanceRating.score}</p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm leading-7 text-parchment/70">{report.performanceRating.summary}</p>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {report.performanceRating.parameters.map((parameter) => (
+              <div className="rounded-[20px] border border-white/10 bg-white/6 p-4" key={parameter.label}>
+                <p className="text-xs uppercase tracking-[0.16em] text-parchment/55">{parameter.label}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{parameter.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-parchment/55">Pontos fortes</p>
+              <div className="mt-3 space-y-2">
+                {report.performanceRating.strengths.map((strength) => (
+                  <p className="rounded-[18px] bg-white/6 px-4 py-3 text-sm leading-6 text-parchment/88" key={strength}>
+                    {strength}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-parchment/55">Proximo nivel</p>
+              <div className="mt-3 space-y-2">
+                {report.performanceRating.improvements.map((improvement) => (
+                  <p className="rounded-[18px] bg-white/6 px-4 py-3 text-sm leading-6 text-parchment/88" key={improvement}>
+                    {improvement}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

@@ -66,6 +66,34 @@ export function FeedbackPanel({ feedback, onContinue, isFinalStep }: FeedbackPan
               <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.selectedFoundations.join(", ")}.</p>
             </div>
           ) : null}
+          {feedback.selectedDocuments && feedback.selectedDocuments.length > 0 ? (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-parchment/55">Provas documentais usadas</p>
+              <p className="mt-2 text-sm leading-7 text-parchment/90">{feedback.selectedDocuments.join(", ")}.</p>
+            </div>
+          ) : null}
+          {feedback.documentEvidence ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-[20px] border border-emerald/25 bg-emerald/10 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-parchment/55">Bem escolhidas</p>
+                <p className="mt-2 text-sm leading-6 text-parchment/90">
+                  {feedback.documentEvidence.wellChosen.length > 0 ? feedback.documentEvidence.wellChosen.join(", ") : "Nenhuma."}
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-brass/25 bg-brass/10 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-parchment/55">Ignoradas</p>
+                <p className="mt-2 text-sm leading-6 text-parchment/90">
+                  {feedback.documentEvidence.ignored.length > 0 ? feedback.documentEvidence.ignored.join(", ") : "Nenhuma."}
+                </p>
+              </div>
+              <div className="rounded-[20px] border border-garnet/25 bg-garnet/10 p-4">
+                <p className="text-xs uppercase tracking-[0.18em] text-parchment/55">Arriscadas</p>
+                <p className="mt-2 text-sm leading-6 text-parchment/90">
+                  {feedback.documentEvidence.risky.length > 0 ? feedback.documentEvidence.risky.join(", ") : "Nenhuma."}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-[24px] bg-white/8 p-5">

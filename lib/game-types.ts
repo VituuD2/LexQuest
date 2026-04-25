@@ -125,6 +125,16 @@ export type CaseDocument = {
   messages?: DocumentMessage[];
 };
 
+export type DocumentSelectionConfig = {
+  enabled: boolean;
+  min: number;
+  max: number;
+  prompt: string;
+  relevant_document_ids: string[];
+  risky_document_ids: string[];
+  missing_important_document_penalty: number;
+};
+
 export type StepOption = {
   key: string;
   label: string;
@@ -154,6 +164,7 @@ export type Step = {
     max: number;
     prompt: string;
   };
+  document_selection?: DocumentSelectionConfig;
   free_text?: {
     enabled: boolean;
     min_lines: number;
@@ -223,6 +234,12 @@ export type ChoiceHistoryEntry = {
     etica: number;
   };
   selectedFoundations?: string[];
+  selectedDocuments?: string[];
+  documentEvidence?: {
+    wellChosen: string[];
+    ignored: string[];
+    risky: string[];
+  };
   freeText?: string;
   rubricScore?: number;
 };
@@ -254,12 +271,30 @@ export type FeedbackState = {
   unlockedDocuments: string[];
   nextStep: number;
   selectedFoundations?: string[];
+  selectedDocuments?: string[];
+  documentEvidence?: {
+    wellChosen: string[];
+    ignored: string[];
+    risky: string[];
+  };
 };
 
 export type FinalReportData = {
   average: number;
   label: string;
   summary: string;
+  performanceRating: {
+    score: number;
+    label: string;
+    headline: string;
+    summary: string;
+    strengths: string[];
+    improvements: string[];
+    parameters: Array<{
+      label: string;
+      value: string;
+    }>;
+  };
   judgeOrder?: FinalOrder;
   endingKey?: string;
 };

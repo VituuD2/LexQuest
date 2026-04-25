@@ -12,8 +12,17 @@ on conflict (id) do update set
   area = excluded.area,
   difficulty = excluded.difficulty;
 
+alter table public.case_steps add column if not exists document_selection jsonb;
+
 delete from scoring_rules where case_id = 'hc_48h_001';
 delete from case_foundations where case_id = 'hc_48h_001';
+update public.player_choices
+set step_id = null
+where step_id in (
+  select id
+  from public.case_steps
+  where case_id = 'hc_48h_001'
+);
 delete from case_steps where case_id = 'hc_48h_001';
 delete from case_documents where case_id = 'hc_48h_001';
 
@@ -121,6 +130,7 @@ insert into case_steps (
   best_choice,
   pedagogical_note,
   foundation_selection,
+  document_selection,
   free_text,
   criteria,
   result_bands
@@ -141,6 +151,7 @@ values
     '{"enabled":true,"min":1,"max":2,"prompt":"Selecione de 1 a 2 fundamentos praticos para orientar a primeira resposta do plantao."}'::jsonb,
     null,
     null,
+    null,
     null
   ),
   (
@@ -156,6 +167,7 @@ values
     'A',
     'A linha mais forte e atacar a preventiva onde ela parece fragil: fundamentacao abstrata e falta de individualizacao.',
     '{"enabled":true,"min":1,"max":2,"prompt":"Selecione de 1 a 2 fundamentos que sustentem a critica tecnica da decisao de custodia."}'::jsonb,
+    '{"enabled":true,"min":1,"max":2,"prompt":"Selecione os documentos que demonstram o vicio central da preventiva.","relevant_document_ids":["doc_004","doc_003"],"risky_document_ids":["doc_003"],"missing_important_document_penalty":4}'::jsonb,
     null,
     null,
     null
@@ -173,6 +185,7 @@ values
     'B',
     'B e a melhor neste desenho porque organiza documentos e cautelares no juizo de origem. A tambem e forte se a transferencia estiver confirmada.',
     '{"enabled":true,"min":2,"max":3,"prompt":"Selecione de 2 a 3 fundamentos para sustentar a via processual escolhida."}'::jsonb,
+    '{"enabled":true,"min":2,"max":3,"prompt":"Selecione as provas que devem acompanhar a medida urgente.","relevant_document_ids":["doc_004","doc_005","doc_006"],"risky_document_ids":["doc_003","doc_006"],"missing_important_document_penalty":5}'::jsonb,
     null,
     null,
     null
@@ -190,6 +203,7 @@ values
     'A',
     'A melhor tese preserva foco na cautelaridade e usa fatos favoraveis sem exagero.',
     '{"enabled":true,"min":2,"max":4,"prompt":"Selecione de 2 a 4 fundamentos que darao espinha dorsal a tese."}'::jsonb,
+    '{"enabled":true,"min":2,"max":4,"prompt":"Selecione os documentos que a tese deve usar como prova principal.","relevant_document_ids":["doc_004","doc_006","doc_008"],"risky_document_ids":["doc_003","doc_008"],"missing_important_document_penalty":5}'::jsonb,
     null,
     null,
     null
@@ -207,6 +221,7 @@ values
     null,
     null,
     '{"enabled":true,"min":3,"max":4,"prompt":"Selecione de 3 a 4 fundamentos que serao efetivamente usados na minuta."}'::jsonb,
+    '{"enabled":true,"min":3,"max":4,"prompt":"Selecione as provas documentais que precisam aparecer na minuta liminar.","relevant_document_ids":["doc_004","doc_005","doc_006","doc_007"],"risky_document_ids":["doc_003","doc_008"],"missing_important_document_penalty":4}'::jsonb,
     '{"enabled":true,"min_lines":8,"max_lines":12}'::jsonb,
     '["pedido liminar claro","vicio da preventiva","fatos concretos favoraveis","enfrentamento de fato desfavoravel","cautelares diversas como pedido subsidiario","coerencia entre tese e documentos","linguagem tecnica e objetiva"]'::jsonb,
     null
@@ -221,6 +236,7 @@ values
     'Traduzir estrategia, prova, fundamentos e redacao em consequencia processual coerente.',
     '[]'::jsonb,
     '{}',
+    null,
     null,
     null,
     null,
